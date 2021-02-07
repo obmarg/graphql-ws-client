@@ -7,8 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-# TODO: this should not be the default
-default = ["async-tungstenite"]
+# TODO: these should not be the default
+default = ["async-tungstenite", "cynic"]
 
 [dependencies]
 async_executors = { version = "0.4" }
@@ -19,3 +19,6 @@ thiserror = "1.0"
 uuid = { version = "0.8", features = ["v4"] }
 
 async-tungstenite = { version = "0.12", optional = true }
+
+#cynic = { version = "0.11", optional = true }
+cynic = { path = "/Users/graeme/src/cynic/cynic", optional = true }

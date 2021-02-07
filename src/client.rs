@@ -22,12 +22,12 @@ const SUBSCRIPTION_BUFFER_SIZE: usize = 5;
 ///
 // TODO: Is this a good name?
 // TODO: example
-pub struct AsyncWebsocketClient<Message, GraphqlClient>
+pub struct AsyncWebsocketClient<GraphqlClient, WsMessage>
 where
     GraphqlClient: graphql::GraphqlClient,
 {
     inner: Arc<ClientInner<GraphqlClient>>,
-    sender_sink: mpsc::Sender<Message>,
+    sender_sink: mpsc::Sender<WsMessage>,
     phantom: PhantomData<*const GraphqlClient>,
 }
 
@@ -38,7 +38,7 @@ pub struct Error {}
 
 // TODO: Docstrings, book etc.
 
-impl<WsMessage, GraphqlClient> AsyncWebsocketClient<WsMessage, GraphqlClient>
+impl<GraphqlClient, WsMessage> AsyncWebsocketClient<GraphqlClient, WsMessage>
 where
     WsMessage: WebsocketMessage + Send + 'static,
     GraphqlClient: crate::graphql::GraphqlClient + 'static,
@@ -192,6 +192,12 @@ where
     GraphqlClient: crate::graphql::GraphqlClient,
 {
     let event = decode_message::<Event<GraphqlClient::Response>, WsMessage>(msg?)?;
+
+    if event.is_none() {
+        return Ok(());
+    }
+    let event = event.unwrap();
+
     let id = &Uuid::parse_str(event.id())?;
     match event {
         Event::Next { payload, .. } => {
@@ -286,12 +292,18 @@ fn json_message<M: WebsocketMessage>(payload: impl serde::Serialize) -> Result<M
 
 fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
     message: WsMessage,
-) -> Result<T, BoxError> {
-    if let Some(s) = message.text() {
-        println!("Received {}", s);
-        Ok(serde_json::from_str::<T>(&s)?)
-    } else {
+) -> Result<Option<T>, BoxError> {
+    if message.is_ping() || message.is_pong() {
+        // TODO: logging
+        Ok(None)
+    } else if message.is_close() {
         todo!()
+    } else if let Some(s) = message.text() {
+        println!("Received {}", s);
+        Ok(Some(serde_json::from_str::<T>(&s)?))
+    } else {
+        // TODO: logging
+        Ok(None)
     }
 }
 

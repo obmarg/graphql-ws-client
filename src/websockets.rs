@@ -13,6 +13,15 @@ pub trait WebsocketMessage: std::fmt::Debug {
 
     /// Returns the text (if there is any) contained in this message
     fn text(&self) -> Option<&str>;
+
+    /// Returns true if this message is a websocket ping.
+    fn is_ping(&self) -> bool;
+
+    /// Returns true if this message is a websocket pong.
+    fn is_pong(&self) -> bool;
+
+    /// Returns true if this message is a websocket close.
+    fn is_close(&self) -> bool;
 }
 
 #[cfg(feature = "async-tungstenite")]
@@ -29,5 +38,17 @@ impl WebsocketMessage for async_tungstenite::tungstenite::Message {
             async_tungstenite::tungstenite::Message::Text(text) => Some(text.as_ref()),
             _ => None,
         }
+    }
+
+    fn is_ping(&self) -> bool {
+        matches!(self, async_tungstenite::tungstenite::Message::Ping(_))
+    }
+
+    fn is_pong(&self) -> bool {
+        matches!(self, async_tungstenite::tungstenite::Message::Pong(_))
+    }
+
+    fn is_close(&self) -> bool {
+        matches!(self, async_tungstenite::tungstenite::Message::Close(_))
     }
 }

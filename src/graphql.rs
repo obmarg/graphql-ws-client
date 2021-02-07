@@ -40,3 +40,48 @@ pub trait GraphqlClient {
     /// Decodes some error JSON into a `Response`
     fn error_response(errors: Vec<serde_json::Value>) -> Result<Self::Response, Self::DecodeError>;
 }
+
+#[cfg(feature = "cynic")]
+pub use self::cynic::Cynic;
+
+#[cfg(feature = "cynic")]
+mod cynic {
+    use super::*;
+
+    pub struct Cynic {}
+
+    impl GraphqlClient for Cynic {
+        type Response = ::cynic::GraphQLResponse<serde_json::Value>;
+
+        type DecodeError = serde_json::Error;
+
+        fn error_response(
+            errors: Vec<serde_json::Value>,
+        ) -> Result<Self::Response, Self::DecodeError> {
+            Ok(::cynic::GraphQLResponse {
+                data: None,
+                errors: Some(
+                    errors
+                        .into_iter()
+                        .map(serde_json::from_value)
+                        .collect::<Result<Vec<_>, _>>()?,
+                ),
+            })
+        }
+    }
+
+    impl<'a, ResponseData> GraphqlOperation for ::cynic::StreamingOperation<'a, ResponseData>
+    where
+        ResponseData: 'a,
+    {
+        type GenericResponse = ::cynic::GraphQLResponse<serde_json::Value>;
+
+        type Response = ::cynic::GraphQLResponse<ResponseData>;
+
+        type Error = ::cynic::DecodeError;
+
+        fn decode(&self, data: Self::GenericResponse) -> Result<Self::Response, Self::Error> {
+            self.decode_response(data)
+        }
+    }
+}

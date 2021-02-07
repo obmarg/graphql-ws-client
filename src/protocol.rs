@@ -11,12 +11,6 @@ impl<Payload> ConnectionInit<Payload> {
     pub fn new() -> Self {
         ConnectionInit { payload: None }
     }
-
-    pub fn with_payload(payload: Payload) -> Self {
-        ConnectionInit {
-            payload: Some(payload),
-        }
-    }
 }
 
 impl serde::Serialize for ConnectionInit {
