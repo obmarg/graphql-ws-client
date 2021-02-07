@@ -14,3 +14,20 @@ pub trait WebsocketMessage: std::fmt::Debug {
     /// Returns the text (if there is any) contained in this message
     fn text(&self) -> Option<&str>;
 }
+
+#[cfg(feature = "async-tungstenite")]
+impl WebsocketMessage for async_tungstenite::tungstenite::Message {
+    type Error = async_tungstenite::tungstenite::Error;
+
+    fn new(text: String) -> Self {
+        async_tungstenite::tungstenite::Message::Text(text)
+    }
+
+    // TODO: This should maybe return Error?
+    fn text(&self) -> Option<&str> {
+        match self {
+            async_tungstenite::tungstenite::Message::Text(text) => Some(text.as_ref()),
+            _ => None,
+        }
+    }
+}

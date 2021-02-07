@@ -295,22 +295,6 @@ fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
     }
 }
 
-impl WebsocketMessage for async_tungstenite::tungstenite::Message {
-    type Error = async_tungstenite::tungstenite::Error;
-
-    fn new(text: String) -> Self {
-        async_tungstenite::tungstenite::Message::Text(text)
-    }
-
-    // TODO: This should maybe return Error?
-    fn text(&self) -> Option<&str> {
-        match self {
-            async_tungstenite::tungstenite::Message::Text(text) => Some(text.as_ref()),
-            _ => None,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     // TODO: Need to allow the client to just use stream & sink directly.
