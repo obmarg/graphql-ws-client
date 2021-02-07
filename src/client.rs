@@ -18,6 +18,10 @@ use super::{
 // TODO: Make this customisable somehow.
 const SUBSCRIPTION_BUFFER_SIZE: usize = 5;
 
+/// A websocket client
+///
+// TODO: Is this a good name?
+// TODO: example
 pub struct AsyncWebsocketClient<Message, GraphqlClient>
 where
     GraphqlClient: graphql::GraphqlClient,
@@ -39,6 +43,13 @@ where
     WsMessage: WebsocketMessage + Send + 'static,
     GraphqlClient: crate::graphql::GraphqlClient + 'static,
 {
+    /// Constructs an AsyncWebsocketClient
+    ///
+    /// Accepts a stream and a sink for the underlying websocket connection,
+    /// and an `async_executors::SpawnHandle` that tells the client which
+    /// async runtime to use.
+    ///
+    /// TODO: example
     pub async fn new(
         mut websocket_stream: impl Stream<Item = Result<WsMessage, WsMessage::Error>>
             + Unpin
@@ -104,6 +115,9 @@ where
         // Probably hook into streaming operation and do a take 1 -> into_future
     }*/
 
+    /// Starts a streaming operation on this client.
+    ///
+    /// Returns a `Stream` of responses.
     pub async fn streaming_operation<Operation>(
         &mut self,
         op: Operation,
