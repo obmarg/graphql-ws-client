@@ -48,6 +48,7 @@ pub use self::cynic::Cynic;
 mod cynic {
     use super::*;
 
+    /// Provides an implementation of [GraphqlClient] for the cynic GraphQL crate
     pub struct Cynic {}
 
     impl GraphqlClient for Cynic {
