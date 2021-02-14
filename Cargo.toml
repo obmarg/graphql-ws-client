@@ -17,7 +17,6 @@ serde_json = "1.0"
 thiserror = "1.0"
 uuid = { version = "0.8", features = ["v4"] }
 
-async-tungstenite = { version = "0.12", optional = true }
+async-tungstenite = { version = "0.13", optional = true }
 
-#cynic = { version = "0.11", optional = true }
-cynic = { path = "/Users/graeme/src/cynic/cynic", optional = true }
+cynic = { git = "https://github.com/obmarg/cynic.git", optional = true }
