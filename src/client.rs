@@ -15,13 +15,9 @@ use super::{
     websockets::WebsocketMessage,
 };
 
-// TODO: Make this customisable somehow.
 const SUBSCRIPTION_BUFFER_SIZE: usize = 5;
 
 /// A websocket client
-///
-// TODO: Is this a good name?
-// TODO: example
 pub struct AsyncWebsocketClient<GraphqlClient, WsMessage>
 where
     GraphqlClient: graphql::GraphqlClient,
@@ -31,12 +27,9 @@ where
     phantom: PhantomData<*const GraphqlClient>,
 }
 
-// TODO: Better error (somehow)
 #[derive(thiserror::Error, Debug)]
 #[error("Something went wrong")]
 pub struct Error {}
-
-// TODO: Docstrings, book etc.
 
 impl<GraphqlClient, WsMessage> AsyncWebsocketClient<GraphqlClient, WsMessage>
 where
@@ -48,8 +41,6 @@ where
     /// Accepts a stream and a sink for the underlying websocket connection,
     /// and an `async_executors::SpawnHandle` that tells the client which
     /// async runtime to use.
-    ///
-    /// TODO: example
     pub async fn new(
         mut websocket_stream: impl Stream<Item = Result<WsMessage, WsMessage::Error>>
             + Unpin
@@ -58,8 +49,6 @@ where
         mut websocket_sink: impl Sink<WsMessage, Error = WsMessage::Error> + Unpin + Send + 'static,
         runtime: impl SpawnHandle<()>,
     ) -> Result<Self, Error> {
-        // TODO: actual error handling, ditch unwraps
-
         websocket_sink
             .send(json_message(ConnectionInit::new()).unwrap())
             .await
@@ -70,7 +59,6 @@ where
             Some(Err(_)) => todo!(),
             Some(Ok(data)) => {
                 decode_message::<ConnectionAck<()>, _>(data).unwrap();
-                println!("Connection acked");
             }
         }
 
@@ -78,7 +66,6 @@ where
 
         let operations = Arc::new(Mutex::new(HashMap::new()));
 
-        // TODO: Don't force the graphql error type here to be ()
         let receiver_handle = runtime
             .spawn_handle(receiver_loop::<_, _, GraphqlClient>(
                 websocket_stream,
@@ -125,11 +112,9 @@ where
     where
         Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response>,
     {
-        // TODO: no unwraps
         let id = Uuid::new_v4();
         let (sender, receiver) = mpsc::channel(SUBSCRIPTION_BUFFER_SIZE);
 
-        // TODO: THink I need to move operations map into the futures
         self.inner.operations.lock().await.insert(id, sender);
 
         let msg = json_message(Message::Subscribe {
@@ -140,10 +125,6 @@ where
 
         self.sender_sink.send(msg).await.unwrap();
 
-        // TODO: This needs to return a type that
-        // has close & some sort of status func on it.
-        // Have the receiver send details and have that intercepted
-        // by this type and stored.
         receiver.map(move |response| op.decode(response).unwrap())
     }
 }
@@ -151,9 +132,6 @@ where
 type OperationSender<GenericResponse> = mpsc::Sender<GenericResponse>;
 
 type OperationMap<GenericResponse> = Arc<Mutex<HashMap<Uuid, OperationSender<GenericResponse>>>>;
-
-// TODO: Think about whether there's actually some Arc cycles here
-// that I need to care about
 
 async fn receiver_loop<S, WsMessage, GraphqlClient>(
     mut receiver: S,
@@ -164,9 +142,6 @@ async fn receiver_loop<S, WsMessage, GraphqlClient>(
     WsMessage: WebsocketMessage,
     GraphqlClient: crate::graphql::GraphqlClient,
 {
-    // TODO: Ok, so basically need a oneshot from here -> sender that
-    // tells the sender to stop.  It can close it's incoming, drain it's stream
-    // and then close the streams in the HashMap.
     while let Some(msg) = receiver.next().await {
         println!("Received message: {:?}", msg);
         if handle_message::<WsMessage, GraphqlClient>(msg, &operations)
@@ -221,9 +196,6 @@ where
                 .remove(&id)
                 .ok_or("Received error for unknown subscription")?;
 
-            // TODO: Guess I need a way of constructing a GQL response here
-            // to send it via the sink?
-            // Could just define our own GraphQLResponse type?
             sink.send(GraphqlClient::error_response(payload)?).await?;
         }
     }
@@ -232,8 +204,6 @@ where
 }
 
 async fn sender_loop<M, S, E, GenericResponse>(
-    // TODO: Maybe don't use Message or M here - have this func transform
-    // so the type param doesn't escape this func
     message_stream: mpsc::Receiver<M>,
     mut ws_sender: S,
     operations: OperationMap<GenericResponse>,
@@ -250,13 +220,11 @@ async fn sender_loop<M, S, E, GenericResponse>(
 
     loop {
         select! {
-            // TODO: Could use select_next_some here?
             msg = message_stream.next() => {
                 if let Some(msg) = msg {
                     println!("Sending message: {:?}", msg);
                     ws_sender.send(msg).await.unwrap();
                 } else {
-                    // TODO: Do I need to indicate errors in here to the rest of the system?
                     return;
                 }
             }
@@ -294,7 +262,6 @@ fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
     message: WsMessage,
 ) -> Result<Option<T>, BoxError> {
     if message.is_ping() || message.is_pong() {
-        // TODO: logging
         Ok(None)
     } else if message.is_close() {
         todo!()
@@ -302,16 +269,6 @@ fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
         println!("Received {}", s);
         Ok(Some(serde_json::from_str::<T>(&s)?))
     } else {
-        // TODO: logging
         Ok(None)
     }
-}
-
-#[cfg(test)]
-mod tests {
-    // TODO: Need to allow the client to just use stream & sink directly.
-    // That way I can impl tests for it indepdendant of tungsten stuff...
-
-    // TODO: tests of shutdown behaviour etc would be good.
-    // also mocked tests and what not
 }

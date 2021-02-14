@@ -66,6 +66,7 @@ pub enum Message<'a, Operation> {
     #[serde(rename = "subscribe")]
     Subscribe { id: String, payload: &'a Operation },
     #[serde(rename = "complete")]
+    #[allow(dead_code)]
     Complete { id: String },
 }
 
@@ -92,17 +93,3 @@ impl<Response> Event<Response> {
         }
     }
 }
-
-// so, thoughts:
-//
-// A transport-ws-async feature:
-//
-// that takes a futures::Sink & futures::Stream
-// uses those as the send & sink.
-// That'll support async_std _and_ tokio via tungestenite_async
-// though it's still the clients job to implement.
-//
-// A transport-ws-tungstenite impl that uses plain tungstenite?
-//
-// Though unsure how to manage concurrency with that?  Looks like
-// a shit API for concurrency.

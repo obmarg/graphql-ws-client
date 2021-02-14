@@ -1,4 +1,4 @@
-//! Contians traits to provide support for various underlying websocket clients.
+//! Contains traits to provide support for various underlying websocket clients.
 
 /// An abstraction around WebsocketMessages
 ///
@@ -32,7 +32,6 @@ impl WebsocketMessage for async_tungstenite::tungstenite::Message {
         async_tungstenite::tungstenite::Message::Text(text)
     }
 
-    // TODO: This should maybe return Error?
     fn text(&self) -> Option<&str> {
         match self {
             async_tungstenite::tungstenite::Message::Text(text) => Some(text.as_ref()),

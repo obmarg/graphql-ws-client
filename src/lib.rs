@@ -30,5 +30,3 @@ pub use client::AsyncWebsocketClient;
 /// A websocket client for the cynic graphql crate
 #[cfg(feature = "cynic")]
 pub type CynicClient<WsMessage> = AsyncWebsocketClient<graphql::Cynic, WsMessage>;
-
-// TODO: graphql-client support, some other websocket client support...
