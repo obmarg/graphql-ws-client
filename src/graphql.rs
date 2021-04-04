@@ -53,14 +53,14 @@ mod cynic {
     pub struct Cynic {}
 
     impl GraphqlClient for Cynic {
-        type Response = ::cynic::GraphQLResponse<serde_json::Value>;
+        type Response = ::cynic::GraphQlResponse<serde_json::Value>;
 
         type DecodeError = serde_json::Error;
 
         fn error_response(
             errors: Vec<serde_json::Value>,
         ) -> Result<Self::Response, Self::DecodeError> {
-            Ok(::cynic::GraphQLResponse {
+            Ok(::cynic::GraphQlResponse {
                 data: None,
                 errors: Some(
                     errors
@@ -76,9 +76,9 @@ mod cynic {
     where
         ResponseData: 'a,
     {
-        type GenericResponse = ::cynic::GraphQLResponse<serde_json::Value>;
+        type GenericResponse = ::cynic::GraphQlResponse<serde_json::Value>;
 
-        type Response = ::cynic::GraphQLResponse<ResponseData>;
+        type Response = ::cynic::GraphQlResponse<ResponseData>;
 
         type Error = ::cynic::DecodeError;
 
