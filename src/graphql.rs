@@ -6,26 +6,6 @@
 //!
 //! [cynic]: https://cynic-rs.dev
 
-/// An abstraction over GraphQL operations.
-pub trait GraphqlOperation: serde::Serialize {
-    /// The "generic" response type.  A graphql-ws-client supports running multiple
-    /// operations at a time.  This GenericResponse is what will intially be decoded -
-    /// with the `decode` function converting this into the actual operation response.
-    ///
-    /// This type needs to match up with `GraphqlClient::Response` below.
-    type GenericResponse;
-
-    /// The actual response & error type of this operation.
-    type Response;
-
-    /// The error that will be returned from failed attempts to decode a `Response`.
-    type Error: std::error::Error;
-
-    /// Decodes a `GenericResponse` into the actual response that will be returned
-    /// to users for this operation.
-    fn decode(&self, data: Self::GenericResponse) -> Result<Self::Response, Self::Error>;
-}
-
 /// A trait for GraphQL clients.
 pub trait GraphqlClient {
     /// The generic response type for this GraphqlClient implementation
@@ -40,6 +20,27 @@ pub trait GraphqlClient {
     /// Decodes some error JSON into a `Response`
     fn error_response(errors: Vec<serde_json::Value>) -> Result<Self::Response, Self::DecodeError>;
 }
+
+/// An abstraction over GraphQL operations.
+pub trait GraphqlOperation: serde::Serialize {
+    /// The "generic" response type.  A graphql-ws-client supports running multiple
+    /// operations at a time.  This GenericResponse is what will intially be decoded -
+    /// with the `decode` function converting this into the actual operation response.
+    ///
+    /// This type needs to match up with [GraphqlClient::Response].
+    type GenericResponse;
+
+    /// The actual response & error type of this operation.
+    type Response;
+
+    /// The error that will be returned from failed attempts to decode a `Response`.
+    type Error: std::error::Error;
+
+    /// Decodes a `GenericResponse` into the actual response that will be returned
+    /// to users for this operation.
+    fn decode(&self, data: Self::GenericResponse) -> Result<Self::Response, Self::Error>;
+}
+
 
 #[cfg(feature = "cynic")]
 pub use self::cynic::Cynic;
