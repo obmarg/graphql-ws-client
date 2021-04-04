@@ -41,7 +41,6 @@ pub trait GraphqlOperation: serde::Serialize {
     fn decode(&self, data: Self::GenericResponse) -> Result<Self::Response, Self::Error>;
 }
 
-
 #[cfg(feature = "cynic")]
 pub use self::cynic::Cynic;
 
