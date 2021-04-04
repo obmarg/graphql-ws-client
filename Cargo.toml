@@ -19,4 +19,4 @@ uuid = { version = "0.8", features = ["v4"] }
 
 async-tungstenite = { version = "0.13", optional = true }
 
-cynic = { git = "https://github.com/obmarg/cynic.git", optional = true }
+cynic = { version = "0.13", optional = true }
