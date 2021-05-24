@@ -42,15 +42,35 @@ where
     /// and an `async_executors::SpawnHandle` that tells the client which
     /// async runtime to use.
     pub async fn new(
+        websocket_stream: impl Stream<Item = Result<WsMessage, WsMessage::Error>>
+            + Unpin
+            + Send
+            + 'static,
+        websocket_sink: impl Sink<WsMessage, Error = WsMessage::Error> + Unpin + Send + 'static,
+        runtime: impl SpawnHandle<()>,
+    ) -> Result<Self, Error> {
+        Self::new_with_connection_payload(Option::<()>::None, websocket_stream, websocket_sink, runtime).await
+    }
+
+    /// Constructs an AsyncWebsocketClient
+    ///
+    /// Accepts a connection_init payload and a stream and a sink for the underlying websocket connection,
+    /// and an `async_executors::SpawnHandle` that tells the client which
+    /// async runtime to use.
+    pub async fn new_with_connection_payload<Payload>(
+        connection_init_payload: Option<Payload>,
         mut websocket_stream: impl Stream<Item = Result<WsMessage, WsMessage::Error>>
             + Unpin
             + Send
             + 'static,
         mut websocket_sink: impl Sink<WsMessage, Error = WsMessage::Error> + Unpin + Send + 'static,
         runtime: impl SpawnHandle<()>,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, Error>
+    where
+        Payload: serde::Serialize,
+    {
         websocket_sink
-            .send(json_message(ConnectionInit::new()).unwrap())
+            .send(json_message(ConnectionInit::new(connection_init_payload)).unwrap())
             .await
             .map_err(|_| Error {})?;
 
