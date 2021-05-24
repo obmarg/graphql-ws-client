@@ -8,12 +8,15 @@ pub struct ConnectionInit<Payload = ()> {
 }
 
 impl<Payload> ConnectionInit<Payload> {
-    pub fn new() -> Self {
-        ConnectionInit { payload: None }
+    pub fn new(payload: Option<Payload>) -> Self {
+        ConnectionInit { payload }
     }
 }
 
-impl serde::Serialize for ConnectionInit {
+impl<Payload> serde::Serialize for ConnectionInit<Payload>
+where
+    Payload: serde::Serialize,
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
