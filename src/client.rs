@@ -49,7 +49,13 @@ where
         websocket_sink: impl Sink<WsMessage, Error = WsMessage::Error> + Unpin + Send + 'static,
         runtime: impl SpawnHandle<()>,
     ) -> Result<Self, Error> {
-        Self::new_with_connection_payload(Option::<()>::None, websocket_stream, websocket_sink, runtime).await
+        Self::new_with_connection_payload(
+            Option::<()>::None,
+            websocket_stream,
+            websocket_sink,
+            runtime,
+        )
+        .await
     }
 
     /// Constructs an AsyncWebsocketClient
