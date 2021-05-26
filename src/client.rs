@@ -27,6 +27,10 @@ where
     phantom: PhantomData<*const GraphqlClient>,
 }
 
+#[derive(thiserror::Error, Debug)]
+#[error("Something went wrong")]
+pub struct Error {}
+
 /// A websocket client builder
 pub struct AsyncWebsocketClientBuilder<Payload, GraphqlClient, WsMessage>
 where
@@ -123,10 +127,6 @@ where
         self
     }
 }
-
-#[derive(thiserror::Error, Debug)]
-#[error("Something went wrong")]
-pub struct Error {}
 
 impl<GraphqlClient, WsMessage> AsyncWebsocketClient<GraphqlClient, WsMessage>
 where
