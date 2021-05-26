@@ -1,11 +1,13 @@
-use std::{collections::HashMap, marker::PhantomData, sync::Arc};
+use std::{collections::HashMap, marker::PhantomData, pin::Pin, sync::Arc};
 
 use async_executors::{JoinHandle, SpawnHandle, SpawnHandleExt};
+use async_trait::async_trait;
 use futures::{
     channel::{mpsc, oneshot},
     lock::Mutex,
     sink::{Sink, SinkExt},
     stream::{Stream, StreamExt},
+    task::{Context, Poll},
 };
 use uuid::Uuid;
 
@@ -24,7 +26,7 @@ where
 {
     inner: Arc<ClientInner<GraphqlClient>>,
     sender_sink: mpsc::Sender<WsMessage>,
-    phantom: PhantomData<*const GraphqlClient>,
+    phantom: PhantomData<GraphqlClient>,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -50,7 +52,7 @@ pub enum Error {
 impl<GraphqlClient, WsMessage> AsyncWebsocketClient<GraphqlClient, WsMessage>
 where
     WsMessage: WebsocketMessage + Send + 'static,
-    GraphqlClient: crate::graphql::GraphqlClient + 'static,
+    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
 {
     /// Constructs an AsyncWebsocketClient
     ///
@@ -94,7 +96,7 @@ where
         websocket_sink
             .send(json_message(ConnectionInit::new(connection_init_payload))?)
             .await
-            .map_err(|err| Error::Unknown(err.to_string()))?;
+            .map_err(|err| Error::Send(err.to_string()))?;
 
         match websocket_stream.next().await {
             None => todo!(),
@@ -147,12 +149,12 @@ where
     /// Starts a streaming operation on this client.
     ///
     /// Returns a `Stream` of responses.
-    pub async fn streaming_operation<Operation>(
-        &mut self,
+    pub async fn streaming_operation<'a, Operation>(
+        &'a mut self,
         op: Operation,
-    ) -> impl Stream<Item = Operation::Response>
+    ) -> impl StreamOperation + Stream<Item = Operation::Response> + 'a
     where
-        Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response>,
+        Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin + Send + 'a,
     {
         let id = Uuid::new_v4();
         let (sender, receiver) = mpsc::channel(SUBSCRIPTION_BUFFER_SIZE);
@@ -167,7 +169,69 @@ where
 
         self.sender_sink.send(msg).await.unwrap();
 
-        receiver.map(move |response| op.decode(response).unwrap())
+        SubscriptionStream::<'a, GraphqlClient, Operation, WsMessage, _> {
+            id: id.to_string(),
+            client: self,
+            stream: receiver.map(move |response| op.decode(response).unwrap()),
+            phantom: PhantomData,
+        }
+    }
+}
+
+#[async_trait]
+/// stream trait for GraphQL operations
+pub trait StreamOperation {
+    /// send stop message to server
+    async fn stop_operation(&mut self) -> Result<(), Error>;
+}
+
+pub struct SubscriptionStream<'a, GraphqlClient, Operation, WsMessage, ReceiverStream>
+where
+    GraphqlClient: graphql::GraphqlClient,
+    Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response>,
+    ReceiverStream: Stream<Item = Operation::Response>,
+{
+    pub(crate) id: String,
+    pub(crate) client: &'a mut AsyncWebsocketClient<GraphqlClient, WsMessage>,
+    pub(crate) stream: ReceiverStream,
+    pub(crate) phantom: PhantomData<Operation>,
+}
+
+#[async_trait]
+impl<'a, GraphqlClient, Operation, WsMessage, ReceiverStream> StreamOperation
+    for SubscriptionStream<'a, GraphqlClient, Operation, WsMessage, ReceiverStream>
+where
+    GraphqlClient: graphql::GraphqlClient + Send,
+    Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Send,
+    WsMessage: WebsocketMessage + Send,
+    ReceiverStream: Stream<Item = Operation::Response> + Send,
+{
+    async fn stop_operation(&mut self) -> Result<(), Error> {
+        let msg: Message<()> = Message::Complete {
+            id: self.id.to_string(),
+        };
+
+        self.client
+            .sender_sink
+            .send(json_message(msg)?)
+            .await
+            .map_err(|err| Error::Send(err.to_string()))?;
+
+        Ok(())
+    }
+}
+
+impl<'a, GraphqlClient, Operation, WsMessage, ReceiverStream> Stream
+    for SubscriptionStream<'a, GraphqlClient, Operation, WsMessage, ReceiverStream>
+where
+    GraphqlClient: graphql::GraphqlClient,
+    Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin,
+    ReceiverStream: Stream<Item = Operation::Response> + Unpin,
+{
+    type Item = Operation::Response;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        Pin::new(&mut Pin::into_inner(self).stream).poll_next(cx)
     }
 }
 

@@ -12,6 +12,7 @@ license = "Apache-2.0"
 default = ["async-tungstenite", "cynic"]
 
 [dependencies]
+async-trait = "0.1.50"
 async_executors = { version = "0.4" }
 futures = { version = "0.3"}
 serde = { version = "1.0", features = ["derive"] }
