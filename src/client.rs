@@ -91,7 +91,7 @@ where
         runtime: impl SpawnHandle<()>,
     ) -> Result<AsyncWebsocketClient<GraphqlClient, WsMessage>, Error> {
         websocket_sink
-            .send(json_message(ConnectionInit::new(connection_init_payload))?)
+            .send(json_message(ConnectionInit::new(self.payload))?)
             .await
             .map_err(|err| Error::Unknown(err.to_string()))?;
 
