@@ -149,7 +149,7 @@ where
 impl<GraphqlClient, WsMessage> AsyncWebsocketClient<GraphqlClient, WsMessage>
 where
     WsMessage: WebsocketMessage + Send + 'static,
-    GraphqlClient: crate::graphql::GraphqlClient + 'static,
+    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
 {
     /*
     pub async fn operation<'a, T: 'a>(&self, _op: Operation<'a, T>) -> Result<(), ()> {
