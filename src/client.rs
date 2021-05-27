@@ -28,8 +28,24 @@ where
 }
 
 #[derive(thiserror::Error, Debug)]
-#[error("Something went wrong")]
-pub struct Error {}
+/// Error type
+pub enum Error {
+    /// Unknown error
+    #[error("unknown: {0}")]
+    Unknown(String),
+    /// Custom error
+    #[error("{0}: {1}")]
+    Custom(String, String),
+    /// Unexpected close frame
+    #[error("got close frame, reason: {0}")]
+    Close(String),
+    /// Decoding / parsing error
+    #[error("message decode error, reason: {0}")]
+    Decode(String),
+    /// Sending error
+    #[error("message sending error, reason: {0}")]
+    Send(String),
+}
 
 /// A websocket client builder
 pub struct AsyncWebsocketClientBuilder<Payload, GraphqlClient, WsMessage>
@@ -75,15 +91,15 @@ where
         runtime: impl SpawnHandle<()>,
     ) -> Result<AsyncWebsocketClient<GraphqlClient, WsMessage>, Error> {
         websocket_sink
-            .send(json_message(ConnectionInit::new(self.payload)).unwrap())
+            .send(json_message(ConnectionInit::new(self.payload))?)
             .await
-            .map_err(|_| Error {})?;
+            .map_err(|err| Error::Unknown(err.to_string()))?;
 
         match websocket_stream.next().await {
             None => todo!(),
             Some(Err(_)) => todo!(),
             Some(Ok(data)) => {
-                decode_message::<ConnectionAck<()>, _>(data).unwrap();
+                decode_message::<ConnectionAck<()>, _>(data)?;
             }
         }
 
@@ -193,47 +209,55 @@ async fn receiver_loop<S, WsMessage, GraphqlClient>(
     shutdown.send(()).expect("Couldn't shutdown sender");
 }
 
-type BoxError = Box<dyn std::error::Error>;
-
 async fn handle_message<WsMessage, GraphqlClient>(
     msg: Result<WsMessage, WsMessage::Error>,
     operations: &OperationMap<GraphqlClient::Response>,
-) -> Result<(), BoxError>
+) -> Result<(), Error>
 where
     WsMessage: WebsocketMessage,
     GraphqlClient: crate::graphql::GraphqlClient,
 {
-    let event = decode_message::<Event<GraphqlClient::Response>, WsMessage>(msg?)?;
+    let event = decode_message::<Event<GraphqlClient::Response>, WsMessage>(
+        msg.map_err(|err| Error::Decode(err.to_string()))?,
+    )
+    .map_err(|err| Error::Decode(err.to_string()))?;
 
     if event.is_none() {
         return Ok(());
     }
     let event = event.unwrap();
 
-    let id = &Uuid::parse_str(event.id())?;
+    let id = &Uuid::parse_str(event.id()).map_err(|err| Error::Decode(err.to_string()))?;
     match event {
         Event::Next { payload, .. } => {
             let mut sink = operations
                 .lock()
                 .await
                 .get(&id)
-                .ok_or("Received message for unknown subscription")?
+                .ok_or(Error::Decode(
+                    "Received message for unknown subscription".to_owned(),
+                ))?
                 .clone();
 
-            sink.send(payload).await?
+            sink.send(payload)
+                .await
+                .map_err(|err| Error::Send(err.to_string()))?
         }
         Event::Complete { .. } => {
             println!("Stream complete");
             operations.lock().await.remove(&id);
         }
         Event::Error { payload, .. } => {
-            let mut sink = operations
-                .lock()
-                .await
-                .remove(&id)
-                .ok_or("Received error for unknown subscription")?;
+            let mut sink = operations.lock().await.remove(&id).ok_or(Error::Decode(
+                "Received error for unknown subscription".to_owned(),
+            ))?;
 
-            sink.send(GraphqlClient::error_response(payload)?).await?;
+            sink.send(
+                GraphqlClient::error_response(payload)
+                    .map_err(|err| Error::Send(err.to_string()))?,
+            )
+            .await
+            .map_err(|err| Error::Send(err.to_string()))?;
         }
     }
 
@@ -291,20 +315,26 @@ where
     operations: OperationMap<GraphqlClient::Response>,
 }
 
-fn json_message<M: WebsocketMessage>(payload: impl serde::Serialize) -> Result<M, BoxError> {
-    Ok(M::new(serde_json::to_string(&payload)?))
+fn json_message<M: WebsocketMessage>(payload: impl serde::Serialize) -> Result<M, Error> {
+    Ok(M::new(
+        serde_json::to_string(&payload).map_err(|err| Error::Decode(err.to_string()))?,
+    ))
 }
 
 fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
     message: WsMessage,
-) -> Result<Option<T>, BoxError> {
+) -> Result<Option<T>, Error> {
     if message.is_ping() || message.is_pong() {
         Ok(None)
     } else if message.is_close() {
-        todo!()
+        Err(Error::Close(
+            message.error_message().unwrap_or("").to_owned(),
+        ))
     } else if let Some(s) = message.text() {
         println!("Received {}", s);
-        Ok(Some(serde_json::from_str::<T>(&s)?))
+        Ok(Some(
+            serde_json::from_str::<T>(&s).map_err(|err| Error::Decode(err.to_string()))?,
+        ))
     } else {
         Ok(None)
     }
