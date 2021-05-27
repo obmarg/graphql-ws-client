@@ -49,52 +49,51 @@ pub enum Error {
     Send(String),
 }
 
-impl<GraphqlClient, WsMessage> AsyncWebsocketClient<GraphqlClient, WsMessage>
+/// A websocket client builder
+pub struct AsyncWebsocketClientBuilder<Payload, GraphqlClient, WsMessage>
 where
+    Payload: serde::Serialize,
+    GraphqlClient: graphql::GraphqlClient,
     WsMessage: WebsocketMessage + Send + 'static,
-    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
 {
+    payload: Option<Payload>,
+    phantom: PhantomData<*const (
+        PhantomData<*const GraphqlClient>,
+        PhantomData<*const WsMessage>,
+    )>,
+}
+
+impl<Payload, GraphqlClient, WsMessage>
+    AsyncWebsocketClientBuilder<Payload, GraphqlClient, WsMessage>
+where
+    Payload: serde::Serialize,
+    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
+    WsMessage: WebsocketMessage + Send + 'static,
+{
+    /// Constructs an AsyncWebsocketClientBuilder
+    pub fn new() -> Self {
+        Self {
+            payload: None,
+            phantom: PhantomData,
+        }
+    }
+
     /// Constructs an AsyncWebsocketClient
     ///
     /// Accepts a stream and a sink for the underlying websocket connection,
     /// and an `async_executors::SpawnHandle` that tells the client which
     /// async runtime to use.
-    pub async fn new(
-        websocket_stream: impl Stream<Item = Result<WsMessage, WsMessage::Error>>
-            + Unpin
-            + Send
-            + 'static,
-        websocket_sink: impl Sink<WsMessage, Error = WsMessage::Error> + Unpin + Send + 'static,
-        runtime: impl SpawnHandle<()>,
-    ) -> Result<Self, Error> {
-        Self::new_with_connection_payload(
-            Option::<()>::None,
-            websocket_stream,
-            websocket_sink,
-            runtime,
-        )
-        .await
-    }
-
-    /// Constructs an AsyncWebsocketClient
-    ///
-    /// Accepts a connection_init payload and a stream and a sink for the underlying websocket connection,
-    /// and an `async_executors::SpawnHandle` that tells the client which
-    /// async runtime to use.
-    pub async fn new_with_connection_payload<Payload>(
-        connection_init_payload: Option<Payload>,
+    pub async fn build(
+        self,
         mut websocket_stream: impl Stream<Item = Result<WsMessage, WsMessage::Error>>
             + Unpin
             + Send
             + 'static,
         mut websocket_sink: impl Sink<WsMessage, Error = WsMessage::Error> + Unpin + Send + 'static,
         runtime: impl SpawnHandle<()>,
-    ) -> Result<Self, Error>
-    where
-        Payload: serde::Serialize,
-    {
+    ) -> Result<AsyncWebsocketClient<GraphqlClient, WsMessage>, Error> {
         websocket_sink
-            .send(json_message(ConnectionInit::new(connection_init_payload))?)
+            .send(json_message(ConnectionInit::new(self.payload))?)
             .await
             .map_err(|err| Error::Send(err.to_string()))?;
 
@@ -140,6 +139,18 @@ where
         })
     }
 
+    /// Add payload to `connection_init`
+    pub fn payload(mut self, payload: Payload) -> Self {
+        self.payload = Some(payload);
+        self
+    }
+}
+
+impl<GraphqlClient, WsMessage> AsyncWebsocketClient<GraphqlClient, WsMessage>
+where
+    WsMessage: WebsocketMessage + Send + 'static,
+    GraphqlClient: crate::graphql::GraphqlClient + 'static,
+{
     /*
     pub async fn operation<'a, T: 'a>(&self, _op: Operation<'a, T>) -> Result<(), ()> {
         todo!()
