@@ -8,6 +8,7 @@ use futures::{
     stream::{Stream, StreamExt},
     task::{Context, Poll},
 };
+use serde::Serialize;
 use uuid::Uuid;
 
 use super::{
@@ -48,26 +49,21 @@ pub enum Error {
     Send(String),
 }
 
+#[derive(Serialize)]
+pub enum NoPayload {}
+
 /// A websocket client builder
-pub struct AsyncWebsocketClientBuilder<Payload, GraphqlClient, WsMessage>
+pub struct AsyncWebsocketClientBuilder<GraphqlClient, Payload = NoPayload>
 where
-    Payload: serde::Serialize,
-    GraphqlClient: graphql::GraphqlClient,
-    WsMessage: WebsocketMessage + Send + 'static,
+    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
 {
     payload: Option<Payload>,
-    phantom: PhantomData<*const (
-        PhantomData<*const GraphqlClient>,
-        PhantomData<*const WsMessage>,
-    )>,
+    phantom: PhantomData<*const GraphqlClient>,
 }
 
-impl<Payload, GraphqlClient, WsMessage>
-    AsyncWebsocketClientBuilder<Payload, GraphqlClient, WsMessage>
+impl<GraphqlClient, Payload> AsyncWebsocketClientBuilder<GraphqlClient, Payload>
 where
-    Payload: serde::Serialize,
     GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
-    WsMessage: WebsocketMessage + Send + 'static,
 {
     /// Constructs an AsyncWebsocketClientBuilder
     pub fn new() -> Self {
@@ -77,12 +73,29 @@ where
         }
     }
 
+    /// Add payload to `connection_init`
+    pub fn payload<NewPayload: Serialize>(
+        self,
+        payload: NewPayload,
+    ) -> AsyncWebsocketClientBuilder<GraphqlClient, NewPayload> {
+        AsyncWebsocketClientBuilder {
+            payload: Some(payload),
+            phantom: PhantomData,
+        }
+    }
+}
+
+impl<GraphqlClient, Payload> AsyncWebsocketClientBuilder<GraphqlClient, Payload>
+where
+    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
+    Payload: Serialize,
+{
     /// Constructs an AsyncWebsocketClient
     ///
     /// Accepts a stream and a sink for the underlying websocket connection,
     /// and an `async_executors::SpawnHandle` that tells the client which
     /// async runtime to use.
-    pub async fn build(
+    pub async fn build<WsMessage>(
         self,
         mut websocket_stream: impl Stream<Item = Result<WsMessage, WsMessage::Error>>
             + Unpin
@@ -90,7 +103,11 @@ where
             + 'static,
         mut websocket_sink: impl Sink<WsMessage, Error = WsMessage::Error> + Unpin + Send + 'static,
         runtime: impl SpawnHandle<()>,
-    ) -> Result<AsyncWebsocketClient<GraphqlClient, WsMessage>, Error> {
+    ) -> Result<AsyncWebsocketClient<GraphqlClient, WsMessage>, Error>
+    where
+        GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
+        WsMessage: WebsocketMessage + Send + 'static,
+    {
         websocket_sink
             .send(json_message(ConnectionInit::new(self.payload))?)
             .await
@@ -136,12 +153,6 @@ where
             sender_sink,
             phantom: PhantomData,
         })
-    }
-
-    /// Add payload to `connection_init`
-    pub fn payload(mut self, payload: Payload) -> Self {
-        self.payload = Some(payload);
-        self
     }
 }
 

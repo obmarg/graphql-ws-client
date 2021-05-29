@@ -51,7 +51,7 @@ async fn main() {
 
     let (sink, stream) = connection.split();
 
-    let mut client = CynicClientBuilder::<(), _>::new()
+    let mut client = CynicClientBuilder::new()
         .build(stream, sink, async_executors::AsyncStd)
         .await
         .unwrap();
