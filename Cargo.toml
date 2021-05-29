@@ -23,3 +23,9 @@ uuid = { version = "0.8", features = ["v4"] }
 async-tungstenite = { version = "0.13", optional = true }
 
 cynic = { version = "0.13", optional = true }
+
+[dev-dependencies]
+async-std = { version = "1.9", features = ["attributes"] }
+async-tungstenite = { version = "0.13", features = ["async-std-runtime"] }
+async_executors = { version = "0.4", features = ["async_std"] }
+insta = "1.7"
