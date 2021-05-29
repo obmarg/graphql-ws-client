@@ -14,6 +14,9 @@ all APIs might be changed.
 ### New Features
 
 - `graphql-ws-client` now has an example
+- `streaming_operation` now returns a `SubscriptionStream` type. This is still
+  a `Stream` but also exposes a `stop_operation` function that can be used to tell
+  the server to end the stream.
 
 ## v0.1.0 - 2021-04-04
 
