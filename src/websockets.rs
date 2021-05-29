@@ -44,10 +44,7 @@ impl WebsocketMessage for async_tungstenite::tungstenite::Message {
 
     fn error_message(&self) -> Option<&str> {
         match self {
-            async_tungstenite::tungstenite::Message::Close(frame) => match frame {
-                Some(frame) => Some(&frame.reason),
-                None => None,
-            },
+            async_tungstenite::tungstenite::Message::Close(Some(frame)) => Some(&frame.reason),
             _ => None,
         }
     }

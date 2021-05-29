@@ -1,7 +1,6 @@
 use std::{collections::HashMap, marker::PhantomData, pin::Pin, sync::Arc};
 
 use async_executors::{JoinHandle, SpawnHandle, SpawnHandleExt};
-use async_trait::async_trait;
 use futures::{
     channel::{mpsc, oneshot},
     lock::Mutex,
@@ -161,11 +160,12 @@ where
     ///
     /// Returns a `Stream` of responses.
     pub async fn streaming_operation<'a, Operation>(
-        &'a mut self,
+        &mut self,
         op: Operation,
-    ) -> impl StreamOperation + Stream<Item = Operation::Response> + 'a
+    ) -> SubscriptionStream<GraphqlClient, Operation>
     where
-        Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin + Send + 'a,
+        Operation:
+            GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin + Send + 'static,
     {
         let id = Uuid::new_v4();
         let (sender, receiver) = mpsc::channel(SUBSCRIPTION_BUFFER_SIZE);
@@ -180,69 +180,60 @@ where
 
         self.sender_sink.send(msg).await.unwrap();
 
-        SubscriptionStream::<'a, GraphqlClient, Operation, WsMessage, _> {
+        let mut sender_clone = self.sender_sink.clone();
+        let id_clone = id.to_string();
+
+        SubscriptionStream::<GraphqlClient, Operation> {
             id: id.to_string(),
-            client: self,
-            stream: receiver.map(move |response| op.decode(response).unwrap()),
+            stream: Box::pin(receiver.map(move |response| op.decode(response).unwrap())),
+            cancel_func: Box::new(move || {
+                Box::pin(async move {
+                    let msg: Message<()> = Message::Complete { id: id_clone };
+
+                    sender_clone
+                        .send(json_message(msg)?)
+                        .await
+                        .map_err(|err| Error::Send(err.to_string()))?;
+
+                    Ok(())
+                })
+            }),
             phantom: PhantomData,
         }
     }
 }
 
-#[async_trait]
-/// stream trait for GraphQL operations
-pub trait StreamOperation {
-    /// send stop message to server
-    async fn stop_operation(&mut self) -> Result<(), Error>;
-}
-
-pub struct SubscriptionStream<'a, GraphqlClient, Operation, WsMessage, ReceiverStream>
+#[pin_project::pin_project]
+pub struct SubscriptionStream<GraphqlClient, Operation>
 where
     GraphqlClient: graphql::GraphqlClient,
     Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response>,
-    ReceiverStream: Stream<Item = Operation::Response>,
 {
-    pub(crate) id: String,
-    pub(crate) client: &'a mut AsyncWebsocketClient<GraphqlClient, WsMessage>,
-    pub(crate) stream: ReceiverStream,
-    pub(crate) phantom: PhantomData<Operation>,
+    id: String,
+    stream: Pin<Box<dyn Stream<Item = Operation::Response> + Send>>,
+    cancel_func: Box<dyn FnOnce() -> futures::future::BoxFuture<'static, Result<(), Error>> + Send>,
+    phantom: PhantomData<GraphqlClient>,
 }
 
-#[async_trait]
-impl<'a, GraphqlClient, Operation, WsMessage, ReceiverStream> StreamOperation
-    for SubscriptionStream<'a, GraphqlClient, Operation, WsMessage, ReceiverStream>
+impl<GraphqlClient, Operation> SubscriptionStream<GraphqlClient, Operation>
 where
     GraphqlClient: graphql::GraphqlClient + Send,
     Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Send,
-    WsMessage: WebsocketMessage + Send,
-    ReceiverStream: Stream<Item = Operation::Response> + Send,
 {
-    async fn stop_operation(&mut self) -> Result<(), Error> {
-        let msg: Message<()> = Message::Complete {
-            id: self.id.to_string(),
-        };
-
-        self.client
-            .sender_sink
-            .send(json_message(msg)?)
-            .await
-            .map_err(|err| Error::Send(err.to_string()))?;
-
-        Ok(())
+    pub async fn stop_operation(self) -> Result<(), Error> {
+        (self.cancel_func)().await
     }
 }
 
-impl<'a, GraphqlClient, Operation, WsMessage, ReceiverStream> Stream
-    for SubscriptionStream<'a, GraphqlClient, Operation, WsMessage, ReceiverStream>
+impl<GraphqlClient, Operation> Stream for SubscriptionStream<GraphqlClient, Operation>
 where
     GraphqlClient: graphql::GraphqlClient,
     Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin,
-    ReceiverStream: Stream<Item = Operation::Response> + Unpin,
 {
     type Item = Operation::Response;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        Pin::new(&mut Pin::into_inner(self).stream).poll_next(cx)
+        self.project().stream.as_mut().poll_next(cx)
     }
 }
 
@@ -298,9 +289,9 @@ where
                 .lock()
                 .await
                 .get(&id)
-                .ok_or(Error::Decode(
-                    "Received message for unknown subscription".to_owned(),
-                ))?
+                .ok_or_else(|| {
+                    Error::Decode("Received message for unknown subscription".to_owned())
+                })?
                 .clone();
 
             sink.send(payload)
@@ -312,9 +303,9 @@ where
             operations.lock().await.remove(&id);
         }
         Event::Error { payload, .. } => {
-            let mut sink = operations.lock().await.remove(&id).ok_or(Error::Decode(
-                "Received error for unknown subscription".to_owned(),
-            ))?;
+            let mut sink = operations.lock().await.remove(&id).ok_or_else(|| {
+                Error::Decode("Received error for unknown subscription".to_owned())
+            })?;
 
             sink.send(
                 GraphqlClient::error_response(payload)
