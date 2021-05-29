@@ -11,6 +11,11 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+### Breaking Changes
+
+- Clients are now created through builder types rather than directly.  See the
+  `AsyncWebsocketClientBuilder` type (or it's `CynicClientBuilder` alias)
+
 ### New Features
 
 - `graphql-ws-client` now has an example
