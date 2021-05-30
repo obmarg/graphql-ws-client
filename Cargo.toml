@@ -16,7 +16,7 @@ members = ["examples"]
 default = ["async-tungstenite", "cynic"]
 
 [dependencies]
-async_executors = { version = "0.4" }
+async_executors = { git = "https://github.com/obmarg/async_executors.git", branch = "tokio-context" }
 futures = { version = "0.3"}
 pin-project = "1"
 serde = { version = "1.0", features = ["derive"] }
@@ -29,7 +29,4 @@ async-tungstenite = { version = "0.13", optional = true }
 cynic = { version = "0.13", optional = true }
 
 [dev-dependencies]
-async-std = { version = "1.9", features = ["attributes"] }
-async-tungstenite = { version = "0.13", features = ["async-std-runtime"] }
-async_executors = { version = "0.4", features = ["async_std"] }
 insta = "1.7"
