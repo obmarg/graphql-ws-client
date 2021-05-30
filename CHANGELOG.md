@@ -23,6 +23,10 @@ all APIs might be changed.
   a `Stream` but also exposes a `stop_operation` function that can be used to tell
   the server to end the stream.
 
+### Bug Fixes
+
+- `graphql-ws-client` has better support for running inside `#[tokio::main]`
+
 ## v0.1.0 - 2021-04-04
 
 - Initial release
