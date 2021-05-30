@@ -5,6 +5,10 @@ authors = ["Graeme Coupar <graeme@polyandglot.dev>"]
 edition = "2018"
 description = "A graphql over websockets client"
 license = "Apache-2.0"
+autoexamples = false
+
+[workspace]
+members = ["examples"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

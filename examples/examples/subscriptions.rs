@@ -4,11 +4,11 @@
 //! Talks to the the tide subscription example in `async-graphql`
 
 mod schema {
-    cynic::use_schema!("schemas/books.graphql");
+    cynic::use_schema!("../schemas/books.graphql");
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "schemas/books.graphql", graphql_type = "Book")]
+#[cynic(schema_path = "../schemas/books.graphql", graphql_type = "Book")]
 struct Book {
     id: String,
     name: String,
@@ -16,7 +16,7 @@ struct Book {
 }
 
 #[derive(cynic::QueryFragment, Debug)]
-#[cynic(schema_path = "schemas/books.graphql", graphql_type = "BookChanged")]
+#[cynic(schema_path = "../schemas/books.graphql", graphql_type = "BookChanged")]
 struct BookChanged {
     id: cynic::Id,
     book: Option<Book>,
@@ -24,7 +24,7 @@ struct BookChanged {
 
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(
-    schema_path = "schemas/books.graphql",
+    schema_path = "../schemas/books.graphql",
     graphql_type = "SubscriptionRoot"
 )]
 struct BooksChangedSubscription {
