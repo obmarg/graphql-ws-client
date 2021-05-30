@@ -32,5 +32,4 @@ pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error};
 pub type CynicClient<WsMessage> = AsyncWebsocketClient<graphql::Cynic, WsMessage>;
 /// A websocket client builder for the cynic graphql crate
 #[cfg(feature = "cynic")]
-pub type CynicClientBuilder<Payload, WsMessage> =
-    AsyncWebsocketClientBuilder<Payload, graphql::Cynic, WsMessage>;
+pub type CynicClientBuilder = AsyncWebsocketClientBuilder<graphql::Cynic>;
