@@ -203,9 +203,12 @@ where
         let mut sender_clone = self.sender_sink.clone();
         let id_clone = id.to_string();
 
-        SubscriptionStream::<GraphqlClient, Operation> {
+        Ok(SubscriptionStream::<GraphqlClient, Operation> {
             id: id.to_string(),
-            stream: Box::pin(receiver.map(move |response| op.decode(response).unwrap())),
+            stream: Box::pin(receiver.map(move |response| {
+                op.decode(response)
+                    .map_err(|err| Error::Decode(err.to_string()))
+            })),
             cancel_func: Box::new(move || {
                 Box::pin(async move {
                     let msg: Message<()> = Message::Complete { id: id_clone };
@@ -219,7 +222,7 @@ where
                 })
             }),
             phantom: PhantomData,
-        }
+        })
     }
 }
 
@@ -230,7 +233,7 @@ where
     Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response>,
 {
     id: String,
-    stream: Pin<Box<dyn Stream<Item = Operation::Response> + Send>>,
+    stream: Pin<Box<dyn Stream<Item = Result<Operation::Response, Error>> + Send>>,
     cancel_func: Box<dyn FnOnce() -> futures::future::BoxFuture<'static, Result<(), Error>> + Send>,
     phantom: PhantomData<GraphqlClient>,
 }
@@ -250,7 +253,7 @@ where
     GraphqlClient: graphql::GraphqlClient,
     Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin,
 {
-    type Item = Operation::Response;
+    type Item = Result<Operation::Response, Error>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.project().stream.as_mut().poll_next(cx)
