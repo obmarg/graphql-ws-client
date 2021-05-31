@@ -56,7 +56,7 @@ async fn main() {
         .await
         .unwrap();
 
-    let mut stream = client.streaming_operation(build_query()).await;
+    let mut stream = client.streaming_operation(build_query()).await.unwrap();
     println!("Running subscription apparently?");
     while let Some(item) = stream.next().await {
         println!("{:?}", item);
