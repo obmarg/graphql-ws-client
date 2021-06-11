@@ -26,7 +26,7 @@ uuid = { version = "0.8", features = ["v4"] }
 
 async-tungstenite = { version = "0.13", optional = true }
 
-cynic = { version = "0.13", optional = true }
+cynic = { version = "0.14", optional = true }
 
 [dev-dependencies]
 insta = "1.7"
