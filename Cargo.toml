@@ -16,7 +16,7 @@ members = ["examples"]
 default = ["async-tungstenite", "ws_stream_wasm", "cynic"]
 
 [dependencies]
-async_executors = { git = "https://github.com/obmarg/async_executors.git", branch = "tokio-context" }
+async_executors = { version = "*", features = ["bindgen"] }
 futures = { version = "0.3" }
 pin-project = "1"
 serde = { version = "1.0", features = ["derive"] }
