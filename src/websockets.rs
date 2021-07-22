@@ -1,6 +1,6 @@
 //! Contains traits to provide support for various underlying websocket clients.
 
-use ws_stream_wasm::WsMessage;
+use ws_stream_wasm::{WsErr, WsMessage};
 
 /// An abstraction around WebsocketMessages
 ///
@@ -66,7 +66,7 @@ impl WebsocketMessage for async_tungstenite::tungstenite::Message {
 
 #[cfg(feature = "ws_stream_wasm")]
 impl WebsocketMessage for WsMessage {
-    type Error = async_tungstenite::tungstenite::Error;
+    type Error = WsErr;
 
     fn new(text: String) -> Self {
         WsMessage::Text(text)
