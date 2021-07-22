@@ -73,6 +73,7 @@ impl WebsocketMessage for WsMessage {
     }
 
     fn text(&self) -> Option<&str> {
+        log::debug!("{:?}", self);
         match self {
             WsMessage::Text(text) => Some(text.as_ref()),
             _ => None,

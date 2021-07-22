@@ -28,6 +28,7 @@ async-tungstenite = { version = "0.13", optional = true }
 ws_stream_wasm = { version = "0.7", optional = true }
 
 cynic = { version = "0.14", optional = true }
+log = "*"
 
 [dev-dependencies]
 insta = "1.7"
