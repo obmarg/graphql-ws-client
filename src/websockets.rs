@@ -1,5 +1,7 @@
 //! Contains traits to provide support for various underlying websocket clients.
 
+use ws_stream_wasm::WsMessage;
+
 /// An abstraction around WebsocketMessages
 ///
 /// graphql-ws-client doesn't implement the websocket protocol itself.
@@ -59,5 +61,37 @@ impl WebsocketMessage for async_tungstenite::tungstenite::Message {
 
     fn is_close(&self) -> bool {
         matches!(self, async_tungstenite::tungstenite::Message::Close(_))
+    }
+}
+
+#[cfg(feature = "ws_stream_wasm")]
+impl WebsocketMessage for WsMessage {
+    type Error = async_tungstenite::tungstenite::Error;
+
+    fn new(text: String) -> Self {
+        WsMessage::Text(text)
+    }
+
+    fn text(&self) -> Option<&str> {
+        match self {
+            WsMessage::Text(text) => Some(text.as_ref()),
+            _ => None,
+        }
+    }
+
+    fn error_message(&self) -> Option<&str> {
+        None
+    }
+
+    fn is_ping(&self) -> bool {
+        false
+    }
+
+    fn is_pong(&self) -> bool {
+        false
+    }
+
+    fn is_close(&self) -> bool {
+        false
     }
 }

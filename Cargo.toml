@@ -13,11 +13,11 @@ members = ["examples"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["async-tungstenite", "cynic"]
+default = ["async-tungstenite", "ws_stream_wasm", "cynic"]
 
 [dependencies]
 async_executors = { git = "https://github.com/obmarg/async_executors.git", branch = "tokio-context" }
-futures = { version = "0.3"}
+futures = { version = "0.3" }
 pin-project = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -25,6 +25,7 @@ thiserror = "1.0"
 uuid = { version = "0.8", features = ["v4"] }
 
 async-tungstenite = { version = "0.13", optional = true }
+ws_stream_wasm = { version = "0.7", optional = true }
 
 cynic = { version = "0.14", optional = true }
 
