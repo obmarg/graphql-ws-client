@@ -1,7 +1,5 @@
 //! Contains traits to provide support for various underlying websocket clients.
 
-use ws_stream_wasm::{WsErr, WsMessage};
-
 /// An abstraction around WebsocketMessages
 ///
 /// graphql-ws-client doesn't implement the websocket protocol itself.
@@ -17,7 +15,7 @@ pub trait WebsocketMessage: std::fmt::Debug {
     fn text(&self) -> Option<&str>;
 
     /// Returns the text (if there is any) of the error
-    fn error_message(&self) -> Option<&str>;
+    fn error_message(&self) -> Option<String>;
 
     /// Returns true if this message is a websocket ping.
     fn is_ping(&self) -> bool;
@@ -44,9 +42,11 @@ impl WebsocketMessage for async_tungstenite::tungstenite::Message {
         }
     }
 
-    fn error_message(&self) -> Option<&str> {
+    fn error_message(&self) -> Option<String> {
         match self {
-            async_tungstenite::tungstenite::Message::Close(Some(frame)) => Some(&frame.reason),
+            async_tungstenite::tungstenite::Message::Close(Some(frame)) => {
+                Some(frame.reason.to_string())
+            }
             _ => None,
         }
     }
@@ -65,22 +65,42 @@ impl WebsocketMessage for async_tungstenite::tungstenite::Message {
 }
 
 #[cfg(feature = "ws_stream_wasm")]
-impl WebsocketMessage for WsMessage {
-    type Error = WsErr;
+#[derive(Debug)]
+/// A WebSocket event abstraction to combine the differentiated WebSocket events and messages of `ws_stream_wasm`.
+pub enum WasmWebsocketMessage {
+    /// A WebSocket message, text or binary, was received.
+    WsMessage(ws_stream_wasm::WsMessage),
+    /// A WebSocket event other than a message was received.
+    WsEvent(ws_stream_wasm::WsEvent),
+}
+
+#[cfg(feature = "ws_stream_wasm")]
+impl WebsocketMessage for WasmWebsocketMessage {
+    type Error = ws_stream_wasm::WsErr;
 
     fn new(text: String) -> Self {
-        WsMessage::Text(text)
+        WasmWebsocketMessage::WsMessage(ws_stream_wasm::WsMessage::Text(text))
     }
 
     fn text(&self) -> Option<&str> {
         match self {
-            WsMessage::Text(text) => Some(text.as_ref()),
+            WasmWebsocketMessage::WsMessage(ws_stream_wasm::WsMessage::Text(text)) => {
+                Some(text.as_ref())
+            }
             _ => None,
         }
     }
 
-    fn error_message(&self) -> Option<&str> {
-        None
+    fn error_message(&self) -> Option<String> {
+        match self {
+            WasmWebsocketMessage::WsEvent(ws_stream_wasm::WsEvent::WsErr(error)) => {
+                Some(error.to_string())
+            }
+            WasmWebsocketMessage::WsEvent(ws_stream_wasm::WsEvent::Error) => {
+                Some("An undisclosed error happened on the connection.".into())
+            }
+            _ => None,
+        }
     }
 
     fn is_ping(&self) -> bool {
@@ -92,6 +112,9 @@ impl WebsocketMessage for WsMessage {
     }
 
     fn is_close(&self) -> bool {
-        false
+        matches!(
+            self,
+            WasmWebsocketMessage::WsEvent(ws_stream_wasm::WsEvent::Closed(_))
+        )
     }
 }

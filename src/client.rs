@@ -413,7 +413,7 @@ fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
         Ok(None)
     } else if message.is_close() {
         Err(Error::Close(
-            message.error_message().unwrap_or("").to_owned(),
+            message.error_message().unwrap_or(String::new()).to_owned(),
         ))
     } else if let Some(s) = message.text() {
         println!("Received {}", s);
