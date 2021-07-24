@@ -25,6 +25,11 @@ mod protocol;
 pub mod graphql;
 pub mod websockets;
 
+#[cfg(feature = "ws_stream_wasm")]
+mod wasm;
+#[cfg(feature = "ws_stream_wasm")]
+pub use wasm::*;
+
 pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error};
 
 /// A websocket client for the cynic graphql crate
