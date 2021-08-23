@@ -30,7 +30,7 @@ mod wasm;
 #[cfg(feature = "ws_stream_wasm")]
 pub use wasm::*;
 
-pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error};
+pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error, SubscriptionStream};
 
 /// A websocket client for the cynic graphql crate
 #[cfg(feature = "cynic")]

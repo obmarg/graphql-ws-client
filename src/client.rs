@@ -226,6 +226,7 @@ where
     }
 }
 
+/// A stream of GraphQL subscription updates.
 #[pin_project::pin_project]
 pub struct SubscriptionStream<GraphqlClient, Operation>
 where
@@ -243,6 +244,7 @@ where
     GraphqlClient: graphql::GraphqlClient + Send,
     Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Send,
 {
+    /// Cancels the subscription.
     pub async fn stop_operation(self) -> Result<(), Error> {
         (self.cancel_func)().await
     }

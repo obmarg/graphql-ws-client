@@ -29,7 +29,7 @@ pharos = { version = "0.5.2" }
 async-tungstenite = { version = "0.13", optional = true }
 ws_stream_wasm = { version = "0.7", optional = true }
 
-cynic = { version = "0.14", path = "../cynic/cynic", optional = true }
+cynic = { version = "0.14", git = "https://github.com/Yatekii/cynic.git", optional = true }
 log = "*"
 
 [dev-dependencies]
