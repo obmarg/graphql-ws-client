@@ -86,3 +86,81 @@ mod cynic {
         }
     }
 }
+
+#[cfg(feature = "graphql_client")]
+pub use self::graphql_client::GraphQLClient;
+
+#[cfg(feature = "graphql_client")]
+mod graphql_client {
+    use super::*;
+    use ::graphql_client::{GraphQLQuery, QueryBody, Response};
+    use std::marker::PhantomData;
+
+    /// Provides an implementation of [GraphqlClient] for the graphql_client GraphQL crate
+    pub struct GraphQLClient {}
+
+    impl GraphqlClient for GraphQLClient {
+        type Response = Response<serde_json::Value>;
+
+        type DecodeError = serde_json::Error;
+
+        fn error_response(
+            errors: Vec<serde_json::Value>,
+        ) -> Result<Self::Response, Self::DecodeError> {
+            Ok(Response {
+                data: None,
+                errors: Some(
+                    errors
+                        .into_iter()
+                        .map(serde_json::from_value)
+                        .collect::<Result<Vec<_>, _>>()?,
+                ),
+            })
+        }
+    }
+
+    pub struct StreamingOperation<Q: GraphQLQuery> {
+        inner: QueryBody<Q::Variables>,
+        phantom: PhantomData<Q>,
+    }
+
+    impl<Q: GraphQLQuery> StreamingOperation<Q> {
+        pub fn decode_response(
+            &self,
+            response: Response<serde_json::Value>,
+        ) -> Result<Response<Q::ResponseData>, serde_json::Error> {
+            if let Some(data) = response.data {
+                Ok(::graphql_client::Response {
+                    data: Some(serde_json::from_value(data)?),
+                    errors: response.errors,
+                })
+            } else {
+                Ok(::graphql_client::Response {
+                    data: None,
+                    errors: response.errors,
+                })
+            }
+        }
+    }
+
+    impl<Q: GraphQLQuery> serde::Serialize for StreamingOperation<Q> {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            self.inner.serialize(serializer)
+        }
+    }
+
+    impl<Q: GraphQLQuery> GraphqlOperation for StreamingOperation<Q> {
+        type GenericResponse = Response<serde_json::Value>;
+
+        type Response = Response<Q::ResponseData>;
+
+        type Error = serde_json::Error;
+
+        fn decode(&self, response: Self::GenericResponse) -> Result<Self::Response, Self::Error> {
+            self.decode_response(response)
+        }
+    }
+}
