@@ -91,6 +91,9 @@ mod cynic {
 pub use self::graphql_client::GraphQLClient;
 
 #[cfg(feature = "graphql_client")]
+pub use self::graphql_client::StreamingOperation;
+
+#[cfg(feature = "graphql_client")]
 mod graphql_client {
     use super::*;
     use ::graphql_client::{GraphQLQuery, QueryBody, Response};
@@ -119,13 +122,22 @@ mod graphql_client {
         }
     }
 
+    /// A streaming operation for a GraphQLQuery
     pub struct StreamingOperation<Q: GraphQLQuery> {
         inner: QueryBody<Q::Variables>,
         phantom: PhantomData<Q>,
     }
 
     impl<Q: GraphQLQuery> StreamingOperation<Q> {
-        pub fn decode_response(
+        /// Constructs a StreamingOperation
+        pub fn new(variables: Q::Variables) -> Self {
+            Self {
+                inner: Q::build_query(variables),
+                phantom: PhantomData::default(),
+            }
+        }
+
+        fn decode_response(
             &self,
             response: Response<serde_json::Value>,
         ) -> Result<Response<Q::ResponseData>, serde_json::Error> {
