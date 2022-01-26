@@ -33,3 +33,10 @@ pub type CynicClient<WsMessage> = AsyncWebsocketClient<graphql::Cynic, WsMessage
 /// A websocket client builder for the cynic graphql crate
 #[cfg(feature = "cynic")]
 pub type CynicClientBuilder = AsyncWebsocketClientBuilder<graphql::Cynic>;
+
+/// A websocket client for the graphql_client graphql crate
+#[cfg(feature = "graphql_client")]
+pub type GraphQLClientClient<WsMessage> = AsyncWebsocketClient<graphql::GraphQLClient, WsMessage>;
+/// A websocket client builder for the graphql_client graphql crate
+#[cfg(feature = "graphql_client")]
+pub type GraphQLClientClientBuilder = AsyncWebsocketClientBuilder<graphql::GraphQLClient>;
