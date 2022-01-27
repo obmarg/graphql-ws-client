@@ -10,11 +10,11 @@ edition = "2018"
 graphql-ws-client = { path = "../", features = ["cynic", "async-tungstenite"] }
 
 async-std = { version = "1.9", features = ["attributes"] }
-async-tungstenite = { version = "0.13", features = ["async-std-runtime", "tokio-runtime"] }
-async_executors = { git = "https://github.com/obmarg/async_executors.git", branch = "tokio-context", features = ["async_std", "tokio_context"] }
-cynic = { version = "0.14" }
+async-tungstenite = { version = "0.16", features = ["async-std-runtime", "tokio-runtime"] }
+async_executors = { version = "0.5", features = ["async_std"] }
+cynic = { version = "1.0" }
 futures = { version = "0.3"}
-tokio = { version = "1.6.1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.15", features = ["rt-multi-thread", "macros"] }
 
 [dev-dependencies]
 insta = "1.7"
