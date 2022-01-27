@@ -4,8 +4,11 @@ version = "0.1.0"
 authors = ["Graeme Coupar <graeme@polyandglot.dev>"]
 edition = "2018"
 description = "A graphql over websockets client"
+keywords = ["graphql", "client", "api", "websockets", "subscriptions"]
 license = "Apache-2.0"
 autoexamples = false
+documentation = "https://docs.rs/graphql-ws-client"
+readme = "README.md"
 
 [workspace]
 members = ["examples"]
