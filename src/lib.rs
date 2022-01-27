@@ -1,10 +1,10 @@
 //! # graphql-ws-client
 //!
-//! graphql-ws-client implements asynchronous GraphQL over websockets using the
+//! graphql-ws-client implements asynchronous GraphQL-over-Websocket using the
 //! [graphql-transport-ws protocol][protocol].  It tries to be websocket client,
 //! graphql client _and_ async executor and provides built in support for:
 //!
-//! - [Cynic][cynic] as a GraphQL client.
+//! - [Cynic][cynic] & [Graphql-Client][graphql-client] GraphQL clients.
 //! - [async-tungstenite][async-tungstenite] as a Websocket Client.
 //! - The [async-std][async-std] & [tokio][tokio] async runtimes.
 //!
@@ -13,6 +13,7 @@
 //!
 //! [protocol]: https://github.com/enisdenjo/graphql-ws/blob/HEAD/PROTOCOL.md
 //! [cynic]: https://cynic-rs.dev
+//! [graphql-client]: https://github.com/graphql-rust/graphql-client
 //! [async-tungstenite]: https://github.com/sdroege/async-tungstenite
 //! [async-std]: https://async.rs/
 //! [tokio]: https://tokio.rs/
