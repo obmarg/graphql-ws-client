@@ -92,6 +92,15 @@ where
     }
 }
 
+impl<GraphqlClient, Payload> Default for AsyncWebsocketClientBuilder<GraphqlClient, Payload>
+where
+    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<GraphqlClient, Payload> AsyncWebsocketClientBuilder<GraphqlClient, Payload>
 where
     GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
@@ -227,6 +236,9 @@ where
     }
 }
 
+/// A `futures::Stream` for a subscription.
+///
+/// Emits an item for each message received by the subscription.
 #[pin_project::pin_project]
 pub struct SubscriptionStream<GraphqlClient, Operation>
 where
@@ -244,6 +256,7 @@ where
     GraphqlClient: graphql::GraphqlClient + Send,
     Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Send,
 {
+    /// Stops the operation by sending a Complete message to the server.
     pub async fn stop_operation(self) -> Result<(), Error> {
         (self.cancel_func)().await
     }
@@ -315,7 +328,7 @@ where
             let mut sink = operations
                 .lock()
                 .await
-                .get(&id)
+                .get(id)
                 .ok_or_else(|| {
                     Error::Decode("Received message for unknown subscription".to_owned())
                 })?
@@ -327,10 +340,10 @@ where
         }
         Event::Complete { .. } => {
             trace!("Stream complete");
-            operations.lock().await.remove(&id);
+            operations.lock().await.remove(id);
         }
         Event::Error { payload, .. } => {
-            let mut sink = operations.lock().await.remove(&id).ok_or_else(|| {
+            let mut sink = operations.lock().await.remove(id).ok_or_else(|| {
                 Error::Decode("Received error for unknown subscription".to_owned())
             })?;
 
@@ -419,7 +432,7 @@ fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
     } else if let Some(s) = message.text() {
         trace!("Decoding message: {}", s);
         Ok(Some(
-            serde_json::from_str::<T>(&s).map_err(|err| Error::Decode(err.to_string()))?,
+            serde_json::from_str::<T>(s).map_err(|err| Error::Decode(err.to_string()))?,
         ))
     } else {
         Ok(None)
