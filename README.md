@@ -21,7 +21,7 @@
 # Overview
 
 The goal of this library is to provide a runtime agnostic implementation for [GraphQL-over-Websocket](https://github.com/enisdenjo/graphql-ws/blob/HEAD/PROTOCOL.md).
-This is typically used for subscriptions but it can also be used for queries and mutations if you wish. The library is built upon the websocket library [async-tungstenite](https://github.com/sdroege/async-tungstenite).
+The library only supports subscriptions for now but will eventually support queries and mutations. It is built upon the websocket library [async-tungstenite](https://github.com/sdroege/async-tungstenite).
 
 ## Integrations
 
