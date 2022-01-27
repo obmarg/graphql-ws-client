@@ -1,10 +1,12 @@
 //! This module contains traits that abstract over GraphQL implementations,
 //! allowing this library to be used with different GraphQL client libraries.
 //!
-//! Support is provided for [`cynic`][cynic], but other client libraries can
-//! be added by implementing these traits for those libraries.
+//! Support is provided for [`cynic`][cynic] & [`graphql_client`][graphql-client],
+//! but other client libraries can be added by implementing these traits for
+//! those libraries.
 //!
 //! [cynic]: https://cynic-rs.dev
+//! [graphql-client]: https://github.com/graphql-rust/graphql-client
 
 /// A trait for GraphQL clients.
 pub trait GraphqlClient {
