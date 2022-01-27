@@ -13,6 +13,7 @@ use uuid::Uuid;
 
 use super::{
     graphql::{self, GraphqlOperation},
+    logging::trace,
     protocol::{ConnectionAck, ConnectionInit, Event, Message},
     websockets::WebsocketMessage,
 };
@@ -275,12 +276,12 @@ where
     GraphqlClient: crate::graphql::GraphqlClient,
 {
     while let Some(msg) = receiver.next().await {
-        println!("Received message: {:?}", msg);
+        trace!("Received message: {:?}", msg);
         if handle_message::<WsMessage, GraphqlClient>(msg, &operations)
             .await
             .is_err()
         {
-            println!("Error happened, killing things");
+            trace!("Error happened, killing things");
             break;
         }
     }
@@ -325,7 +326,7 @@ where
                 .map_err(|err| Error::Send(err.to_string()))?
         }
         Event::Complete { .. } => {
-            println!("Stream complete");
+            trace!("Stream complete");
             operations.lock().await.remove(&id);
         }
         Event::Error { payload, .. } => {
@@ -365,7 +366,7 @@ where
         select! {
             msg = message_stream.next() => {
                 if let Some(msg) = msg {
-                    println!("Sending message: {:?}", msg);
+                    trace!("Sending message: {:?}", msg);
                     ws_sender
                         .send(msg)
                         .await
@@ -416,7 +417,7 @@ fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
             message.error_message().unwrap_or("").to_owned(),
         ))
     } else if let Some(s) = message.text() {
-        println!("Received {}", s);
+        trace!("Decoding message: {}", s);
         Ok(Some(
             serde_json::from_str::<T>(&s).map_err(|err| Error::Decode(err.to_string()))?,
         ))

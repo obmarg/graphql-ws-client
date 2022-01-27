@@ -20,6 +20,7 @@
 #![warn(missing_docs)]
 
 mod client;
+mod logging;
 mod protocol;
 
 pub mod graphql;

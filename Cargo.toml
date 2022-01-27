@@ -16,17 +16,19 @@ members = ["examples"]
 default = ["async-tungstenite"]
 client-cynic = ["async-tungstenite", "cynic"]
 client-graphql-client = ["async-tungstenite", "graphql_client"]
+no-logging = []
 
 [dependencies]
-futures = { version = "0.3"}
+futures = "0.3"
+log = "0.4"
 pin-project = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
 uuid = { version = "0.8", features = ["v4"] }
 
-async-tungstenite = { version = "0.16", optional = true }
 cynic = { version = "1.0", optional = true }
+async-tungstenite = { version = "0.16", optional = true }
 graphql_client = { version = "0.10.0", optional = true }
 
 [dev-dependencies]
