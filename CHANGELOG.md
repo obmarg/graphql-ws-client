@@ -11,6 +11,8 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+## v0.2.0 - 2022-01-27
+
 ### Breaking Changes
 
 - Clients are now created through builder types rather than directly.  See the
@@ -20,7 +22,6 @@ all APIs might be changed.
   rather than the `async_executors` crate, as `async_executors` is not
   compatible with `#[tokio::main]`.  An example impl is provided for `tokio` in
   the examples folder.
-
 
 ### New Features
 
