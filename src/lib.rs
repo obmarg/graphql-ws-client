@@ -27,7 +27,7 @@ mod protocol;
 pub mod graphql;
 pub mod websockets;
 
-pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error};
+pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error, SubscriptionStream};
 
 /// A websocket client for the cynic graphql crate
 #[cfg(feature = "cynic")]
