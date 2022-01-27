@@ -3,6 +3,8 @@
 //!
 //! Talks to the the tide subscription example in `async-graphql`
 
+use examples::TokioSpawner;
+
 mod schema {
     cynic::use_schema!("../schemas/books.graphql");
 }
@@ -52,7 +54,7 @@ async fn main() {
     let (sink, stream) = connection.split();
 
     let mut client = CynicClientBuilder::new()
-        .build(stream, sink, async_executors::TokioContext::new())
+        .build(stream, sink, TokioSpawner::current())
         .await
         .unwrap();
 

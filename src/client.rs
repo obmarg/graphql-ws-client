@@ -1,12 +1,12 @@
 use std::{collections::HashMap, marker::PhantomData, pin::Pin, sync::Arc};
 
-use async_executors::{JoinHandle, SpawnHandle, SpawnHandleExt};
 use futures::{
     channel::{mpsc, oneshot},
+    future::RemoteHandle,
     lock::Mutex,
     sink::{Sink, SinkExt},
     stream::{Stream, StreamExt},
-    task::{Context, Poll},
+    task::{Context, Poll, SpawnExt},
 };
 use serde::Serialize;
 use uuid::Uuid;
@@ -108,7 +108,7 @@ where
             + Send
             + 'static,
         mut websocket_sink: impl Sink<WsMessage, Error = WsMessage::Error> + Unpin + Send + 'static,
-        runtime: impl SpawnHandle<Result<(), Error>>,
+        runtime: impl SpawnExt,
     ) -> Result<AsyncWebsocketClient<GraphqlClient, WsMessage>, Error>
     where
         GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
@@ -132,7 +132,7 @@ where
         let operations = Arc::new(Mutex::new(HashMap::new()));
 
         let receiver_handle = runtime
-            .spawn_handle(receiver_loop::<_, _, GraphqlClient>(
+            .spawn_with_handle(receiver_loop::<_, _, GraphqlClient>(
                 websocket_stream,
                 Arc::clone(&operations),
                 shutdown_sender,
@@ -142,7 +142,7 @@ where
         let (sender_sink, sender_stream) = mpsc::channel(1);
 
         let sender_handle = runtime
-            .spawn_handle(sender_loop(
+            .spawn_with_handle(sender_loop(
                 sender_stream,
                 websocket_sink,
                 Arc::clone(&operations),
@@ -394,9 +394,9 @@ where
     GraphqlClient: crate::graphql::GraphqlClient,
 {
     #[allow(dead_code)]
-    receiver_handle: JoinHandle<Result<(), Error>>,
+    receiver_handle: RemoteHandle<Result<(), Error>>,
     #[allow(dead_code)]
-    sender_handle: JoinHandle<Result<(), Error>>,
+    sender_handle: RemoteHandle<Result<(), Error>>,
     operations: OperationMap<GraphqlClient::Response>,
 }
 
