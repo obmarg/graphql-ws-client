@@ -17,4 +17,4 @@ futures = { version = "0.3"}
 tokio = { version = "1.15", features = ["rt-multi-thread", "macros"] }
 
 [dev-dependencies]
-insta = "1.7"
+insta = "1.11"
