@@ -8,7 +8,7 @@ edition = "2018"
 
 [features]
 default = ["async-tungstenite"]
-async-tungstenite = ["graphql-ws-client/cynic", "graphql-ws-client/async-tungstenite", "dep:async-tungstenite", "tokio", "pretty_env_logger"]
+async-tungstenite = ["graphql-ws-client/async-tungstenite", "dep:async-tungstenite", "tokio", "pretty_env_logger"]
 ws_stream_wasm = ["dep:ws_stream_wasm", "graphql-ws-client/ws_stream_wasm", "wasm-bindgen", "console_log"]
 
 [dependencies]
