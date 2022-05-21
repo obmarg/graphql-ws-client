@@ -10,13 +10,13 @@ use ws_stream_wasm::{WsErr, WsEvent, WsMessage, WsMeta, WsStream};
 
 use crate::websockets::WebsocketMessage;
 
-/// Creates a new pair of stream and sink which operate on [`WasmWebsocketMessage`] instead of `WsMessage` and `WsEvent` separately.
+/// Creates a new pair of sink and stream which operate on [`WasmWebsocketMessage`] instead of `WsMessage` and `WsEvent` separately.
 pub async fn wasm_websocket_combined_split(
     mut ws_meta: WsMeta,
     ws_stream: WsStream,
 ) -> (
-    impl Stream<Item = Result<WasmWebsocketMessage, WsErr>>,
     impl Sink<WasmWebsocketMessage, Error = WsErr>,
+    impl Stream<Item = Result<WasmWebsocketMessage, WsErr>>,
 ) {
     let event_stream = ws_meta.observe(ObserveConfig::default()).await.unwrap();
 
@@ -33,7 +33,7 @@ pub async fn wasm_websocket_combined_split(
 
     let sink = FusedWasmWebsocketSink::new(sink);
 
-    (stream, sink)
+    (sink, stream)
 }
 
 #[derive(Debug)]

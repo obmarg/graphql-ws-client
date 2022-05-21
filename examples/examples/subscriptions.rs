@@ -64,9 +64,8 @@ async fn main() {
         connection.split()
     };
 
-    // TODO: this is flipped compared to the above!
     #[cfg(target_arch = "wasm32")]
-    let (stream, sink) = {
+    let (sink, stream) = {
         let (ws, wsio) = ws_stream_wasm::WsMeta::connect(
             "ws://localhost:8000/graphql",
             Some(vec!["graphql-transport-ws"]),
