@@ -1,4 +1,4 @@
-use std::{collections::HashMap, marker::PhantomData, pin::Pin, sync::Arc};
+use std::{borrow::Cow, collections::HashMap, marker::PhantomData, pin::Pin, sync::Arc};
 
 use futures::{
     channel::{mpsc, oneshot},
@@ -482,7 +482,7 @@ fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
         Ok(None)
     } else if message.is_close() {
         Err(Error::Close(
-            message.error_message().unwrap_or(String::new()).to_owned(),
+            message.error_message().unwrap_or(Cow::from("")).into(),
         ))
     } else if let Some(s) = message.text() {
         trace!("Decoding message: {}", s);

@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -61,10 +62,10 @@ impl WebsocketMessage for WasmWebsocketMessage {
         }
     }
 
-    fn error_message(&self) -> Option<String> {
+    fn error_message(&self) -> Option<Cow<str>> {
         match self {
             WasmWebsocketMessage::WsEvent(ws_stream_wasm::WsEvent::WsErr(error)) => {
-                Some(error.to_string())
+                Some(error.to_string().into())
             }
             WasmWebsocketMessage::WsEvent(ws_stream_wasm::WsEvent::Error) => {
                 Some("An undisclosed error happened on the connection.".into())
