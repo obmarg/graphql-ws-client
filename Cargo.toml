@@ -3,6 +3,7 @@ name = "graphql-ws-client"
 version = "0.2.0"
 authors = ["Graeme Coupar <graeme@polyandglot.dev>"]
 edition = "2018"
+resolver = "2"
 description = "A graphql over websockets client"
 keywords = ["graphql", "client", "api", "websockets", "subscriptions"]
 license = "Apache-2.0"
@@ -17,8 +18,7 @@ members = ["examples"]
 
 [features]
 default = ["async-tungstenite"]
-client-cynic = ["async-tungstenite", "cynic"]
-client-graphql-client = ["async-tungstenite", "graphql_client"]
+ws_stream_wasm = ["dep:ws_stream_wasm", "uuid/js", "no-logging"]
 no-logging = []
 
 [dependencies]
@@ -28,7 +28,7 @@ pin-project = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
-uuid = { version = "0.8", features = ["v4"] }
+uuid = { version = "1.0", features = ["v4"] }
 pin-project-lite = "0.2.7"
 pharos = { version = "0.5.2" }
 

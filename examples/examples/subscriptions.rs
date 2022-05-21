@@ -33,23 +33,47 @@ struct BooksChangedSubscription {
 
 #[async_std::main]
 async fn main() {
+    #[cfg(not(target_arch = "wasm32"))]
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
+    #[cfg(target_arch = "wasm32")]
+    use wasm_bindgen::UnwrapThrowExt;
+
     use futures::StreamExt;
     use graphql_ws_client::CynicClientBuilder;
+    use log::info;
 
-    let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
-    request.headers_mut().insert(
-        "Sec-WebSocket-Protocol",
-        HeaderValue::from_str("graphql-transport-ws").unwrap(),
-    );
+    #[cfg(target_arch = "wasm32")]
+    console_log::init_with_level(log::Level::Info).expect("init logging");
 
-    let (connection, _) = async_tungstenite::async_std::connect_async(request)
+    #[cfg(not(target_arch = "wasm32"))]
+    pretty_env_logger::init();
+
+    #[cfg(not(target_arch = "wasm32"))]
+    let (sink, stream) = {
+        let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
+        request.headers_mut().insert(
+            "Sec-WebSocket-Protocol",
+            HeaderValue::from_str("graphql-transport-ws").unwrap(),
+        );
+        let (connection, _) = async_tungstenite::async_std::connect_async(request)
+            .await
+            .unwrap();
+        connection.split()
+    };
+
+    // TODO: this is flipped compared to the above!
+    #[cfg(target_arch = "wasm32")]
+    let (stream, sink) = {
+        let (ws, wsio) = ws_stream_wasm::WsMeta::connect(
+            "ws://localhost:8000/graphql",
+            Some(vec!["graphql-transport-ws"]),
+        )
         .await
-        .unwrap();
+        .expect_throw("assume the connection succeeds");
+        graphql_ws_client::wasm_websocket_combined_split(ws, wsio).await
+    };
 
-    println!("Connected");
-
-    let (sink, stream) = connection.split();
+    info!("Connected");
 
     let mut client = CynicClientBuilder::new()
         .build(stream, sink, async_executors::AsyncStd)
@@ -57,9 +81,9 @@ async fn main() {
         .unwrap();
 
     let mut stream = client.streaming_operation(build_query()).await.unwrap();
-    println!("Running subscription apparently?");
+    info!("Running subscription");
     while let Some(item) = stream.next().await {
-        println!("{:?}", item);
+        info!("{:?}", item);
     }
 }
 
