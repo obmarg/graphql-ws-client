@@ -18,8 +18,6 @@ members = ["examples"]
 
 [features]
 default = ["async-tungstenite"]
-client-cynic = ["async-tungstenite", "cynic"]
-client-graphql-client = ["async-tungstenite", "graphql_client"]
 ws_stream_wasm = ["dep:ws_stream_wasm", "uuid/js", "no-logging", "pharos", "pin-project-lite"]
 no-logging = []
 
