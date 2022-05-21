@@ -9,6 +9,7 @@ mod schema {
 
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(schema_path = "../schemas/books.graphql", graphql_type = "Book")]
+#[allow(dead_code)]
 struct Book {
     id: String,
     name: String,
@@ -17,6 +18,7 @@ struct Book {
 
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(schema_path = "../schemas/books.graphql", graphql_type = "BookChanged")]
+#[allow(dead_code)]
 struct BookChanged {
     id: cynic::Id,
     book: Option<Book>,
@@ -27,6 +29,7 @@ struct BookChanged {
     schema_path = "../schemas/books.graphql",
     graphql_type = "SubscriptionRoot"
 )]
+#[allow(dead_code)]
 struct BooksChangedSubscription {
     books: BookChanged,
 }
