@@ -37,7 +37,7 @@ async fn main() {
     use futures::StreamExt;
     use graphql_ws_client::CynicClientBuilder;
 
-    let mut request = "ws://localhost:8000".into_client_request().unwrap();
+    let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
     request.headers_mut().insert(
         "Sec-WebSocket-Protocol",
         HeaderValue::from_str("graphql-transport-ws").unwrap(),
