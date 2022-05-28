@@ -14,7 +14,7 @@ use uuid::Uuid;
 use super::{
     graphql::{self, GraphqlOperation},
     logging::trace,
-    protocol::{ConnectionAck, ConnectionInit, Event, Message},
+    protocol::{ConnectionInit, Event, Message},
     websockets::WebsocketMessage,
 };
 
@@ -129,27 +129,11 @@ where
             .await
             .map_err(|err| Error::Send(err.to_string()))?;
 
-        match websocket_stream.next().await {
-            None => todo!(),
-            Some(Err(_)) => todo!(),
-            Some(Ok(data)) => {
-                decode_message::<ConnectionAck<()>, _>(data)?;
-            }
-        }
-
-        let (shutdown_sender, shutdown_receiver) = oneshot::channel();
-
         let operations = Arc::new(Mutex::new(HashMap::new()));
 
-        let receiver_handle = runtime
-            .spawn_with_handle(receiver_loop::<_, _, GraphqlClient>(
-                websocket_stream,
-                Arc::clone(&operations),
-                shutdown_sender,
-            ))
-            .map_err(|err| Error::SpawnHandle(err.to_string()))?;
+        let (mut sender_sink, sender_stream) = mpsc::channel(1);
 
-        let (sender_sink, sender_stream) = mpsc::channel(1);
+        let (shutdown_sender, shutdown_receiver) = oneshot::channel();
 
         let sender_handle = runtime
             .spawn_with_handle(sender_loop(
@@ -157,6 +141,51 @@ where
                 websocket_sink,
                 Arc::clone(&operations),
                 shutdown_receiver,
+            ))
+            .map_err(|err| Error::SpawnHandle(err.to_string()))?;
+
+        // wait for ack before entering receiver loop:
+        loop {
+            match websocket_stream.next().await {
+                None => todo!(),
+                Some(msg) => {
+                    let event = decode_message::<Event<GraphqlClient::Response>, WsMessage>(
+                        msg.map_err(|err| Error::Decode(err.to_string()))?,
+                    )
+                    .map_err(|err| Error::Decode(err.to_string()))?;
+                    match event {
+                        // pings can be sent at any time
+                        Some(Event::Ping { .. }) => {
+                            let msg = json_message(Message::<()>::Pong)
+                                .map_err(|err| Error::Send(err.to_string()))?;
+                            sender_sink
+                                .send(msg)
+                                .await
+                                .map_err(|err| Error::Send(err.to_string()))?;
+                        }
+                        Some(Event::ConnectionAck { .. }) => {
+                            // handshake completed, ready to enter main receiver loop
+                            trace!("connection_ack received, handshake completed");
+                            break;
+                        }
+                        Some(event) => {
+                            return Err(Error::Decode(format!(
+                                "expected a connection_ack or ping, got {}",
+                                event.r#type()
+                            )));
+                        }
+                        None => {}
+                    }
+                }
+            }
+        }
+
+        let receiver_handle = runtime
+            .spawn_with_handle(receiver_loop::<_, _, GraphqlClient>(
+                websocket_stream,
+                sender_sink.clone(),
+                Arc::clone(&operations),
+                shutdown_sender,
             ))
             .map_err(|err| Error::SpawnHandle(err.to_string()))?;
 
@@ -280,6 +309,7 @@ type OperationMap<GenericResponse> = Arc<Mutex<HashMap<Uuid, OperationSender<Gen
 
 async fn receiver_loop<S, WsMessage, GraphqlClient>(
     mut receiver: S,
+    mut sender: mpsc::Sender<WsMessage>,
     operations: OperationMap<GraphqlClient::Response>,
     shutdown: oneshot::Sender<()>,
 ) -> Result<(), Error>
@@ -290,11 +320,10 @@ where
 {
     while let Some(msg) = receiver.next().await {
         trace!("Received message: {:?}", msg);
-        if handle_message::<WsMessage, GraphqlClient>(msg, &operations)
-            .await
-            .is_err()
+        if let Err(err) =
+            handle_message::<WsMessage, GraphqlClient>(msg, &mut sender, &operations).await
         {
-            trace!("Error happened, killing things");
+            trace!("message handler error, shutting down: {err:?}");
             break;
         }
     }
@@ -306,6 +335,7 @@ where
 
 async fn handle_message<WsMessage, GraphqlClient>(
     msg: Result<WsMessage, WsMessage::Error>,
+    sender: &mut mpsc::Sender<WsMessage>,
     operations: &OperationMap<GraphqlClient::Response>,
 ) -> Result<(), Error>
 where
@@ -322,13 +352,17 @@ where
         None => return Ok(()),
     };
 
-    let id = &Uuid::parse_str(event.id()).map_err(|err| Error::Decode(err.to_string()))?;
+    let id = match event.id() {
+        Some(id) => Some(Uuid::parse_str(id).map_err(|err| Error::Decode(err.to_string()))?),
+        None => None,
+    };
+
     match event {
         Event::Next { payload, .. } => {
             let mut sink = operations
                 .lock()
                 .await
-                .get(id)
+                .get(id.as_ref().expect("id for next event"))
                 .ok_or_else(|| {
                     Error::Decode("Received message for unknown subscription".to_owned())
                 })?
@@ -340,12 +374,19 @@ where
         }
         Event::Complete { .. } => {
             trace!("Stream complete");
-            operations.lock().await.remove(id);
+            operations
+                .lock()
+                .await
+                .remove(id.as_ref().expect("id for complete event"));
         }
         Event::Error { payload, .. } => {
-            let mut sink = operations.lock().await.remove(id).ok_or_else(|| {
-                Error::Decode("Received error for unknown subscription".to_owned())
-            })?;
+            let mut sink = operations
+                .lock()
+                .await
+                .remove(id.as_ref().expect("id for error event"))
+                .ok_or_else(|| {
+                    Error::Decode("Received error for unknown subscription".to_owned())
+                })?;
 
             sink.send(
                 GraphqlClient::error_response(payload)
@@ -354,6 +395,18 @@ where
             .await
             .map_err(|err| Error::Send(err.to_string()))?;
         }
+        Event::ConnectionAck { .. } => {
+            return Err(Error::Decode("unexpected connection_ack".to_string()))
+        }
+        Event::Ping { .. } => {
+            let msg =
+                json_message(Message::<()>::Pong).map_err(|err| Error::Send(err.to_string()))?;
+            sender
+                .send(msg)
+                .await
+                .map_err(|err| Error::Send(err.to_string()))?;
+        }
+        Event::Pong { .. } => {}
     }
 
     Ok(())
