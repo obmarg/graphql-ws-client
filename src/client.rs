@@ -324,6 +324,8 @@ where
             handle_message::<WsMessage, GraphqlClient>(msg, &mut sender, &operations).await
         {
             trace!("message handler error, shutting down: {err:?}");
+            #[cfg(feature = "no-logging")]
+            let _ = err;
             break;
         }
     }
