@@ -32,37 +32,6 @@ where
     }
 }
 
-pub struct ConnectionAck<Payload = ()> {
-    pub payload: Option<Payload>,
-}
-
-impl<'de, Payload> serde::Deserialize<'de> for ConnectionAck<Payload>
-where
-    Payload: serde::Deserialize<'de>,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        #[derive(serde::Deserialize)]
-        struct ConnectionAckMessage<Payload> {
-            r#type: String,
-            payload: Option<Payload>,
-        }
-        let message = ConnectionAckMessage::deserialize(deserializer)?;
-        if message.r#type != "connection_ack" {
-            return Err(serde::de::Error::custom(format!(
-                "expected a connection_ack message, got a {}",
-                message.r#type
-            )));
-        }
-
-        Ok(ConnectionAck {
-            payload: message.payload,
-        })
-    }
-}
-
 #[derive(serde::Serialize)]
 #[serde(tag = "type")]
 pub enum Message<'a, Operation> {
@@ -71,6 +40,8 @@ pub enum Message<'a, Operation> {
     #[serde(rename = "complete")]
     #[allow(dead_code)]
     Complete { id: String },
+    #[serde(rename = "pong")]
+    Pong,
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -85,14 +56,32 @@ pub enum Event<Response> {
     },
     #[serde(rename = "complete")]
     Complete { id: String },
+    #[serde(rename = "connection_ack")]
+    ConnectionAck { payload: Option<serde_json::Value> },
+    #[serde(rename = "ping")]
+    Ping { payload: Option<serde_json::Value> },
+    #[serde(rename = "pong")]
+    Pong { payload: Option<serde_json::Value> },
 }
 
 impl<Response> Event<Response> {
-    pub fn id(&self) -> &str {
+    pub fn id(&self) -> Option<&str> {
         match self {
-            Event::Next { id, .. } => id.as_ref(),
-            Event::Complete { id, .. } => id.as_ref(),
-            Event::Error { id, .. } => id.as_ref(),
+            Event::Next { id, .. } => Some(id.as_ref()),
+            Event::Complete { id, .. } => Some(id.as_ref()),
+            Event::Error { id, .. } => Some(id.as_ref()),
+            Event::Ping { .. } | Event::Pong { .. } | Event::ConnectionAck { .. } => None,
+        }
+    }
+
+    pub fn r#type(&self) -> &'static str {
+        match self {
+            Event::Next { .. } => "next",
+            Event::Complete { .. } => "complete",
+            Event::Error { .. } => "error",
+            Event::Ping { .. } => "ping",
+            Event::Pong { .. } => "pong",
+            Event::ConnectionAck { .. } => "connection_ack",
         }
     }
 }
