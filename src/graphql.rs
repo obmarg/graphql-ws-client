@@ -120,6 +120,7 @@ mod graphql_client {
                         .map(serde_json::from_value)
                         .collect::<Result<Vec<_>, _>>()?,
                 ),
+                extensions: None,
             })
         }
     }
@@ -147,11 +148,13 @@ mod graphql_client {
                 Ok(::graphql_client::Response {
                     data: Some(serde_json::from_value(data)?),
                     errors: response.errors,
+                    extensions: response.extensions,
                 })
             } else {
                 Ok(::graphql_client::Response {
                     data: None,
                     errors: response.errors,
+                    extensions: response.extensions,
                 })
             }
         }
