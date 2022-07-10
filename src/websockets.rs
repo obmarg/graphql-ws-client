@@ -1,7 +1,5 @@
 //! Contains traits to provide support for various underlying websocket clients.
 
-use std::borrow::Cow;
-
 /// An abstraction around WebsocketMessages
 ///
 /// graphql-ws-client doesn't implement the websocket protocol itself.
@@ -17,7 +15,7 @@ pub trait WebsocketMessage: std::fmt::Debug {
     fn text(&self) -> Option<&str>;
 
     /// Returns the text (if there is any) of the error
-    fn error_message(&self) -> Option<Cow<str>>;
+    fn error_message(&self) -> Option<String>;
 
     /// Returns true if this message is a websocket ping.
     fn is_ping(&self) -> bool;
@@ -44,10 +42,10 @@ impl WebsocketMessage for async_tungstenite::tungstenite::Message {
         }
     }
 
-    fn error_message(&self) -> Option<Cow<str>> {
+    fn error_message(&self) -> Option<String> {
         match self {
             async_tungstenite::tungstenite::Message::Close(Some(frame)) => {
-                Some(frame.reason.clone())
+                Some(frame.reason.to_string())
             }
             _ => None,
         }
