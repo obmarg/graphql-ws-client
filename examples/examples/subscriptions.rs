@@ -39,9 +39,6 @@ async fn main() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
     use graphql_ws_client::CynicClientBuilder;
-    use log::info;
-
-    pretty_env_logger::init();
 
     let (sink, stream) = {
         let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
@@ -55,7 +52,7 @@ async fn main() {
         connection.split()
     };
 
-    info!("Connected");
+    println!("Connected");
 
     let mut client = CynicClientBuilder::new()
         .build(stream, sink, async_executors::AsyncStd)
@@ -63,9 +60,9 @@ async fn main() {
         .unwrap();
 
     let mut stream = client.streaming_operation(build_query()).await.unwrap();
-    info!("Running subscription");
+    println!("Running subscription");
     while let Some(item) = stream.next().await {
-        info!("{:?}", item);
+        println!("{:?}", item);
     }
 }
 
