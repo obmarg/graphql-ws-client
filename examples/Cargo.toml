@@ -6,28 +6,17 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[features]
-default = ["async-tungstenite"]
-async-tungstenite = ["graphql-ws-client/async-tungstenite", "dep:async-tungstenite", "tokio", "pretty_env_logger"]
-ws_stream_wasm = ["dep:ws_stream_wasm", "graphql-ws-client/ws_stream_wasm", "wasm-bindgen", "console_log"]
-
 [dependencies]
-graphql-ws-client = { path = "../", default-features = false, features = ["cynic"] }
+graphql-ws-client = { path = "../", default-features = false, features = ["cynic", "async-tungstenite"] }
 async-std = { version = "1.9", features = ["attributes"] }
 async_executors = { version = "0.5", features = ["async_std"] }
 cynic = { version = "1.0" }
 futures = { version = "0.3"}
 log = "0.4"
 
-# native
-async-tungstenite = { version = "0.17", optional = true, features = ["async-std-runtime", "tokio-runtime"] }
-tokio = { version = "1.15", optional = true, features = ["rt-multi-thread", "macros"] }
-pretty_env_logger = { version = "0.4", optional = true }
-
-# wasm
-ws_stream_wasm = { version = "0.7", optional = true }
-wasm-bindgen = { version = "0.2", optional = true, default-features = false }
-console_log = { version = "0.2", optional = true }
+async-tungstenite = { version = "0.17", features = ["async-std-runtime", "tokio-runtime"] }
+tokio = { version = "1.15", features = ["rt-multi-thread", "macros"] }
+pretty_env_logger = "0.4"
 
 [dev-dependencies]
 insta = "1.11"

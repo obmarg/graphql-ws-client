@@ -36,22 +36,13 @@ struct BooksChangedSubscription {
 
 #[async_std::main]
 async fn main() {
-    #[cfg(not(target_arch = "wasm32"))]
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
-    #[cfg(target_arch = "wasm32")]
-    use wasm_bindgen::UnwrapThrowExt;
-
     use futures::StreamExt;
     use graphql_ws_client::CynicClientBuilder;
     use log::info;
 
-    #[cfg(target_arch = "wasm32")]
-    console_log::init_with_level(log::Level::Info).expect("init logging");
-
-    #[cfg(not(target_arch = "wasm32"))]
     pretty_env_logger::init();
 
-    #[cfg(not(target_arch = "wasm32"))]
     let (sink, stream) = {
         let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
         request.headers_mut().insert(
@@ -62,17 +53,6 @@ async fn main() {
             .await
             .unwrap();
         connection.split()
-    };
-
-    #[cfg(target_arch = "wasm32")]
-    let (sink, stream) = {
-        let (ws, wsio) = ws_stream_wasm::WsMeta::connect(
-            "ws://localhost:8000/graphql",
-            Some(vec!["graphql-transport-ws"]),
-        )
-        .await
-        .expect_throw("assume the connection succeeds");
-        graphql_ws_client::wasm_websocket_combined_split(ws, wsio).await
     };
 
     info!("Connected");
