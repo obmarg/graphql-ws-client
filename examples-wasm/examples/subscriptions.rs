@@ -43,17 +43,16 @@ async fn main() {
 
     console_log::init_with_level(log::Level::Info).expect("init logging");
 
-    let (sink, stream) = {
-        let (ws, wsio) = ws_stream_wasm::WsMeta::connect(
-            "ws://localhost:8000/graphql",
-            Some(vec!["graphql-transport-ws"]),
-        )
-        .await
-        .expect_throw("assume the connection succeeds");
-        graphql_ws_client::wasm_websocket_combined_split(ws, wsio).await
-    };
+    let (ws, wsio) = ws_stream_wasm::WsMeta::connect(
+        "ws://localhost:8000/graphql",
+        Some(vec!["graphql-transport-ws"]),
+    )
+    .await
+    .expect_throw("assume the connection succeeds");
 
     info!("Connected");
+
+    let (sink, stream) = graphql_ws_client::wasm_websocket_combined_split(ws, wsio).await;
 
     let mut client = CynicClientBuilder::new()
         .build(stream, sink, async_executors::AsyncStd)

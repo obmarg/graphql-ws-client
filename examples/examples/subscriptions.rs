@@ -40,19 +40,19 @@ async fn main() {
     use futures::StreamExt;
     use graphql_ws_client::CynicClientBuilder;
 
-    let (sink, stream) = {
-        let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
-        request.headers_mut().insert(
-            "Sec-WebSocket-Protocol",
-            HeaderValue::from_str("graphql-transport-ws").unwrap(),
-        );
-        let (connection, _) = async_tungstenite::async_std::connect_async(request)
-            .await
-            .unwrap();
-        connection.split()
-    };
+    let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
+    request.headers_mut().insert(
+        "Sec-WebSocket-Protocol",
+        HeaderValue::from_str("graphql-transport-ws").unwrap(),
+    );
+
+    let (connection, _) = async_tungstenite::async_std::connect_async(request)
+        .await
+        .unwrap();
 
     println!("Connected");
+
+    let (sink, stream) = connection.split();
 
     let mut client = CynicClientBuilder::new()
         .build(stream, sink, async_executors::AsyncStd)
