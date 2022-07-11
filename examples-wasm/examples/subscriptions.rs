@@ -1,5 +1,5 @@
 //! An example of using subscriptions with `graphql-ws-client` and
-//! `async-tungstenite`
+//! `ws_stream_wasm`
 //!
 //! Talks to the the tide subscription example in `async-graphql`
 
@@ -36,23 +36,23 @@ struct BooksChangedSubscription {
 
 #[async_std::main]
 async fn main() {
-    use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
     use graphql_ws_client::CynicClientBuilder;
+    use log::info;
+    use wasm_bindgen::UnwrapThrowExt;
 
-    let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
-    request.headers_mut().insert(
-        "Sec-WebSocket-Protocol",
-        HeaderValue::from_str("graphql-transport-ws").unwrap(),
-    );
+    console_log::init_with_level(log::Level::Info).expect("init logging");
 
-    let (connection, _) = async_tungstenite::async_std::connect_async(request)
-        .await
-        .unwrap();
+    let (ws, wsio) = ws_stream_wasm::WsMeta::connect(
+        "ws://localhost:8000/graphql",
+        Some(vec!["graphql-transport-ws"]),
+    )
+    .await
+    .expect_throw("assume the connection succeeds");
 
-    println!("Connected");
+    info!("Connected");
 
-    let (sink, stream) = connection.split();
+    let (sink, stream) = graphql_ws_client::wasm_websocket_combined_split(ws, wsio).await;
 
     let mut client = CynicClientBuilder::new()
         .build(stream, sink, async_executors::AsyncStd)
@@ -60,9 +60,9 @@ async fn main() {
         .unwrap();
 
     let mut stream = client.streaming_operation(build_query()).await.unwrap();
-    println!("Running subscription");
+    info!("Running subscription");
     while let Some(item) = stream.next().await {
-        println!("{:?}", item);
+        info!("{:?}", item);
     }
 }
 

@@ -15,7 +15,7 @@ pub trait WebsocketMessage: std::fmt::Debug {
     fn text(&self) -> Option<&str>;
 
     /// Returns the text (if there is any) of the error
-    fn error_message(&self) -> Option<&str>;
+    fn error_message(&self) -> Option<String>;
 
     /// Returns true if this message is a websocket ping.
     fn is_ping(&self) -> bool;
@@ -25,39 +25,4 @@ pub trait WebsocketMessage: std::fmt::Debug {
 
     /// Returns true if this message is a websocket close.
     fn is_close(&self) -> bool;
-}
-
-#[cfg(feature = "async-tungstenite")]
-impl WebsocketMessage for async_tungstenite::tungstenite::Message {
-    type Error = async_tungstenite::tungstenite::Error;
-
-    fn new(text: String) -> Self {
-        async_tungstenite::tungstenite::Message::Text(text)
-    }
-
-    fn text(&self) -> Option<&str> {
-        match self {
-            async_tungstenite::tungstenite::Message::Text(text) => Some(text.as_ref()),
-            _ => None,
-        }
-    }
-
-    fn error_message(&self) -> Option<&str> {
-        match self {
-            async_tungstenite::tungstenite::Message::Close(Some(frame)) => Some(&frame.reason),
-            _ => None,
-        }
-    }
-
-    fn is_ping(&self) -> bool {
-        matches!(self, async_tungstenite::tungstenite::Message::Ping(_))
-    }
-
-    fn is_pong(&self) -> bool {
-        matches!(self, async_tungstenite::tungstenite::Message::Pong(_))
-    }
-
-    fn is_close(&self) -> bool {
-        matches!(self, async_tungstenite::tungstenite::Message::Close(_))
-    }
 }
