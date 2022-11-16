@@ -481,9 +481,7 @@ fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
     if message.is_ping() || message.is_pong() {
         Ok(None)
     } else if message.is_close() {
-        Err(Error::Close(
-            message.error_message().unwrap_or(String::new()).to_owned(),
-        ))
+        Err(Error::Close(message.error_message().unwrap_or_default()))
     } else if let Some(s) = message.text() {
         trace!("Decoding message: {}", s);
         Ok(Some(
