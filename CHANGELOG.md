@@ -11,6 +11,19 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+### New Features
+
+- Added support for wasm with the `ws_stream_wasm` library.
+
+### Changes
+
+- Updated some dependency versions
+
+### Bug Fixes
+
+- `graphql-ws-client` will no longer panic when it receives a `Ping` event.
+- The `AsyncWebsocketClientBuilder` type is now `Send`.
+
 ## v0.2.0 - 2022-01-27
 
 ### Breaking Changes
