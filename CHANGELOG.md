@@ -11,6 +11,8 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+## v0.3.0 - 2022-12-26
+
 ### New Features
 
 - Added support for wasm with the `ws_stream_wasm` library.
