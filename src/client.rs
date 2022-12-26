@@ -65,7 +65,7 @@ where
     GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
 {
     payload: Option<Payload>,
-    phantom: PhantomData<*const GraphqlClient>,
+    phantom: PhantomData<fn() -> GraphqlClient>,
 }
 
 impl<GraphqlClient, Payload> AsyncWebsocketClientBuilder<GraphqlClient, Payload>
