@@ -11,6 +11,7 @@ mod schema {
 
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(schema_path = "../schemas/books.graphql", graphql_type = "Book")]
+#[allow(dead_code)]
 struct Book {
     id: String,
     name: String,
@@ -19,6 +20,7 @@ struct Book {
 
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(schema_path = "../schemas/books.graphql", graphql_type = "BookChanged")]
+#[allow(dead_code)]
 struct BookChanged {
     id: cynic::Id,
     book: Option<Book>,
@@ -29,6 +31,7 @@ struct BookChanged {
     schema_path = "../schemas/books.graphql",
     graphql_type = "SubscriptionRoot"
 )]
+#[allow(dead_code)]
 struct BooksChangedSubscription {
     books: BookChanged,
 }
@@ -69,29 +72,4 @@ fn build_query() -> cynic::StreamingOperation<'static, BooksChangedSubscription>
     use cynic::SubscriptionBuilder;
 
     BooksChangedSubscription::build(())
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn snapshot_test_menu_query() {
-        // Running a snapshot test of the query building functionality as that gives us
-        // a place to copy and paste the actual GQL we're using for running elsewhere,
-        // and also helps ensure we don't change queries by mistake
-
-        let query = build_query();
-
-        insta::assert_snapshot!(query.query);
-    }
-
-    #[test]
-    fn test_running_query() {
-        let result = run_query();
-        if result.errors.is_some() {
-            assert_eq!(result.errors.unwrap().len(), 0);
-        }
-        insta::assert_debug_snapshot!(result.data);
-    }
 }
