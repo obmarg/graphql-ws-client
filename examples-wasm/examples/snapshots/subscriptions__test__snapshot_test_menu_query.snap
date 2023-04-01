@@ -1,0 +1,15 @@
+---
+source: examples-wasm/examples/subscriptions.rs
+expression: query.query()
+---
+subscription Subscription {
+  books {
+    id
+    book {
+      id
+      name
+      author
+    }
+  }
+}
+

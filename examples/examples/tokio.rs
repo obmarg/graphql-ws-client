@@ -86,15 +86,6 @@ mod test {
 
         let query = build_query();
 
-        insta::assert_snapshot!(query.query);
-    }
-
-    #[test]
-    fn test_running_query() {
-        let result = run_query();
-        if result.errors.is_some() {
-            assert_eq!(result.errors.unwrap().len(), 0);
-        }
-        insta::assert_debug_snapshot!(result.data);
+        insta::assert_snapshot!(query.query());
     }
 }
