@@ -71,19 +71,3 @@ fn build_query() -> cynic::StreamingOperation<'static, BooksChangedSubscription>
 
     BooksChangedSubscription::build(())
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn snapshot_test_menu_query() {
-        // Running a snapshot test of the query building functionality as that gives us
-        // a place to copy and paste the actual GQL we're using for running elsewhere,
-        // and also helps ensure we don't change queries by mistake
-
-        let query = build_query();
-
-        insta::assert_snapshot!(query.query());
-    }
-}
