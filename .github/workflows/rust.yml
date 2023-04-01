@@ -56,8 +56,10 @@ jobs:
       - name: Build examples
         uses: actions-rs/cargo@v1
         with:
-          command: build --examples
+          command: build 
+          args: --workspace --examples
       - name: Test examples
         uses: actions-rs/cargo@v1
         with:
-          command: test --examples
+          command: test 
+          args: --workspace --examples
