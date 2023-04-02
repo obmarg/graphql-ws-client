@@ -10,7 +10,7 @@ edition = "2018"
 graphql-ws-client = { path = "../", default-features = false, features = ["cynic", "async-tungstenite"] }
 async-std = { version = "1.9", features = ["attributes"] }
 async_executors = { version = "0.5", features = ["async_std"] }
-cynic = { version = "1.0" }
+cynic = { version = "2.2" }
 futures = { version = "0.3"}
 
 async-tungstenite = { version = "0.20", features = ["async-std-runtime", "tokio-runtime"] }
