@@ -68,7 +68,7 @@ async fn main() {
     }
 }
 
-fn build_query() -> cynic::StreamingOperation<'static, BooksChangedSubscription> {
+fn build_query() -> cynic::StreamingOperation<BooksChangedSubscription> {
     use cynic::SubscriptionBuilder;
 
     BooksChangedSubscription::build(())

@@ -10,7 +10,7 @@ edition = "2018"
 graphql-ws-client = { path = "../", default-features = false, features = ["cynic", "ws_stream_wasm"] }
 async-std = { version = "1.9", features = ["attributes"] }
 async_executors = { version = "0.5", features = ["async_std"] }
-cynic = { version = "1.0" }
+cynic = { version = "2.2" }
 futures = { version = "0.3"}
 log = "0.4"
 

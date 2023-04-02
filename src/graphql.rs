@@ -73,18 +73,24 @@ mod cynic {
         }
     }
 
-    impl<'a, ResponseData> GraphqlOperation for ::cynic::StreamingOperation<'a, ResponseData>
+    impl<ResponseData> GraphqlOperation for ::cynic::StreamingOperation<ResponseData>
     where
-        ResponseData: 'a,
+        ResponseData: serde::de::DeserializeOwned,
     {
         type GenericResponse = ::cynic::GraphQlResponse<serde_json::Value>;
 
         type Response = ::cynic::GraphQlResponse<ResponseData>;
 
-        type Error = ::cynic::DecodeError;
+        type Error = serde_json::Error;
 
-        fn decode(&self, data: Self::GenericResponse) -> Result<Self::Response, Self::Error> {
-            self.decode_response(data)
+        fn decode(&self, response: Self::GenericResponse) -> Result<Self::Response, Self::Error> {
+            Ok(::cynic::GraphQlResponse {
+                data: response
+                    .data
+                    .map(|data| serde_json::from_value(data))
+                    .transpose()?,
+                errors: response.errors,
+            })
         }
     }
 }
