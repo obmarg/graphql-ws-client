@@ -11,6 +11,8 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+## v0.4.0 - 2023-04-02
+
 ### Breaking Changes
 
 - `cynic` dependency has been updated to 2.2
