@@ -52,13 +52,19 @@ pub struct BookChanged {
     pub id: ID,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug, async_graphql::Enum)]
+enum MutationType {
+    Created,
+    Deleted,
+}
+
 pub struct SubscriptionRoot {
     channel: Sender<BookChanged>,
 }
 
 #[Subscription]
 impl SubscriptionRoot {
-    async fn books(&self) -> impl Stream<Item = BookChanged> {
+    async fn books(&self, _mutation_type: MutationType) -> impl Stream<Item = BookChanged> {
         println!("Subscription received");
         BroadcastStream::new(self.channel.subscribe()).filter_map(|r| async move { r.ok() })
     }

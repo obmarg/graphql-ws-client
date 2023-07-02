@@ -12,7 +12,7 @@ mod schema {
 }
 
 #[derive(cynic::QueryFragment, Debug, Clone)]
-#[cynic(schema_path = "schemas/books.graphql", graphql_type = "Book")]
+#[cynic(schema_path = "schemas/books.graphql")]
 #[allow(dead_code)]
 struct Book {
     id: String,
@@ -21,20 +21,34 @@ struct Book {
 }
 
 #[derive(cynic::QueryFragment, Debug, Clone)]
-#[cynic(schema_path = "schemas/books.graphql", graphql_type = "BookChanged")]
+#[cynic(schema_path = "schemas/books.graphql")]
 #[allow(dead_code)]
 struct BookChanged {
     id: cynic::Id,
     book: Option<Book>,
 }
 
+#[derive(cynic::QueryVariables)]
+struct BooksChangedVariables {
+    mutation_type: MutationType,
+}
+
+#[derive(cynic::Enum)]
+#[cynic(schema_path = "schemas/books.graphql")]
+enum MutationType {
+    Created,
+    Deleted,
+}
+
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(
     schema_path = "schemas/books.graphql",
-    graphql_type = "SubscriptionRoot"
+    graphql_type = "SubscriptionRoot",
+    variables = "BooksChangedVariables"
 )]
 #[allow(dead_code)]
 struct BooksChangedSubscription {
+    #[arguments(mutationType: $mutation_type)]
     books: BookChanged,
 }
 
@@ -107,10 +121,12 @@ async fn main() {
     );
 }
 
-fn build_query() -> cynic::StreamingOperation<BooksChangedSubscription> {
+fn build_query() -> cynic::StreamingOperation<BooksChangedSubscription, BooksChangedVariables> {
     use cynic::SubscriptionBuilder;
 
-    BooksChangedSubscription::build(())
+    BooksChangedSubscription::build(BooksChangedVariables {
+        mutation_type: MutationType::Created,
+    })
 }
 
 impl PartialEq<subscription_server::Book> for Book {
