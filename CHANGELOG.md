@@ -11,6 +11,16 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+### Breaking Changes
+
+- `cynic` dependency has been updated to 3
+- `graphql_client` dependency has been updated to 0.13
+- `async_tungstenite` dependency has been updated to 0.22
+
+### Bug Fixes
+
+- Updated the cynic code to support operations with variables.
+
 ## v0.4.0 - 2023-04-02
 
 ### Breaking Changes
