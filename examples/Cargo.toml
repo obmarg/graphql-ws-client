@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 async-std = { version = "1.9", features = ["attributes"] }
 async_executors = { version = "0.5", features = ["async_std"] }
-cynic = { version = "2.2" }
+cynic = { version = "3" }
 futures = { version = "0.3"}
 
 async-tungstenite = { version = "0.20", features = ["async-std-runtime", "tokio-runtime"] }
