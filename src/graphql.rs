@@ -73,9 +73,11 @@ mod cynic {
         }
     }
 
-    impl<ResponseData> GraphqlOperation for ::cynic::StreamingOperation<ResponseData>
+    impl<ResponseData, Variables> GraphqlOperation
+        for ::cynic::StreamingOperation<ResponseData, Variables>
     where
         ResponseData: serde::de::DeserializeOwned,
+        Variables: serde::Serialize,
     {
         type GenericResponse = ::cynic::GraphQlResponse<serde_json::Value>;
 
