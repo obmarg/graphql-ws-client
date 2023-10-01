@@ -53,7 +53,7 @@ struct BooksChangedSubscription {
 }
 
 #[tokio::test]
-async fn main() {
+async fn main_test() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
     use graphql_ws_client::CynicClientBuilder;
