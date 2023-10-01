@@ -11,7 +11,7 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
-## v0.6.0 - 2023-07-13
+## v0.6.0 - 2023-10-01
 
 ### Breaking Changes
 
