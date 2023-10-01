@@ -11,6 +11,12 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+## v0.6.0 - 2023-07-13
+
+### Breaking Changes
+
+- `async_tungstenite` dependency has been updated to 0.23, pulling in a tungstenite security fix
+
 ## v0.5.0 - 2023-07-13
 
 ### Breaking Changes
@@ -54,12 +60,12 @@ all APIs might be changed.
 
 ### Breaking Changes
 
-- Clients are now created through builder types rather than directly.  See the
+- Clients are now created through builder types rather than directly. See the
   `AsyncWebsocketClientBuilder` type (or it's `CynicClientBuilder` alias)
 - `cynic` support is now behind the `client-cynic` feature.
 - It's now recommended to use a custom impl of `futures::task::Spawn` for tokio
   rather than the `async_executors` crate, as `async_executors` is not
-  compatible with `#[tokio::main]`.  An example impl is provided for `tokio` in
+  compatible with `#[tokio::main]`. An example impl is provided for `tokio` in
   the examples folder.
 
 ### New Features
@@ -70,7 +76,7 @@ all APIs might be changed.
   a `Stream` but also exposes a `stop_operation` function that can be used to
   tell the server to end the stream.
 - `cynic` no longer requires the use of `async_executors` - it now only
-  requires an `impl futures::task::Spawn`.  An example is included for tokio.
+  requires an `impl futures::task::Spawn`. An example is included for tokio.
   Old code using the `AsyncStd` executor should continue to work but tokio
   users are encouraged to provide their own using the example.
 
