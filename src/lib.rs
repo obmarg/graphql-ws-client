@@ -36,8 +36,6 @@ pub use wasm::*;
 
 #[cfg(feature = "async-tungstenite")]
 mod native;
-#[cfg(feature = "async-tungstenite")]
-pub use native::*;
 
 pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error, SubscriptionStream};
 
