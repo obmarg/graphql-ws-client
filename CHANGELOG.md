@@ -11,6 +11,10 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+### Breaking Changes
+
+- `async_tungstenite` dependency has been updated to 0.24
+
 ## v0.6.0 - 2023-10-01
 
 ### Breaking Changes
