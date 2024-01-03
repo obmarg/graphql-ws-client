@@ -10,6 +10,7 @@ license = "Apache-2.0"
 autoexamples = false
 documentation = "https://docs.rs/graphql-ws-client"
 readme = "README.md"
+repository = "https://github.com/obmarg/graphql-ws-client"
 
 [workspace]
 members = ["examples", "examples-wasm"]
