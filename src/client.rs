@@ -1,7 +1,7 @@
 use std::{collections::HashMap, marker::PhantomData, pin::Pin, sync::Arc};
 
 use futures::{
-    channel::{mpsc, oneshot},
+    channel::mpsc,
     future::RemoteHandle,
     lock::Mutex,
     sink::{Sink, SinkExt},
@@ -133,15 +133,14 @@ where
 
         let (mut sender_sink, sender_stream) = mpsc::channel(1);
 
-        let (shutdown_sender, shutdown_receiver) = oneshot::channel();
-
         let sender_handle = runtime
-            .spawn_with_handle(sender_loop(
-                sender_stream,
-                websocket_sink,
-                Arc::clone(&operations),
-                shutdown_receiver,
-            ))
+            .spawn_with_handle(async move {
+                sender_stream
+                    .map(Ok)
+                    .forward(websocket_sink)
+                    .await
+                    .map_err(|error| Error::Send(error.to_string()))
+            })
             .map_err(|err| Error::SpawnHandle(err.to_string()))?;
 
         // wait for ack before entering receiver loop:
@@ -185,7 +184,6 @@ where
                 websocket_stream,
                 sender_sink.clone(),
                 Arc::clone(&operations),
-                shutdown_sender,
             ))
             .map_err(|err| Error::SpawnHandle(err.to_string()))?;
 
@@ -311,7 +309,6 @@ async fn receiver_loop<S, WsMessage, GraphqlClient>(
     mut receiver: S,
     mut sender: mpsc::Sender<WsMessage>,
     operations: OperationMap<GraphqlClient::Response>,
-    shutdown: oneshot::Sender<()>,
 ) -> Result<(), Error>
 where
     S: Stream<Item = Result<WsMessage, WsMessage::Error>> + Unpin,
@@ -330,9 +327,10 @@ where
         }
     }
 
-    shutdown
-        .send(())
-        .map_err(|_| Error::SenderShutdown("Couldn't shutdown sender".to_owned()))
+    // Clear out any operations
+    operations.lock().await.clear();
+
+    Ok(())
 }
 
 async fn handle_message<WsMessage, GraphqlClient>(
@@ -412,50 +410,6 @@ where
     }
 
     Ok(())
-}
-
-async fn sender_loop<M, S, E, GenericResponse>(
-    message_stream: mpsc::Receiver<M>,
-    mut ws_sender: S,
-    operations: OperationMap<GenericResponse>,
-    shutdown: oneshot::Receiver<()>,
-) -> Result<(), Error>
-where
-    M: WebsocketMessage,
-    S: Sink<M, Error = E> + Unpin,
-    E: std::error::Error,
-{
-    use futures::{future::FutureExt, select};
-
-    let mut message_stream = message_stream.fuse();
-    let mut shutdown = shutdown.fuse();
-
-    loop {
-        select! {
-            msg = message_stream.next() => {
-                if let Some(msg) = msg {
-                    trace!("Sending message: {:?}", msg);
-                    ws_sender
-                        .send(msg)
-                        .await
-                        .map_err(|err| Error::Send(err.to_string()))?;
-                } else {
-                    return Ok(());
-                }
-            }
-            _ = shutdown => {
-                // Shutdown the incoming message stream
-                let mut message_stream = message_stream.into_inner();
-                message_stream.close();
-                while message_stream.next().await.is_some() {}
-
-                // Clear out any operations
-                operations.lock().await.clear();
-
-                return Ok(());
-            }
-        }
-    }
 }
 
 struct ClientInner<GraphqlClient>
