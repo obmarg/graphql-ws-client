@@ -11,6 +11,12 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+### Breaking Changes
+
+- Subscription IDs sent to the server are now just monotonic numbers rather
+  than uuids.
+- `SubscriptionStream` no longer takes `GraphqlClient` as a generic parameter
+
 ## v0.7.0 - 2024-01-03
 
 ### Breaking Changes
