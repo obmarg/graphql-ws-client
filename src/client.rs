@@ -216,7 +216,7 @@ where
     pub async fn streaming_operation<'a, Operation>(
         &mut self,
         op: Operation,
-    ) -> Result<SubscriptionStream<GraphqlClient, Operation>, Error>
+    ) -> Result<SubscriptionStream<Operation>, Error>
     where
         Operation:
             GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin + Send + 'static,
@@ -240,7 +240,7 @@ where
         let mut sender_clone = self.sender_sink.clone();
         let id_clone = id.to_string();
 
-        Ok(SubscriptionStream::<GraphqlClient, Operation> {
+        Ok(SubscriptionStream::<Operation> {
             id: id.to_string(),
             stream: Box::pin(receiver.map(move |response| {
                 op.decode(response)
@@ -258,7 +258,6 @@ where
                     Ok(())
                 })
             }),
-            phantom: PhantomData,
         })
     }
 }
@@ -267,21 +266,18 @@ where
 ///
 /// Emits an item for each message received by the subscription.
 #[pin_project::pin_project]
-pub struct SubscriptionStream<GraphqlClient, Operation>
+pub struct SubscriptionStream<Operation>
 where
-    GraphqlClient: graphql::GraphqlClient,
-    Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response>,
+    Operation: GraphqlOperation,
 {
     id: String,
     stream: Pin<Box<dyn Stream<Item = Result<Operation::Response, Error>> + Send>>,
     cancel_func: Box<dyn FnOnce() -> futures::future::BoxFuture<'static, Result<(), Error>> + Send>,
-    phantom: PhantomData<GraphqlClient>,
 }
 
-impl<GraphqlClient, Operation> SubscriptionStream<GraphqlClient, Operation>
+impl<Operation> SubscriptionStream<Operation>
 where
-    GraphqlClient: graphql::GraphqlClient + Send,
-    Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Send,
+    Operation: GraphqlOperation + Send,
 {
     /// Stops the operation by sending a Complete message to the server.
     pub async fn stop_operation(self) -> Result<(), Error> {
@@ -289,10 +285,9 @@ where
     }
 }
 
-impl<GraphqlClient, Operation> Stream for SubscriptionStream<GraphqlClient, Operation>
+impl<Operation> Stream for SubscriptionStream<Operation>
 where
-    GraphqlClient: graphql::GraphqlClient,
-    Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin,
+    Operation: GraphqlOperation + Unpin,
 {
     type Item = Result<Operation::Response, Error>;
 
