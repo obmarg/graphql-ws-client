@@ -21,7 +21,7 @@ members = ["examples", "examples-wasm"]
 default = ["async-tungstenite"]
 client-cynic = ["async-tungstenite", "cynic"]
 client-graphql-client = ["async-tungstenite", "graphql_client"]
-ws_stream_wasm = ["dep:ws_stream_wasm", "uuid/js", "no-logging", "pharos", "pin-project-lite"]
+ws_stream_wasm = ["dep:ws_stream_wasm", "no-logging", "pharos", "pin-project-lite"]
 no-logging = []
 
 [dependencies]
@@ -31,7 +31,6 @@ pin-project = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
-uuid = { version = "1.0", features = ["v4"] }
 
 cynic = { version = "3", optional = true }
 async-tungstenite = { version = "0.24", optional = true }

@@ -1,4 +1,12 @@
-use std::{collections::HashMap, marker::PhantomData, pin::Pin, sync::Arc};
+use std::{
+    collections::HashMap,
+    marker::PhantomData,
+    pin::Pin,
+    sync::{
+        atomic::{self, AtomicU64},
+        Arc,
+    },
+};
 
 use futures::{
     channel::mpsc,
@@ -9,7 +17,6 @@ use futures::{
     task::{Context, Poll, SpawnExt},
 };
 use serde::Serialize;
-use uuid::Uuid;
 
 use super::{
     graphql::{self, GraphqlOperation},
@@ -27,6 +34,7 @@ where
 {
     inner: Arc<ClientInner<GraphqlClient>>,
     sender_sink: mpsc::Sender<WsMessage>,
+    next_id: AtomicU64,
     phantom: PhantomData<GraphqlClient>,
 }
 
@@ -193,6 +201,7 @@ where
                 operations,
                 sender_handle,
             }),
+            next_id: 0.into(),
             sender_sink,
             phantom: PhantomData,
         })
@@ -221,7 +230,7 @@ where
         Operation:
             GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin + Send + 'static,
     {
-        let id = Uuid::new_v4();
+        let id = self.next_id.fetch_add(1, atomic::Ordering::Relaxed);
         let (sender, receiver) = mpsc::channel(SUBSCRIPTION_BUFFER_SIZE);
 
         self.inner.operations.lock().await.insert(id, sender);
@@ -298,7 +307,7 @@ where
 
 type OperationSender<GenericResponse> = mpsc::Sender<GenericResponse>;
 
-type OperationMap<GenericResponse> = Arc<Mutex<HashMap<Uuid, OperationSender<GenericResponse>>>>;
+type OperationMap<GenericResponse> = Arc<Mutex<HashMap<u64, OperationSender<GenericResponse>>>>;
 
 async fn receiver_loop<S, WsMessage, GraphqlClient>(
     mut receiver: S,
@@ -348,7 +357,10 @@ where
     };
 
     let id = match event.id() {
-        Some(id) => Some(Uuid::parse_str(id).map_err(|err| Error::Decode(err.to_string()))?),
+        Some(id) => Some(
+            id.parse::<u64>()
+                .map_err(|err| Error::Decode(err.to_string()))?,
+        ),
         None => None,
     };
 
