@@ -25,13 +25,6 @@ pub trait GraphqlClient {
 
 /// An abstraction over GraphQL operations.
 pub trait GraphqlOperation: serde::Serialize {
-    /// The "generic" response type.  A graphql-ws-client supports running multiple
-    /// operations at a time.  This GenericResponse is what will intially be decoded -
-    /// with the `decode` function converting this into the actual operation response.
-    ///
-    /// This type needs to match up with [GraphqlClient::Response].
-    type GenericResponse;
-
     /// The actual response & error type of this operation.
     type Response;
 
@@ -40,38 +33,12 @@ pub trait GraphqlOperation: serde::Serialize {
 
     /// Decodes a `GenericResponse` into the actual response that will be returned
     /// to users for this operation.
-    fn decode(&self, data: Self::GenericResponse) -> Result<Self::Response, Self::Error>;
+    fn decode(&self, data: serde_json::Value) -> Result<Self::Response, Self::Error>;
 }
-
-#[cfg(feature = "cynic")]
-pub use self::cynic::Cynic;
 
 #[cfg(feature = "cynic")]
 mod cynic {
     use super::*;
-
-    /// Provides an implementation of [GraphqlClient] for the cynic GraphQL crate
-    pub struct Cynic {}
-
-    impl GraphqlClient for Cynic {
-        type Response = ::cynic::GraphQlResponse<serde_json::Value>;
-
-        type DecodeError = serde_json::Error;
-
-        fn error_response(
-            errors: Vec<serde_json::Value>,
-        ) -> Result<Self::Response, Self::DecodeError> {
-            Ok(::cynic::GraphQlResponse {
-                data: None,
-                errors: Some(
-                    errors
-                        .into_iter()
-                        .map(serde_json::from_value)
-                        .collect::<Result<Vec<_>, _>>()?,
-                ),
-            })
-        }
-    }
 
     impl<ResponseData, Variables> GraphqlOperation
         for ::cynic::StreamingOperation<ResponseData, Variables>
@@ -79,59 +46,24 @@ mod cynic {
         ResponseData: serde::de::DeserializeOwned,
         Variables: serde::Serialize,
     {
-        type GenericResponse = ::cynic::GraphQlResponse<serde_json::Value>;
-
         type Response = ::cynic::GraphQlResponse<ResponseData>;
 
         type Error = serde_json::Error;
 
-        fn decode(&self, response: Self::GenericResponse) -> Result<Self::Response, Self::Error> {
-            Ok(::cynic::GraphQlResponse {
-                data: response
-                    .data
-                    .map(|data| serde_json::from_value(data))
-                    .transpose()?,
-                errors: response.errors,
-            })
+        fn decode(&self, response: serde_json::Value) -> Result<Self::Response, Self::Error> {
+            serde_json::from_value(response)
         }
     }
 }
 
-#[cfg(feature = "graphql_client")]
-pub use self::graphql_client::GraphQLClient;
-
-#[cfg(feature = "graphql_client")]
+#[cfg(feature = "client-graphql-client")]
 pub use self::graphql_client::StreamingOperation;
 
-#[cfg(feature = "graphql_client")]
+#[cfg(feature = "client-graphql-client")]
 mod graphql_client {
     use super::*;
     use ::graphql_client::{GraphQLQuery, QueryBody, Response};
     use std::marker::PhantomData;
-
-    /// Provides an implementation of [GraphqlClient] for the graphql_client GraphQL crate
-    pub struct GraphQLClient {}
-
-    impl GraphqlClient for GraphQLClient {
-        type Response = Response<serde_json::Value>;
-
-        type DecodeError = serde_json::Error;
-
-        fn error_response(
-            errors: Vec<serde_json::Value>,
-        ) -> Result<Self::Response, Self::DecodeError> {
-            Ok(Response {
-                data: None,
-                errors: Some(
-                    errors
-                        .into_iter()
-                        .map(serde_json::from_value)
-                        .collect::<Result<Vec<_>, _>>()?,
-                ),
-                extensions: None,
-            })
-        }
-    }
 
     /// A streaming operation for a GraphQLQuery
     pub struct StreamingOperation<Q: GraphQLQuery> {
@@ -144,26 +76,7 @@ mod graphql_client {
         pub fn new(variables: Q::Variables) -> Self {
             Self {
                 inner: Q::build_query(variables),
-                phantom: PhantomData::default(),
-            }
-        }
-
-        fn decode_response(
-            &self,
-            response: Response<serde_json::Value>,
-        ) -> Result<Response<Q::ResponseData>, serde_json::Error> {
-            if let Some(data) = response.data {
-                Ok(::graphql_client::Response {
-                    data: Some(serde_json::from_value(data)?),
-                    errors: response.errors,
-                    extensions: response.extensions,
-                })
-            } else {
-                Ok(::graphql_client::Response {
-                    data: None,
-                    errors: response.errors,
-                    extensions: response.extensions,
-                })
+                phantom: PhantomData,
             }
         }
     }
@@ -178,14 +91,12 @@ mod graphql_client {
     }
 
     impl<Q: GraphQLQuery> GraphqlOperation for StreamingOperation<Q> {
-        type GenericResponse = Response<serde_json::Value>;
-
         type Response = Response<Q::ResponseData>;
 
         type Error = serde_json::Error;
 
-        fn decode(&self, response: Self::GenericResponse) -> Result<Self::Response, Self::Error> {
-            self.decode_response(response)
+        fn decode(&self, response: serde_json::Value) -> Result<Self::Response, Self::Error> {
+            serde_json::from_value(response)
         }
     }
 }
