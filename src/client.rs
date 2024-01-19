@@ -1,7 +1,15 @@
-use std::{collections::HashMap, marker::PhantomData, pin::Pin, sync::Arc};
+use std::{
+    collections::HashMap,
+    marker::PhantomData,
+    pin::Pin,
+    sync::{
+        atomic::{self, AtomicU64},
+        Arc,
+    },
+};
 
 use futures::{
-    channel::{mpsc, oneshot},
+    channel::mpsc,
     future::RemoteHandle,
     lock::Mutex,
     sink::{Sink, SinkExt},
@@ -9,7 +17,6 @@ use futures::{
     task::{Context, Poll, SpawnExt},
 };
 use serde::Serialize;
-use uuid::Uuid;
 
 use super::{
     graphql::{self, GraphqlOperation},
@@ -27,6 +34,7 @@ where
 {
     inner: Arc<ClientInner<GraphqlClient>>,
     sender_sink: mpsc::Sender<WsMessage>,
+    next_id: AtomicU64,
     phantom: PhantomData<GraphqlClient>,
 }
 
@@ -133,15 +141,14 @@ where
 
         let (mut sender_sink, sender_stream) = mpsc::channel(1);
 
-        let (shutdown_sender, shutdown_receiver) = oneshot::channel();
-
         let sender_handle = runtime
-            .spawn_with_handle(sender_loop(
-                sender_stream,
-                websocket_sink,
-                Arc::clone(&operations),
-                shutdown_receiver,
-            ))
+            .spawn_with_handle(async move {
+                sender_stream
+                    .map(Ok)
+                    .forward(websocket_sink)
+                    .await
+                    .map_err(|error| Error::Send(error.to_string()))
+            })
             .map_err(|err| Error::SpawnHandle(err.to_string()))?;
 
         // wait for ack before entering receiver loop:
@@ -185,7 +192,6 @@ where
                 websocket_stream,
                 sender_sink.clone(),
                 Arc::clone(&operations),
-                shutdown_sender,
             ))
             .map_err(|err| Error::SpawnHandle(err.to_string()))?;
 
@@ -195,6 +201,7 @@ where
                 operations,
                 sender_handle,
             }),
+            next_id: 0.into(),
             sender_sink,
             phantom: PhantomData,
         })
@@ -218,12 +225,12 @@ where
     pub async fn streaming_operation<'a, Operation>(
         &mut self,
         op: Operation,
-    ) -> Result<SubscriptionStream<GraphqlClient, Operation>, Error>
+    ) -> Result<SubscriptionStream<Operation>, Error>
     where
         Operation:
             GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin + Send + 'static,
     {
-        let id = Uuid::new_v4();
+        let id = self.next_id.fetch_add(1, atomic::Ordering::Relaxed);
         let (sender, receiver) = mpsc::channel(SUBSCRIPTION_BUFFER_SIZE);
 
         self.inner.operations.lock().await.insert(id, sender);
@@ -242,7 +249,7 @@ where
         let mut sender_clone = self.sender_sink.clone();
         let id_clone = id.to_string();
 
-        Ok(SubscriptionStream::<GraphqlClient, Operation> {
+        Ok(SubscriptionStream::<Operation> {
             id: id.to_string(),
             stream: Box::pin(receiver.map(move |response| {
                 op.decode(response)
@@ -260,7 +267,6 @@ where
                     Ok(())
                 })
             }),
-            phantom: PhantomData,
         })
     }
 }
@@ -269,21 +275,18 @@ where
 ///
 /// Emits an item for each message received by the subscription.
 #[pin_project::pin_project]
-pub struct SubscriptionStream<GraphqlClient, Operation>
+pub struct SubscriptionStream<Operation>
 where
-    GraphqlClient: graphql::GraphqlClient,
-    Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response>,
+    Operation: GraphqlOperation,
 {
     id: String,
     stream: Pin<Box<dyn Stream<Item = Result<Operation::Response, Error>> + Send>>,
     cancel_func: Box<dyn FnOnce() -> futures::future::BoxFuture<'static, Result<(), Error>> + Send>,
-    phantom: PhantomData<GraphqlClient>,
 }
 
-impl<GraphqlClient, Operation> SubscriptionStream<GraphqlClient, Operation>
+impl<Operation> SubscriptionStream<Operation>
 where
-    GraphqlClient: graphql::GraphqlClient + Send,
-    Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Send,
+    Operation: GraphqlOperation + Send,
 {
     /// Stops the operation by sending a Complete message to the server.
     pub async fn stop_operation(self) -> Result<(), Error> {
@@ -291,10 +294,9 @@ where
     }
 }
 
-impl<GraphqlClient, Operation> Stream for SubscriptionStream<GraphqlClient, Operation>
+impl<Operation> Stream for SubscriptionStream<Operation>
 where
-    GraphqlClient: graphql::GraphqlClient,
-    Operation: GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin,
+    Operation: GraphqlOperation + Unpin,
 {
     type Item = Result<Operation::Response, Error>;
 
@@ -305,13 +307,12 @@ where
 
 type OperationSender<GenericResponse> = mpsc::Sender<GenericResponse>;
 
-type OperationMap<GenericResponse> = Arc<Mutex<HashMap<Uuid, OperationSender<GenericResponse>>>>;
+type OperationMap<GenericResponse> = Arc<Mutex<HashMap<u64, OperationSender<GenericResponse>>>>;
 
 async fn receiver_loop<S, WsMessage, GraphqlClient>(
     mut receiver: S,
     mut sender: mpsc::Sender<WsMessage>,
     operations: OperationMap<GraphqlClient::Response>,
-    shutdown: oneshot::Sender<()>,
 ) -> Result<(), Error>
 where
     S: Stream<Item = Result<WsMessage, WsMessage::Error>> + Unpin,
@@ -330,9 +331,10 @@ where
         }
     }
 
-    shutdown
-        .send(())
-        .map_err(|_| Error::SenderShutdown("Couldn't shutdown sender".to_owned()))
+    // Clear out any operations
+    operations.lock().await.clear();
+
+    Ok(())
 }
 
 async fn handle_message<WsMessage, GraphqlClient>(
@@ -355,7 +357,10 @@ where
     };
 
     let id = match event.id() {
-        Some(id) => Some(Uuid::parse_str(id).map_err(|err| Error::Decode(err.to_string()))?),
+        Some(id) => Some(
+            id.parse::<u64>()
+                .map_err(|err| Error::Decode(err.to_string()))?,
+        ),
         None => None,
     };
 
@@ -412,50 +417,6 @@ where
     }
 
     Ok(())
-}
-
-async fn sender_loop<M, S, E, GenericResponse>(
-    message_stream: mpsc::Receiver<M>,
-    mut ws_sender: S,
-    operations: OperationMap<GenericResponse>,
-    shutdown: oneshot::Receiver<()>,
-) -> Result<(), Error>
-where
-    M: WebsocketMessage,
-    S: Sink<M, Error = E> + Unpin,
-    E: std::error::Error,
-{
-    use futures::{future::FutureExt, select};
-
-    let mut message_stream = message_stream.fuse();
-    let mut shutdown = shutdown.fuse();
-
-    loop {
-        select! {
-            msg = message_stream.next() => {
-                if let Some(msg) = msg {
-                    trace!("Sending message: {:?}", msg);
-                    ws_sender
-                        .send(msg)
-                        .await
-                        .map_err(|err| Error::Send(err.to_string()))?;
-                } else {
-                    return Ok(());
-                }
-            }
-            _ = shutdown => {
-                // Shutdown the incoming message stream
-                let mut message_stream = message_stream.into_inner();
-                message_stream.close();
-                while message_stream.next().await.is_some() {}
-
-                // Clear out any operations
-                operations.lock().await.clear();
-
-                return Ok(());
-            }
-        }
-    }
 }
 
 struct ClientInner<GraphqlClient>
