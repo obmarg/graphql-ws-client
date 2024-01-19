@@ -29,6 +29,7 @@ mod protocol;
 pub mod graphql;
 pub mod websockets;
 
+mod next;
 #[cfg(feature = "ws_stream_wasm")]
 mod wasm;
 #[cfg(feature = "ws_stream_wasm")]

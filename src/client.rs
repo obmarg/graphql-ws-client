@@ -44,11 +44,14 @@ pub enum Error {
     #[error("{0}: {1}")]
     Custom(String, String),
     /// Unexpected close frame
-    #[error("got close frame, reason: {0}")]
-    Close(String),
+    #[error("got close frame. code: {0}, reason: {1}")]
+    Close(u16, String),
     /// Decoding / parsing error
     #[error("message decode error, reason: {0}")]
     Decode(String),
+    /// Decoding / parsing error
+    #[error("couldn't serialize message, reason: {0}")]
+    Serializing(String),
     /// Sending error
     #[error("message sending error, reason: {0}")]
     Send(String),
@@ -58,6 +61,9 @@ pub enum Error {
     /// Sender shutdown error
     #[error("sender shutdown error, reason: {0}")]
     SenderShutdown(String),
+    /// Sender shutdown error
+    #[error("the connection was closed while starting an operation")]
+    ConnectionClosedWhileStarting,
 }
 
 #[derive(Serialize)]
@@ -408,7 +414,7 @@ fn decode_message<T: serde::de::DeserializeOwned, WsMessage: WebsocketMessage>(
     if message.is_ping() || message.is_pong() {
         Ok(None)
     } else if message.is_close() {
-        Err(Error::Close(message.error_message().unwrap_or_default()))
+        Err(Error::Close(0, message.error_message().unwrap_or_default()))
     } else if let Some(s) = message.text() {
         trace!("Decoding message: {}", s);
         Ok(Some(

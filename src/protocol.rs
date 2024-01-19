@@ -38,7 +38,6 @@ pub enum Message<'a, Operation> {
     #[serde(rename = "subscribe")]
     Subscribe { id: String, payload: &'a Operation },
     #[serde(rename = "complete")]
-    #[allow(dead_code)]
     Complete { id: String },
     #[serde(rename = "pong")]
     Pong,
