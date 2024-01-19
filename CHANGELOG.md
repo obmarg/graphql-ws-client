@@ -9,7 +9,7 @@ This project intends to inhere to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html), but has not yet reached 1.0 so
 all APIs might be changed.
 
-## Unreleased - xxxx-xx-xx
+## v0.8.0-alpha.1 - 2024-01-19
 
 ### Breaking Changes
 
