@@ -46,9 +46,12 @@ pub enum Message<'a, Operation> {
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "type")]
-pub enum Event<Response> {
+pub enum Event {
     #[serde(rename = "next")]
-    Next { id: String, payload: Response },
+    Next {
+        id: String,
+        payload: serde_json::Value,
+    },
     #[serde(rename = "error")]
     Error {
         id: String,
@@ -64,7 +67,7 @@ pub enum Event<Response> {
     Pong { payload: Option<serde_json::Value> },
 }
 
-impl<Response> Event<Response> {
+impl Event {
     pub fn id(&self) -> Option<&str> {
         match self {
             Event::Next { id, .. } => Some(id.as_ref()),

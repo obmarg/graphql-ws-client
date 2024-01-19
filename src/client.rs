@@ -17,9 +17,10 @@ use futures::{
     task::{Context, Poll, SpawnExt},
 };
 use serde::Serialize;
+use serde_json::json;
 
 use super::{
-    graphql::{self, GraphqlOperation},
+    graphql::GraphqlOperation,
     logging::trace,
     protocol::{ConnectionInit, Event, Message},
     websockets::WebsocketMessage,
@@ -28,14 +29,10 @@ use super::{
 const SUBSCRIPTION_BUFFER_SIZE: usize = 5;
 
 /// A websocket client
-pub struct AsyncWebsocketClient<GraphqlClient, WsMessage>
-where
-    GraphqlClient: graphql::GraphqlClient,
-{
-    inner: Arc<ClientInner<GraphqlClient>>,
+pub struct AsyncWebsocketClient<WsMessage> {
+    inner: Arc<ClientInner>,
     sender_sink: mpsc::Sender<WsMessage>,
     next_id: AtomicU64,
-    phantom: PhantomData<GraphqlClient>,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -127,7 +124,7 @@ where
             + 'static,
         mut websocket_sink: impl Sink<WsMessage, Error = WsMessage::Error> + Unpin + Send + 'static,
         runtime: impl SpawnExt,
-    ) -> Result<AsyncWebsocketClient<GraphqlClient, WsMessage>, Error>
+    ) -> Result<AsyncWebsocketClient<WsMessage>, Error>
     where
         GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
         WsMessage: WebsocketMessage + Send + 'static,
@@ -156,7 +153,7 @@ where
             match websocket_stream.next().await {
                 None => todo!(),
                 Some(msg) => {
-                    let event = decode_message::<Event<GraphqlClient::Response>, WsMessage>(
+                    let event = decode_message::<Event, WsMessage>(
                         msg.map_err(|err| Error::Decode(err.to_string()))?,
                     )
                     .map_err(|err| Error::Decode(err.to_string()))?;
@@ -188,7 +185,7 @@ where
         }
 
         let receiver_handle = runtime
-            .spawn_with_handle(receiver_loop::<_, _, GraphqlClient>(
+            .spawn_with_handle(receiver_loop(
                 websocket_stream,
                 sender_sink.clone(),
                 Arc::clone(&operations),
@@ -203,15 +200,13 @@ where
             }),
             next_id: 0.into(),
             sender_sink,
-            phantom: PhantomData,
         })
     }
 }
 
-impl<GraphqlClient, WsMessage> AsyncWebsocketClient<GraphqlClient, WsMessage>
+impl<WsMessage> AsyncWebsocketClient<WsMessage>
 where
     WsMessage: WebsocketMessage + Send + 'static,
-    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
 {
     /*
     pub async fn operation<'a, T: 'a>(&self, _op: Operation<'a, T>) -> Result<(), ()> {
@@ -227,8 +222,7 @@ where
         op: Operation,
     ) -> Result<SubscriptionStream<Operation>, Error>
     where
-        Operation:
-            GraphqlOperation<GenericResponse = GraphqlClient::Response> + Unpin + Send + 'static,
+        Operation: GraphqlOperation + Unpin + Send + 'static,
     {
         let id = self.next_id.fetch_add(1, atomic::Ordering::Relaxed);
         let (sender, receiver) = mpsc::channel(SUBSCRIPTION_BUFFER_SIZE);
@@ -305,25 +299,22 @@ where
     }
 }
 
-type OperationSender<GenericResponse> = mpsc::Sender<GenericResponse>;
+type OperationSender = mpsc::Sender<serde_json::Value>;
 
-type OperationMap<GenericResponse> = Arc<Mutex<HashMap<u64, OperationSender<GenericResponse>>>>;
+type OperationMap = Arc<Mutex<HashMap<u64, OperationSender>>>;
 
-async fn receiver_loop<S, WsMessage, GraphqlClient>(
+async fn receiver_loop<S, WsMessage>(
     mut receiver: S,
     mut sender: mpsc::Sender<WsMessage>,
-    operations: OperationMap<GraphqlClient::Response>,
+    operations: OperationMap,
 ) -> Result<(), Error>
 where
     S: Stream<Item = Result<WsMessage, WsMessage::Error>> + Unpin,
     WsMessage: WebsocketMessage,
-    GraphqlClient: crate::graphql::GraphqlClient,
 {
     while let Some(msg) = receiver.next().await {
         trace!("Received message: {:?}", msg);
-        if let Err(err) =
-            handle_message::<WsMessage, GraphqlClient>(msg, &mut sender, &operations).await
-        {
+        if let Err(err) = handle_message::<WsMessage>(msg, &mut sender, &operations).await {
             trace!("message handler error, shutting down: {err:?}");
             #[cfg(feature = "no-logging")]
             let _ = err;
@@ -337,19 +328,17 @@ where
     Ok(())
 }
 
-async fn handle_message<WsMessage, GraphqlClient>(
+async fn handle_message<WsMessage>(
     msg: Result<WsMessage, WsMessage::Error>,
     sender: &mut mpsc::Sender<WsMessage>,
-    operations: &OperationMap<GraphqlClient::Response>,
+    operations: &OperationMap,
 ) -> Result<(), Error>
 where
     WsMessage: WebsocketMessage,
-    GraphqlClient: crate::graphql::GraphqlClient,
 {
-    let event = decode_message::<Event<GraphqlClient::Response>, WsMessage>(
-        msg.map_err(|err| Error::Decode(err.to_string()))?,
-    )
-    .map_err(|err| Error::Decode(err.to_string()))?;
+    let event =
+        decode_message::<Event, WsMessage>(msg.map_err(|err| Error::Decode(err.to_string()))?)
+            .map_err(|err| Error::Decode(err.to_string()))?;
 
     let event = match event {
         Some(event) => event,
@@ -395,12 +384,9 @@ where
                     Error::Decode("Received error for unknown subscription".to_owned())
                 })?;
 
-            sink.send(
-                GraphqlClient::error_response(payload)
-                    .map_err(|err| Error::Send(err.to_string()))?,
-            )
-            .await
-            .map_err(|err| Error::Send(err.to_string()))?;
+            sink.send(json!({"errors": payload}))
+                .await
+                .map_err(|err| Error::Send(err.to_string()))?;
         }
         Event::ConnectionAck { .. } => {
             return Err(Error::Decode("unexpected connection_ack".to_string()))
@@ -419,15 +405,12 @@ where
     Ok(())
 }
 
-struct ClientInner<GraphqlClient>
-where
-    GraphqlClient: crate::graphql::GraphqlClient,
-{
+struct ClientInner {
     #[allow(dead_code)]
     receiver_handle: RemoteHandle<Result<(), Error>>,
     #[allow(dead_code)]
     sender_handle: RemoteHandle<Result<(), Error>>,
-    operations: OperationMap<GraphqlClient::Response>,
+    operations: OperationMap,
 }
 
 fn json_message<M: WebsocketMessage>(payload: impl serde::Serialize) -> Result<M, Error> {

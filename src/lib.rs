@@ -41,14 +41,14 @@ pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error, Subsc
 
 /// A websocket client for the cynic graphql crate
 #[cfg(feature = "cynic")]
-pub type CynicClient<WsMessage> = AsyncWebsocketClient<graphql::Cynic, WsMessage>;
+pub type CynicClient<WsMessage> = AsyncWebsocketClient<WsMessage>;
 /// A websocket client builder for the cynic graphql crate
 #[cfg(feature = "cynic")]
 pub type CynicClientBuilder = AsyncWebsocketClientBuilder<graphql::Cynic>;
 
 /// A websocket client for the graphql_client graphql crate
-#[cfg(feature = "graphql_client")]
-pub type GraphQLClientClient<WsMessage> = AsyncWebsocketClient<graphql::GraphQLClient, WsMessage>;
+#[cfg(feature = "client-graphql-client")]
+pub type GraphQLClientClient<WsMessage> = AsyncWebsocketClient<WsMessage>;
 /// A websocket client builder for the graphql_client graphql crate
-#[cfg(feature = "graphql_client")]
+#[cfg(feature = "client-graphql-client")]
 pub type GraphQLClientClientBuilder = AsyncWebsocketClientBuilder<graphql::GraphQLClient>;
