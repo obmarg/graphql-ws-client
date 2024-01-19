@@ -37,34 +37,8 @@ pub trait GraphqlOperation: serde::Serialize {
 }
 
 #[cfg(feature = "cynic")]
-pub use self::cynic::Cynic;
-
-#[cfg(feature = "cynic")]
 mod cynic {
     use super::*;
-
-    /// Provides an implementation of [GraphqlClient] for the cynic GraphQL crate
-    pub struct Cynic {}
-
-    impl GraphqlClient for Cynic {
-        type Response = ::cynic::GraphQlResponse<serde_json::Value>;
-
-        type DecodeError = serde_json::Error;
-
-        fn error_response(
-            errors: Vec<serde_json::Value>,
-        ) -> Result<Self::Response, Self::DecodeError> {
-            Ok(::cynic::GraphQlResponse {
-                data: None,
-                errors: Some(
-                    errors
-                        .into_iter()
-                        .map(serde_json::from_value)
-                        .collect::<Result<Vec<_>, _>>()?,
-                ),
-            })
-        }
-    }
 
     impl<ResponseData, Variables> GraphqlOperation
         for ::cynic::StreamingOperation<ResponseData, Variables>
@@ -83,9 +57,6 @@ mod cynic {
 }
 
 #[cfg(feature = "client-graphql-client")]
-pub use self::graphql_client::GraphQLClient;
-
-#[cfg(feature = "client-graphql-client")]
 pub use self::graphql_client::StreamingOperation;
 
 #[cfg(feature = "client-graphql-client")]
@@ -93,30 +64,6 @@ mod graphql_client {
     use super::*;
     use ::graphql_client::{GraphQLQuery, QueryBody, Response};
     use std::marker::PhantomData;
-
-    /// Provides an implementation of [GraphqlClient] for the graphql_client GraphQL crate
-    pub struct GraphQLClient {}
-
-    impl GraphqlClient for GraphQLClient {
-        type Response = Response<serde_json::Value>;
-
-        type DecodeError = serde_json::Error;
-
-        fn error_response(
-            errors: Vec<serde_json::Value>,
-        ) -> Result<Self::Response, Self::DecodeError> {
-            Ok(Response {
-                data: None,
-                errors: Some(
-                    errors
-                        .into_iter()
-                        .map(serde_json::from_value)
-                        .collect::<Result<Vec<_>, _>>()?,
-                ),
-                extensions: None,
-            })
-        }
-    }
 
     /// A streaming operation for a GraphQLQuery
     pub struct StreamingOperation<Q: GraphQLQuery> {

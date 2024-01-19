@@ -44,11 +44,11 @@ pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error, Subsc
 pub type CynicClient<WsMessage> = AsyncWebsocketClient<WsMessage>;
 /// A websocket client builder for the cynic graphql crate
 #[cfg(feature = "cynic")]
-pub type CynicClientBuilder = AsyncWebsocketClientBuilder<graphql::Cynic>;
+pub type CynicClientBuilder = AsyncWebsocketClientBuilder;
 
 /// A websocket client for the graphql_client graphql crate
 #[cfg(feature = "client-graphql-client")]
 pub type GraphQLClientClient<WsMessage> = AsyncWebsocketClient<WsMessage>;
 /// A websocket client builder for the graphql_client graphql crate
 #[cfg(feature = "client-graphql-client")]
-pub type GraphQLClientClientBuilder = AsyncWebsocketClientBuilder<graphql::GraphQLClient>;
+pub type GraphQLClientClientBuilder = AsyncWebsocketClientBuilder;

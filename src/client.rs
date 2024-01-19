@@ -1,6 +1,5 @@
 use std::{
     collections::HashMap,
-    marker::PhantomData,
     pin::Pin,
     sync::{
         atomic::{self, AtomicU64},
@@ -65,50 +64,35 @@ pub enum Error {
 pub enum NoPayload {}
 
 /// A websocket client builder
-pub struct AsyncWebsocketClientBuilder<GraphqlClient, Payload = NoPayload>
-where
-    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
-{
+pub struct AsyncWebsocketClientBuilder<Payload = NoPayload> {
     payload: Option<Payload>,
-    phantom: PhantomData<fn() -> GraphqlClient>,
 }
 
-impl<GraphqlClient, Payload> AsyncWebsocketClientBuilder<GraphqlClient, Payload>
-where
-    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
-{
+impl<Payload> AsyncWebsocketClientBuilder<Payload> {
     /// Constructs an AsyncWebsocketClientBuilder
     pub fn new() -> Self {
-        Self {
-            payload: None,
-            phantom: PhantomData,
-        }
+        Self { payload: None }
     }
 
     /// Add payload to `connection_init`
     pub fn payload<NewPayload: Serialize>(
         self,
         payload: NewPayload,
-    ) -> AsyncWebsocketClientBuilder<GraphqlClient, NewPayload> {
+    ) -> AsyncWebsocketClientBuilder<NewPayload> {
         AsyncWebsocketClientBuilder {
             payload: Some(payload),
-            phantom: PhantomData,
         }
     }
 }
 
-impl<GraphqlClient, Payload> Default for AsyncWebsocketClientBuilder<GraphqlClient, Payload>
-where
-    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
-{
+impl<Payload> Default for AsyncWebsocketClientBuilder<Payload> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<GraphqlClient, Payload> AsyncWebsocketClientBuilder<GraphqlClient, Payload>
+impl<Payload> AsyncWebsocketClientBuilder<Payload>
 where
-    GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
     Payload: Serialize,
 {
     /// Constructs an AsyncWebsocketClient
@@ -126,7 +110,6 @@ where
         runtime: impl SpawnExt,
     ) -> Result<AsyncWebsocketClient<WsMessage>, Error>
     where
-        GraphqlClient: crate::graphql::GraphqlClient + Send + 'static,
         WsMessage: WebsocketMessage + Send + 'static,
     {
         websocket_sink

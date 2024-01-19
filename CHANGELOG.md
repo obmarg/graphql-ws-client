@@ -16,6 +16,11 @@ all APIs might be changed.
 - Subscription IDs sent to the server are now just monotonic numbers rather
   than uuids.
 - `SubscriptionStream` no longer takes `GraphqlClient` as a generic parameter
+- Removed the `GraphqlClient` trait and all its uses
+- Changed the `StreamingOperation` trait:
+  - Removed the `GenericResponse` associated type
+  - `decode_response` now always takes a `serde_json::value` - I expect most
+    implementations of this will now just be a call to `serde_json::from_value`
 
 ## v0.7.0 - 2024-01-03
 

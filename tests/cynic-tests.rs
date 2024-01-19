@@ -85,7 +85,7 @@ async fn main_test() {
 
     let stream = client.streaming_operation(build_query()).await.unwrap();
 
-    sleep(Duration::from_millis(1000)).await;
+    sleep(Duration::from_millis(100)).await;
 
     let updates = [
         subscription_server::BookChanged {
