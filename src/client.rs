@@ -70,8 +70,8 @@ pub struct AsyncWebsocketClientBuilder<Payload = NoPayload> {
 
 impl<Payload> AsyncWebsocketClientBuilder<Payload> {
     /// Constructs an AsyncWebsocketClientBuilder
-    pub fn new() -> Self {
-        Self { payload: None }
+    pub fn new() -> AsyncWebsocketClientBuilder<()> {
+        AsyncWebsocketClientBuilder { payload: None }
     }
 
     /// Add payload to `connection_init`
@@ -87,7 +87,7 @@ impl<Payload> AsyncWebsocketClientBuilder<Payload> {
 
 impl<Payload> Default for AsyncWebsocketClientBuilder<Payload> {
     fn default() -> Self {
-        Self::new()
+        AsyncWebsocketClientBuilder { payload: None }
     }
 }
 
