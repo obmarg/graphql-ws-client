@@ -18,6 +18,7 @@ use crate::{
 use self::stream::SubscriptionStream;
 
 mod actor;
+mod builder;
 mod connection;
 mod stream;
 
@@ -28,6 +29,17 @@ pub struct Client {
 }
 
 impl Client {
+    pub(super) fn new(
+        actor: mpsc::Sender<ConnectionCommand>,
+        subscription_buffer_size: usize,
+    ) -> Self {
+        Client {
+            actor,
+            subscription_buffer_size,
+            next_id: Arc::new(AtomicUsize::new(0)),
+        }
+    }
+
     // Starts a streaming operation on this client.
     ///
     /// Returns a `Stream` of responses.

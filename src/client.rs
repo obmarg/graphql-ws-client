@@ -49,7 +49,7 @@ pub enum Error {
     /// Decoding / parsing error
     #[error("message decode error, reason: {0}")]
     Decode(String),
-    /// Decoding / parsing error
+    /// Serializing error
     #[error("couldn't serialize message, reason: {0}")]
     Serializing(String),
     /// Sending error

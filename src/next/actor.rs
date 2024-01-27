@@ -21,10 +21,19 @@ pub(crate) struct ConnectionActor {
 }
 
 impl ConnectionActor {
+    pub(super) fn new(
+        connection: Box<dyn Connection + Send>,
+        commands: mpsc::Receiver<ConnectionCommand>,
+    ) -> Self {
+        ConnectionActor {
+            connection,
+            commands,
+            operations: HashMap::new(),
+        }
+    }
+
     // TODO: this could be public as an alternative to IntoFuture
     async fn run(mut self) {
-        // TODO: Do the initial ack flow?
-
         while let Some(next) = self.next().await {
             let response = match next {
                 Next::Command(cmd) => self.handle_command(cmd).await,

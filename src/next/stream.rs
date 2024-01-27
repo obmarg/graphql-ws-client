@@ -7,7 +7,7 @@ use futures::{channel::mpsc, SinkExt, Stream};
 
 use crate::{graphql::GraphqlOperation, Error};
 
-use super::ConnectionCommand;
+use super::{actor::ConnectionActor, ConnectionCommand};
 
 /// A `futures::Stream` for a subscription.
 ///
