@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{hash_map::Entry, HashMap},
     future::{Future, IntoFuture},
 };
 
@@ -15,24 +15,23 @@ use super::{
 
 #[must_use]
 pub(crate) struct ConnectionActor {
+    client: Option<mpsc::Receiver<ConnectionCommand>>,
     connection: Box<dyn Connection + Send>,
-    commands: mpsc::Receiver<ConnectionCommand>,
     operations: HashMap<usize, mpsc::Sender<Value>>,
 }
 
 impl ConnectionActor {
     pub(super) fn new(
         connection: Box<dyn Connection + Send>,
-        commands: mpsc::Receiver<ConnectionCommand>,
+        client: mpsc::Receiver<ConnectionCommand>,
     ) -> Self {
         ConnectionActor {
+            client: Some(client),
             connection,
-            commands,
             operations: HashMap::new(),
         }
     }
 
-    // TODO: this could be public as an alternative to IntoFuture
     async fn run(mut self) {
         while let Some(next) = self.next().await {
             let response = match next {
@@ -40,20 +39,25 @@ impl ConnectionActor {
                 Next::Message(message) => self.handle_message(message).await,
             };
 
-            if let Some(response) = response {
-                match response {
-                    response @ Message::Close { .. } => {
-                        self.connection.send(response).await.ok();
-                        return;
-                    }
-                    response => {
-                        if self.connection.send(response).await.is_err() {
-                            todo!("error handling")
-                        }
-                    }
-                }
+            let Some(response) = response else { continue };
+
+            if matches!(response, Message::Close { .. }) {
+                self.connection.send(response).await.ok();
+                return;
+            }
+
+            if self.connection.send(response).await.is_err() {
+                return;
             }
         }
+
+        self.connection
+            .send(Message::Close {
+                code: Some(100),
+                reason: None,
+            })
+            .await
+            .ok();
     }
 
     async fn handle_command(&mut self, cmd: ConnectionCommand) -> Option<Message> {
@@ -83,7 +87,18 @@ impl ConnectionActor {
     async fn handle_message(&mut self, message: Message) -> Option<Message> {
         let event = match extract_event(message) {
             Ok(event) => event?,
-            Err(error) => todo!(),
+            Err(Error::Close(code, reason)) => {
+                return Some(Message::Close {
+                    code: Some(code),
+                    reason: Some(reason),
+                })
+            }
+            Err(other) => {
+                return Some(Message::Close {
+                    code: Some(4857),
+                    reason: Some(format!("Error while decoding event: {other}")),
+                })
+            }
         };
 
         match event {
@@ -93,15 +108,17 @@ impl ConnectionActor {
                     None => return Some(Message::close(Reason::UnknownSubscription)),
                 };
 
-                let sender = match self.operations.get_mut(&id) {
-                    Some(id) => id,
-                    None => return Some(Message::close(Reason::UnknownSubscription)),
+                let sender = self.operations.entry(id);
+
+                let Entry::Occupied(mut sender) = sender else {
+                    return None;
                 };
 
                 let payload = event.forwarding_payload().unwrap();
 
-                if sender.send(payload).await.is_err() {
-                    todo!("error")
+                if sender.get_mut().send(payload).await.is_err() {
+                    sender.remove();
+                    return Some(Message::complete(id));
                 }
 
                 None
@@ -123,19 +140,36 @@ impl ConnectionActor {
         }
     }
 
-    fn next(&mut self) -> impl Future<Output = Option<Next>> + '_ {
-        let mut next_command = self.commands.next().fuse();
-        let mut next_message = self.connection.receive().fuse();
-        async move {
-            // TODO: Handle termination of these streams appropriately...
-            futures::select! {
-                command = next_command => {
-                    Some(Next::Command(command.expect("TODO: handle termination")))
-                },
-                message = next_message => {
-                    Some(Next::Message(message.expect("TODO: handle termination")))
-                },
+    async fn next(&mut self) -> Option<Next> {
+        loop {
+            if let Some(client) = &mut self.client {
+                let mut next_command = client.next().fuse();
+                let mut next_message = self.connection.receive().fuse();
+                futures::select! {
+                    command = next_command => {
+                        match command {
+                            None => {
+                                self.client.take();
+                                continue;
+                            },
+                            Some(command) => {
+                                return Some(Next::Command(command));
+                            }
+                        }
+                    },
+                    message = next_message => {
+                        return Some(Next::Message(message?));
+                    },
+                }
             }
+
+            if self.operations.is_empty() {
+                // If client has disconnected and we have no running operations
+                // then we should shut down
+                return None;
+            }
+
+            return Some(Next::Message(self.connection.receive().await?));
         }
     }
 }
@@ -178,7 +212,16 @@ enum Reason {
 
 impl Message {
     fn close(reason: Reason) -> Self {
-        todo!()
+        match reason {
+            Reason::UnexpectedAck => Message::Close {
+                code: Some(4855),
+                reason: Some("too many acknowledges".into()),
+            },
+            Reason::UnknownSubscription => Message::Close {
+                code: Some(4856),
+                reason: Some("unknown subscription".into()),
+            },
+        }
     }
 }
 

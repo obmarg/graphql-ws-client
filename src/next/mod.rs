@@ -1,3 +1,5 @@
+#![allow(unused)] // TEMPORARY
+
 use std::sync::{
     atomic::{AtomicU64, AtomicUsize, Ordering},
     Arc,
@@ -86,7 +88,7 @@ impl Client {
     //     todo!()
     // }
 
-    pub fn close(&self) -> () {
+    pub fn close(&self) {
         todo!()
     }
 }
