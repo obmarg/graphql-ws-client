@@ -68,9 +68,12 @@ impl ClientBuilder {
         // wait for ack before entering receiver loop:
         loop {
             match connection.receive().await {
-                None => todo!(),
+                None => return Err(Error::Unknown("connection dropped".into())),
                 Some(Message::Close { code, reason }) => {
-                    todo!()
+                    return Err(Error::Close(
+                        code.unwrap_or_default(),
+                        reason.unwrap_or_default(),
+                    ))
                 }
                 Some(Message::Ping) | Some(Message::Pong) => {}
                 Some(message @ Message::Text(_)) => {
@@ -87,6 +90,10 @@ impl ClientBuilder {
                             break;
                         }
                         event => {
+                            connection.send(Message::Close {
+                                code: Some(4950),
+                                reason: Some("Unexpected message while waiting for ack".into()),
+                            });
                             // TODO: Close the connection gracefully before returning...
                             return Err(Error::Decode(format!(
                                 "expected a connection_ack or ping, got {}",

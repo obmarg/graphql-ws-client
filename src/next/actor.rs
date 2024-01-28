@@ -147,15 +147,12 @@ impl ConnectionActor {
                 let mut next_message = self.connection.receive().fuse();
                 futures::select! {
                     command = next_command => {
-                        match command {
-                            None => {
-                                self.client.take();
-                                continue;
-                            },
-                            Some(command) => {
-                                return Some(Next::Command(command));
-                            }
-                        }
+                        let Some(command) = command else {
+                            self.client.take();
+                            continue;
+                        };
+
+                        return Some(Next::Command(command));
                     },
                     message = next_message => {
                         return Some(Next::Message(message?));

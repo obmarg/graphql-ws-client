@@ -31,7 +31,7 @@ where
         self.actor
             .send(ConnectionCommand::Cancel(self.id))
             .await
-            .map_err(|error| todo!())
+            .map_err(|error| Error::Send(error.to_string()))
     }
 }
 

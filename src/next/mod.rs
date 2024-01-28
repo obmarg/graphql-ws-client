@@ -83,13 +83,11 @@ impl Client {
         })
     }
 
-    // TODO: This should be on the stream itself
-    // pub fn cancel(&self) -> () {
-    //     todo!()
-    // }
-
-    pub fn close(&self) {
-        todo!()
+    pub async fn close(mut self, code: u16, description: impl Into<String>) {
+        self.actor
+            .send(ConnectionCommand::Close(code, description.into()))
+            .await
+            .ok();
     }
 }
 

@@ -61,9 +61,6 @@ pub enum Error {
     /// Sender shutdown error
     #[error("sender shutdown error, reason: {0}")]
     SenderShutdown(String),
-    /// Sender shutdown error
-    #[error("the connection was closed while starting an operation")]
-    ConnectionClosedWhileStarting,
 }
 
 #[derive(Serialize)]
