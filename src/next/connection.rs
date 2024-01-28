@@ -7,8 +7,8 @@ use crate::{protocol, Error};
 
 #[async_trait::async_trait]
 pub trait Connection {
-    async fn receive(&self) -> Option<Message>;
-    async fn send(&self, message: Message) -> Result<(), Error>;
+    async fn receive(&mut self) -> Option<Message>;
+    async fn send(&mut self, message: Message) -> Result<(), Error>;
 }
 
 pub enum Message {

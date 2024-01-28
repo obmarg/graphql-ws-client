@@ -61,7 +61,7 @@ impl ClientBuilder {
 
     async fn build_impl(
         self,
-        connection: Box<dyn Connection + Send>,
+        mut connection: Box<dyn Connection + Send>,
     ) -> Result<(Client, ConnectionActor), Error> {
         connection.send(Message::init(self.payload)).await?;
 
@@ -94,7 +94,6 @@ impl ClientBuilder {
                                 code: Some(4950),
                                 reason: Some("Unexpected message while waiting for ack".into()),
                             });
-                            // TODO: Close the connection gracefully before returning...
                             return Err(Error::Decode(format!(
                                 "expected a connection_ack or ping, got {}",
                                 event.r#type()

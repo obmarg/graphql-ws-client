@@ -13,16 +13,21 @@ use serde_json::Value;
 
 use crate::{
     graphql::GraphqlOperation,
-    protocol::{self, Message},
+    protocol::{self},
     Error,
 };
-
-use self::stream::SubscriptionStream;
 
 mod actor;
 mod builder;
 mod connection;
 mod stream;
+
+pub use self::{
+    actor::ConnectionActor,
+    builder::ClientBuilder,
+    connection::{Connection, Message},
+    stream::SubscriptionStream,
+};
 
 pub struct Client {
     actor: mpsc::Sender<ConnectionCommand>,

@@ -14,7 +14,7 @@ use super::{
 };
 
 #[must_use]
-pub(crate) struct ConnectionActor {
+pub struct ConnectionActor {
     client: Option<mpsc::Receiver<ConnectionCommand>>,
     connection: Box<dyn Connection + Send>,
     operations: HashMap<usize, mpsc::Sender<Value>>,
