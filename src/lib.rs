@@ -12,7 +12,7 @@
 //! If you'd like to use another client or runtime adding support should
 //! hopefully be trivial.
 //!
-//! [protocol]: https://github.com/enisdenjo/graphql-ws/blob/HEAD/PROTOCOL.md
+//! [protocol]: https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md
 //! [cynic]: https://cynic-rs.dev
 //! [graphql-client]: https://github.com/graphql-rust/graphql-client
 //! [async-tungstenite]: https://github.com/sdroege/async-tungstenite
