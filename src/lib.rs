@@ -29,6 +29,10 @@ mod protocol;
 pub mod graphql;
 pub mod websockets;
 
+// TODO: next shouldn't be public really, and shouldn't allow missing_docs
+#[allow(missing_docs)]
+pub mod next;
+
 #[cfg(feature = "ws_stream_wasm")]
 mod wasm;
 #[cfg(feature = "ws_stream_wasm")]

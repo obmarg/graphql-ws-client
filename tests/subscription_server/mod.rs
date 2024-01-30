@@ -4,7 +4,7 @@
 use async_graphql::{EmptyMutation, Object, Schema, SimpleObject, Subscription, ID};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse, GraphQLSubscription};
 use axum::{extract::Extension, routing::post, Router, Server};
-use futures_util::{Stream, StreamExt};
+use futures::{Stream, StreamExt};
 use tokio::sync::broadcast::Sender;
 use tokio_stream::wrappers::BroadcastStream;
 
