@@ -11,9 +11,15 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+## v0.8.0-alpha.2 - 2024-01-30
+
 ### Breaking Changes
 
 - `Error::Close` now has a code as well as a reason.
+
+### New Features
+
+- Added a `next` module with a significant re-work of the API
 
 ## v0.8.0-alpha.1 - 2024-01-19
 
