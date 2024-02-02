@@ -44,18 +44,25 @@ where
 {
     async fn receive(&mut self) -> Option<crate::next::Message> {
         loop {
-            let message = self.next().await?.expect("TODO: error handling");
-            match message {
-                tungstenite::Message::Text(text) => return Some(crate::next::Message::Text(text)),
-                tungstenite::Message::Ping(_) => return Some(crate::next::Message::Ping),
-                tungstenite::Message::Pong(_) => return Some(crate::next::Message::Pong),
-                tungstenite::Message::Close(frame) => {
+            match self.next().await? {
+                Ok(tungstenite::Message::Text(text)) => {
+                    return Some(crate::next::Message::Text(text))
+                }
+                Ok(tungstenite::Message::Ping(_)) => return Some(crate::next::Message::Ping),
+                Ok(tungstenite::Message::Pong(_)) => return Some(crate::next::Message::Pong),
+                Ok(tungstenite::Message::Close(frame)) => {
                     return Some(crate::next::Message::Close {
                         code: frame.as_ref().map(|frame| frame.code.into()),
                         reason: frame.map(|frame| frame.reason.to_string()),
                     })
                 }
-                tungstenite::Message::Frame(_) | tungstenite::Message::Binary(_) => continue,
+                Ok(tungstenite::Message::Frame(_) | tungstenite::Message::Binary(_)) => continue,
+                Err(error) => {
+                    #[allow(unused)]
+                    let error = error;
+                    crate::logging::warning!("error receiving message: {error:?}");
+                    return None;
+                }
             }
         }
     }
