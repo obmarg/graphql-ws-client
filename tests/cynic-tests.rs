@@ -1,6 +1,6 @@
 #![cfg(feature = "cynic")]
 
-use std::time::Duration;
+use std::{future::IntoFuture, time::Duration};
 
 use assert_matches::assert_matches;
 use tokio::time::sleep;
@@ -56,7 +56,6 @@ struct BooksChangedSubscription {
 async fn main_test() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
-    use graphql_ws_client::CynicClientBuilder;
 
     let (channel, _) = tokio::sync::broadcast::channel(10);
 
@@ -76,12 +75,12 @@ async fn main_test() {
 
     println!("Connected");
 
-    let (sink, stream) = connection.split();
-
-    let mut client = CynicClientBuilder::new()
-        .build(stream, sink, TokioSpawner::current())
+    let (mut client, actor) = graphql_ws_client::next::ClientBuilder::new()
+        .build(connection)
         .await
         .unwrap();
+
+    tokio::spawn(actor.into_future());
 
     let stream = client.streaming_operation(build_query()).await.unwrap();
 
@@ -132,27 +131,5 @@ fn build_query() -> cynic::StreamingOperation<BooksChangedSubscription, BooksCha
 impl PartialEq<subscription_server::Book> for Book {
     fn eq(&self, other: &subscription_server::Book) -> bool {
         self.id == other.id.0 && self.name == other.name && self.author == other.author
-    }
-}
-
-pub struct TokioSpawner(tokio::runtime::Handle);
-
-impl TokioSpawner {
-    pub fn new(handle: tokio::runtime::Handle) -> Self {
-        TokioSpawner(handle)
-    }
-
-    pub fn current() -> Self {
-        TokioSpawner::new(tokio::runtime::Handle::current())
-    }
-}
-
-impl futures::task::Spawn for TokioSpawner {
-    fn spawn_obj(
-        &self,
-        obj: futures::task::FutureObj<'static, ()>,
-    ) -> Result<(), futures::task::SpawnError> {
-        self.0.spawn(obj);
-        Ok(())
     }
 }
