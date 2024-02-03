@@ -36,7 +36,11 @@ pub mod next;
 #[cfg(feature = "ws_stream_wasm")]
 mod wasm;
 #[cfg(feature = "ws_stream_wasm")]
-pub use wasm::*;
+pub use wasm::{wasm_websocket_combined_split, FusedWasmWebsocketSink, WasmWebsocketMessage};
+
+#[cfg(feature = "ws_stream_wasm")]
+/// Integration with the ws_stream_wasm library
+pub mod ws_stream_wasm;
 
 #[cfg(feature = "async-tungstenite")]
 mod native;
