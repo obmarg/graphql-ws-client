@@ -3,6 +3,10 @@
 //!
 //! Talks to the the tide subscription example in `async-graphql`
 
+use std::future::IntoFuture;
+
+use graphql_ws_client::{next::ClientBuilder, ws_stream_wasm::Connection};
+
 mod schema {
     cynic::use_schema!("../schemas/books.graphql");
 }
@@ -37,13 +41,12 @@ struct BooksChangedSubscription {
 #[async_std::main]
 async fn main() {
     use futures::StreamExt;
-    use graphql_ws_client::CynicClientBuilder;
     use log::info;
     use wasm_bindgen::UnwrapThrowExt;
 
     console_log::init_with_level(log::Level::Info).expect("init logging");
 
-    let (ws, wsio) = ws_stream_wasm::WsMeta::connect(
+    let ws_conn = ws_stream_wasm::WsMeta::connect(
         "ws://localhost:8000/graphql",
         Some(vec!["graphql-transport-ws"]),
     )
@@ -52,12 +55,10 @@ async fn main() {
 
     info!("Connected");
 
-    let (sink, stream) = graphql_ws_client::wasm_websocket_combined_split(ws, wsio).await;
+    let connection = Connection::new(ws_conn).await;
 
-    let mut client = CynicClientBuilder::new()
-        .build(stream, sink, async_executors::AsyncStd)
-        .await
-        .unwrap();
+    let (mut client, actor) = ClientBuilder::new().build(connection).await.unwrap();
+    wasm_bindgen_futures::spawn_local(actor.into_future());
 
     let mut stream = client.streaming_operation(build_query()).await.unwrap();
     info!("Running subscription");

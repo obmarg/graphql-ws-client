@@ -17,6 +17,7 @@ log = "0.4"
 # wasm-specific
 ws_stream_wasm = "0.7"
 wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
 console_log = "1"
 
 [dependencies.graphql-ws-client]
