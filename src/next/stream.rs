@@ -3,7 +3,12 @@ use std::{
     task::{Context, Poll},
 };
 
-use futures::{channel::mpsc, SinkExt, Stream};
+use futures::{
+    channel::mpsc,
+    future::{self, BoxFuture, Fuse},
+    stream::{self, BoxStream},
+    Future, FutureExt, SinkExt, Stream, StreamExt,
+};
 
 use crate::{graphql::GraphqlOperation, Error};
 
@@ -18,7 +23,7 @@ where
     Operation: GraphqlOperation,
 {
     pub(super) id: usize,
-    pub(super) stream: Pin<Box<dyn Stream<Item = Result<Operation::Response, Error>> + Send>>,
+    pub(super) stream: BoxStream<'static, Result<Operation::Response, Error>>,
     pub(super) actor: mpsc::Sender<ConnectionCommand>,
 }
 
@@ -33,6 +38,16 @@ where
             .await
             .map_err(|error| Error::Send(error.to_string()))
     }
+
+    pub(super) fn join(self, future: Fuse<BoxFuture<'static, ()>>) -> Self
+    where
+        Operation::Response: 'static,
+    {
+        Self {
+            stream: self.stream.join(future).boxed(),
+            ..self
+        }
+    }
 }
 
 impl<Operation> Stream for SubscriptionStream<Operation>
@@ -44,4 +59,60 @@ where
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         self.project().stream.as_mut().poll_next(cx)
     }
+}
+
+trait JoinStreamExt<'a> {
+    type Item;
+
+    /// Joins a future onto the execution of a stream returning a stream that also polls
+    /// the given future.
+    ///
+    /// If the future ends the stream will still continue till completion but if the stream
+    /// ends the future will be cancelled.
+    ///
+    /// This can be used when you have the receivng side of a channel and a future that sends
+    /// on that channel - combining the two into a single stream that'll run till the channel
+    /// is exhausted.  If you drop the stream you also cancel the underlying process.
+    fn join(self, future: Fuse<BoxFuture<'static, ()>>) -> impl Stream<Item = Self::Item>;
+}
+
+impl<'a, Item> JoinStreamExt<'a> for BoxStream<'static, Item>
+where
+    Item: 'static,
+{
+    type Item = Item;
+
+    fn join(self, future: Fuse<BoxFuture<'static, ()>>) -> impl Stream<Item = Self::Item> + 'a {
+        futures::stream::unfold(
+            ProducerState::Running(self.fuse(), future),
+            |mut state| async {
+                loop {
+                    match state {
+                        ProducerState::Running(mut stream, mut producer) => {
+                            futures::select! {
+                                output = stream.next() => {
+                                    return Some((output?, ProducerState::Running(stream, producer)));
+                                }
+                                _ = producer => {
+                                    state = ProducerState::Draining(stream);
+                                    continue;
+                                }
+                            }
+                        }
+                        ProducerState::Draining(mut stream) => {
+                            return Some((stream.next().await?, ProducerState::Draining(stream)))
+                        }
+                    }
+                }
+            },
+        )
+    }
+}
+
+enum ProducerState<'a, Item> {
+    Running(
+        stream::Fuse<BoxStream<'a, Item>>,
+        future::Fuse<BoxFuture<'a, ()>>,
+    ),
+    Draining(stream::Fuse<BoxStream<'a, Item>>),
 }

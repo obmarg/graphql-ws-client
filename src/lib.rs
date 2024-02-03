@@ -26,6 +26,10 @@ mod client;
 mod logging;
 mod protocol;
 
+#[doc(hidden)]
+#[path = "doc_utils.rs"]
+pub mod __doc_utils;
+
 pub mod graphql;
 pub mod websockets;
 

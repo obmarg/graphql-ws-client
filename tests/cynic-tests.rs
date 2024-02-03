@@ -75,8 +75,7 @@ async fn main_test() {
 
     println!("Connected");
 
-    let (mut client, actor) = graphql_ws_client::next::ClientBuilder::new()
-        .build(connection)
+    let (mut client, actor) = graphql_ws_client::next::Client::build(connection)
         .await
         .unwrap();
 
