@@ -11,7 +11,16 @@ use super::{
     Client, SubscriptionStream,
 };
 
-/// A websocket client builder
+/// Builder for Clients.
+///
+/// ```rust
+///  use graphql_ws_client::next::{Client};
+///  use std::future::IntoFuture;
+/// # let conn = graphql_ws_client::Conn
+/// # fn main() -> Result<(), graphql_ws_client_::Error> {
+/// let (client, actor) = Client::new(conn).await?
+/// # }
+/// ```
 pub struct ClientBuilder {
     payload: Option<serde_json::Value>,
     subscription_buffer_size: Option<usize>,
@@ -19,7 +28,7 @@ pub struct ClientBuilder {
 }
 
 impl super::Client {
-    /// Starts building a new Client.
+    /// Creates a ClientBuilder with the given connection.
     ///
     /// ```rust
     ///  use graphql_ws_client::next::{Client};
@@ -104,7 +113,7 @@ impl IntoFuture for ClientBuilder {
     type IntoFuture = BoxFuture<'static, Self::Output>;
 
     fn into_future(self) -> Self::IntoFuture {
-        todo!()
+        Box::pin(self.build())
     }
 }
 
