@@ -26,7 +26,7 @@ impl super::Client {
     ///  use std::future::IntoFuture;
     /// # let conn = graphql_ws_client::Conn
     /// # fn main() -> Result<(), graphql_ws_client_::Error> {
-    /// let (client, actor) = Client::new(conn).await?
+    /// let (client, actor) = Client::build(conn).await?
     /// # }
     /// ```
     pub fn build<Conn>(connection: Conn) -> ClientBuilder
