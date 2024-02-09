@@ -85,34 +85,37 @@ where
     fn join(self, future: Fuse<BoxFuture<'static, ()>>) -> impl Stream<Item = Self::Item> + 'a {
         futures::stream::unfold(
             ProducerState::Running(self.fuse(), future),
-            |mut state| async {
-                loop {
-                    match state {
-                        ProducerState::Running(mut stream, mut producer) => {
-                            futures::select! {
-                                output = stream.next() => {
-                                    return Some((output?, ProducerState::Running(stream, producer)));
-                                }
-                                _ = producer => {
-                                    state = ProducerState::Draining(stream);
-                                    continue;
-                                }
-                            }
-                        }
-                        ProducerState::Draining(mut stream) => {
-                            return Some((stream.next().await?, ProducerState::Draining(stream)))
-                        }
-                    }
-                }
-            },
+            producer_handler,
         )
     }
 }
-
 enum ProducerState<'a, Item> {
     Running(
         stream::Fuse<BoxStream<'a, Item>>,
         future::Fuse<BoxFuture<'a, ()>>,
     ),
     Draining(stream::Fuse<BoxStream<'a, Item>>),
+}
+
+async fn producer_handler<Item>(
+    mut state: ProducerState<'_, Item>,
+) -> Option<(Item, ProducerState<'_, Item>)> {
+    loop {
+        match state {
+            ProducerState::Running(mut stream, mut producer) => {
+                futures::select! {
+                    output = stream.next() => {
+                        return Some((output?, ProducerState::Running(stream, producer)));
+                    }
+                    _ = producer => {
+                        state = ProducerState::Draining(stream);
+                        continue;
+                    }
+                }
+            }
+            ProducerState::Draining(mut stream) => {
+                return Some((stream.next().await?, ProducerState::Draining(stream)))
+            }
+        }
+    }
 }
