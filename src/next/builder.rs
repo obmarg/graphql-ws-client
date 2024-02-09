@@ -16,9 +16,11 @@ use super::{
 /// ```rust
 ///  use graphql_ws_client::next::{Client};
 ///  use std::future::IntoFuture;
-/// # let conn = graphql_ws_client::Conn
-/// # fn main() -> Result<(), graphql_ws_client_::Error> {
-/// let (client, actor) = Client::new(conn).await?
+/// #
+/// # async fn example() -> Result<(), graphql_ws_client::Error> {
+/// # let connection = graphql_ws_client::__doc_utils::Conn;
+/// let (client, actor) = Client::build(connection).await?;
+/// # Ok(())
 /// # }
 /// ```
 pub struct ClientBuilder {
@@ -33,9 +35,10 @@ impl super::Client {
     /// ```rust
     ///  use graphql_ws_client::next::{Client};
     ///  use std::future::IntoFuture;
-    /// # let conn = graphql_ws_client::Conn
-    /// # fn main() -> Result<(), graphql_ws_client_::Error> {
-    /// let (client, actor) = Client::build(conn).await?
+    /// # async fn example() -> Result<(), graphql_ws_client::Error> {
+    /// # let connection = graphql_ws_client::__doc_utils::Conn;
+    /// let (client, actor) = Client::build(connection).await?;
+    /// # Ok(())
     /// # }
     /// ```
     pub fn build<Conn>(connection: Conn) -> ClientBuilder
@@ -74,9 +77,20 @@ impl ClientBuilder {
 
     /// Initialise a Client and use it to run a single streaming operation
     ///
+    /// ```rust
+    ///  use graphql_ws_client::next::{Client};
+    ///  use std::future::IntoFuture;
+    /// # async fn example() -> Result<(), graphql_ws_client::Error> {
+    /// # let connection = graphql_ws_client::__doc_utils::Conn;
+    /// # let subscription = graphql_ws_client::__doc_utils::Subscription;
+    /// let stream = Client::build(connection).streaming_operation(subscription).await?;
+    /// # Ok(())
+    /// # }
     /// ```
-    /// todo!("a doctest")
-    /// ```
+    ///
+    /// Note that this takes ownership of the client, so it cannot be
+    /// used to run any more operations.
+    ///
     /// If users want to run mutliple operations on a connection they
     /// should use the `IntoFuture` impl to construct a `Client`
     pub async fn streaming_operation<'a, Operation>(
