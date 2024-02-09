@@ -119,6 +119,70 @@ async fn main_test() {
     );
 }
 
+#[tokio::test]
+async fn oneshot_operation_test() {
+    use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
+    use futures::StreamExt;
+
+    let (channel, _) = tokio::sync::broadcast::channel(10);
+
+    subscription_server::start(57433, channel.clone()).await;
+
+    sleep(Duration::from_millis(20)).await;
+
+    let mut request = "ws://localhost:57433/ws".into_client_request().unwrap();
+    request.headers_mut().insert(
+        "Sec-WebSocket-Protocol",
+        HeaderValue::from_str("graphql-transport-ws").unwrap(),
+    );
+
+    let (connection, _) = async_tungstenite::tokio::connect_async(request)
+        .await
+        .unwrap();
+
+    println!("Connected");
+
+    let stream = graphql_ws_client::next::Client::build(connection)
+        .streaming_operation(build_query())
+        .await
+        .unwrap();
+
+    sleep(Duration::from_millis(100)).await;
+
+    let updates = [
+        subscription_server::BookChanged {
+            id: "123".into(),
+            book: None,
+        },
+        subscription_server::BookChanged {
+            id: "456".into(),
+            book: None,
+        },
+        subscription_server::BookChanged {
+            id: "789".into(),
+            book: None,
+        },
+    ];
+
+    futures::join!(
+        async {
+            for update in &updates {
+                channel.send(update.to_owned()).unwrap();
+            }
+        },
+        async {
+            let received_updates = stream.take(updates.len()).collect::<Vec<_>>().await;
+
+            for (expected, update) in updates.iter().zip(received_updates) {
+                let update = update.unwrap();
+                assert_matches!(update.errors, None);
+                let data = update.data.unwrap();
+                assert_eq!(data.books.id.inner(), expected.id.0);
+            }
+        }
+    );
+}
+
 fn build_query() -> cynic::StreamingOperation<BooksChangedSubscription, BooksChangedVariables> {
     use cynic::SubscriptionBuilder;
 
