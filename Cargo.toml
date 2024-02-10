@@ -2,7 +2,7 @@
 name = "graphql-ws-client"
 version = "0.8.0-alpha.2"
 authors = ["Graeme Coupar <graeme@polyandglot.dev>"]
-edition = "2018"
+edition = "2021"
 resolver = "2"
 description = "A graphql over websockets client"
 keywords = ["graphql", "client", "api", "websockets", "subscriptions"]
@@ -34,7 +34,7 @@ serde_json = "1.0"
 thiserror = "1.0"
 
 cynic = { version = "3", optional = true }
-async-tungstenite = { version = "0.24", optional = true }
+async-tungstenite = { version = "0.25", optional = true }
 graphql_client = { version = "0.13.0", optional = true }
 
 ws_stream_wasm = { version = "0.7", optional = true }
@@ -45,7 +45,7 @@ pharos = { version = "0.5.2", optional = true }
 assert_matches = "1.5"
 async-graphql = "7.0.1"
 async-graphql-axum = "7"
-async-tungstenite = { version = "0.24", features = ["tokio-runtime"] }
+async-tungstenite = { version = "0.25", features = ["tokio-runtime"] }
 axum = "0.7"
 axum-macros = "0.4"
 cynic = { version = "3" }
