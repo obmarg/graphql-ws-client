@@ -11,11 +11,14 @@ use super::{
     Client, Subscription,
 };
 
-/// Builder for Clients.
+/// Builder for Graphql over Websocket clients
+///
+/// This can be used to configure the client prior to construction, but can also create
+/// subscriptions directly in the case where users only need to run one per connection.
 ///
 /// ```rust
-///  use graphql_ws_client::Client;
-///  use std::future::IntoFuture;
+/// use graphql_ws_client::Client;
+/// use std::future::IntoFuture;
 /// #
 /// # async fn example() -> Result<(), graphql_ws_client::Error> {
 /// # let connection = graphql_ws_client::__doc_utils::Conn;
@@ -33,8 +36,8 @@ impl super::Client {
     /// Creates a ClientBuilder with the given connection.
     ///
     /// ```rust
-    ///  use graphql_ws_client::Client;
-    ///  use std::future::IntoFuture;
+    /// use graphql_ws_client::Client;
+    /// use std::future::IntoFuture;
     /// # async fn example() -> Result<(), graphql_ws_client::Error> {
     /// # let connection = graphql_ws_client::__doc_utils::Conn;
     /// let (client, actor) = Client::build(connection).await?;
@@ -68,6 +71,8 @@ impl ClientBuilder {
         })
     }
 
+    /// Sets the size of the incoming message buffer that subscriptions created by this client will
+    /// use
     pub fn subscription_buffer_size(self, new: usize) -> Self {
         ClientBuilder {
             subscription_buffer_size: Some(new),
@@ -75,15 +80,15 @@ impl ClientBuilder {
         }
     }
 
-    /// Initialise a Client and use it to run a single streaming operation
+    /// Initialise a Client and use it to run a single subscription
     ///
     /// ```rust
-    ///  use graphql_ws_client::Client;
-    ///  use std::future::IntoFuture;
+    /// use graphql_ws_client::Client;
+    /// use std::future::IntoFuture;
     /// # async fn example() -> Result<(), graphql_ws_client::Error> {
     /// # let connection = graphql_ws_client::__doc_utils::Conn;
     /// # let subscription = graphql_ws_client::__doc_utils::Subscription;
-    /// let stream = Client::build(connection).streaming_operation(subscription).await?;
+    /// let stream = Client::build(connection).subscribe(subscription).await?;
     /// # Ok(())
     /// # }
     /// ```

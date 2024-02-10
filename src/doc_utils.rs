@@ -1,4 +1,4 @@
-use futures::future::BoxFuture;
+use futures::{future::BoxFuture, Future};
 
 use crate::{next::Message, Error};
 
@@ -26,3 +26,5 @@ impl crate::graphql::GraphqlOperation for Subscription {
         unimplemented!()
     }
 }
+
+pub fn spawn<T>(_future: impl Future<Output = T> + Send + 'static) {}

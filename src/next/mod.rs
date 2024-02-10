@@ -24,6 +24,29 @@ pub use self::{
     stream::Subscription,
 };
 
+/// A GraphQL over Websocket client
+///
+/// ```rust,no_run
+/// use graphql_ws_client::Client;
+/// use std::future::IntoFuture;
+/// use futures::StreamExt;
+/// # use graphql_ws_client::__doc_utils::spawn;
+/// # async fn example() -> Result<(), graphql_ws_client::Error> {
+/// # let connection = graphql_ws_client::__doc_utils::Conn;
+/// # let subscription = graphql_ws_client::__doc_utils::Subscription;
+///
+/// let (mut client, actor) = Client::build(connection).await?;
+///
+/// // Spawn the actor onto an async runtime
+/// spawn(actor.into_future());
+///
+/// let mut subscription = client.subscribe(subscription).await?;
+///
+/// while let Some(response) = subscription.next().await {
+///     // Do something with response
+/// }
+/// # Ok(())
+/// # }
 pub struct Client {
     actor: mpsc::Sender<ConnectionCommand>,
     subscription_buffer_size: usize,
@@ -83,6 +106,10 @@ impl Client {
         })
     }
 
+    /// Gracefully closes the connection
+    ///
+    /// This will stop all running subscriptions and shut down the ConnectionActor wherever
+    /// it is running.
     pub async fn close(mut self, code: u16, description: impl Into<String>) {
         self.actor
             .send(ConnectionCommand::Close(code, description.into()))

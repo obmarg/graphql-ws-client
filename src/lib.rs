@@ -11,12 +11,18 @@
 //! If you'd like to use another client or adding support should be trivial.
 //!
 //! ```rust
-//!  use graphql_ws_client::Client;
-//!  use std::future::IntoFuture;
+//! use graphql_ws_client::Client;
+//! use std::future::IntoFuture;
+//! use futures::StreamExt;
 //! # async fn example() -> Result<(), graphql_ws_client::Error> {
 //! # let connection = graphql_ws_client::__doc_utils::Conn;
 //! # let subscription = graphql_ws_client::__doc_utils::Subscription;
-//! let stream = Client::build(connection).streaming_operation(subscription).await?;
+//!
+//! let mut stream = Client::build(connection).subscribe(subscription).await?;
+//!
+//! while let Some(response) = stream.next().await {
+//!     // Do something with response
+//! }
 //! # Ok(())
 //! # }
 //! ```
