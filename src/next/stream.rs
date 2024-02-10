@@ -7,12 +7,12 @@ use futures::{
     channel::mpsc,
     future::{self, BoxFuture, Fuse},
     stream::{self, BoxStream},
-    Future, FutureExt, SinkExt, Stream, StreamExt,
+    SinkExt, Stream, StreamExt,
 };
 
 use crate::{graphql::GraphqlOperation, Error};
 
-use super::{actor::ConnectionActor, ConnectionCommand};
+use super::ConnectionCommand;
 
 /// A `futures::Stream` for a subscription.
 ///

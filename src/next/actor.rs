@@ -1,6 +1,6 @@
 use std::{
     collections::{hash_map::Entry, HashMap},
-    future::{Future, IntoFuture},
+    future::IntoFuture,
 };
 
 use futures::{channel::mpsc, future::BoxFuture, FutureExt, SinkExt, StreamExt};
@@ -225,8 +225,8 @@ impl Message {
 impl Event {
     fn forwarding_payload(self) -> Option<Value> {
         match self {
-            Event::Next { id, payload } => Some(payload),
-            Event::Error { id, payload } => Some(json!({"errors": payload})),
+            Event::Next { payload, .. } => Some(payload),
+            Event::Error { payload, .. } => Some(json!({"errors": payload})),
             _ => None,
         }
     }
