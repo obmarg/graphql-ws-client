@@ -10,11 +10,25 @@
 //!
 //! If you'd like to use another client or adding support should be trivial.
 //!
+//! ```rust
+//!  use graphql_ws_client::Client;
+//!  use std::future::IntoFuture;
+//! # async fn example() -> Result<(), graphql_ws_client::Error> {
+//! # let connection = graphql_ws_client::__doc_utils::Conn;
+//! # let subscription = graphql_ws_client::__doc_utils::Subscription;
+//! let stream = Client::build(connection).streaming_operation(subscription).await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! See the [examples][examples] for more thorough usage details.
+//!
 //! [protocol]: https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md
 //! [cynic]: https://cynic-rs.dev
 //! [graphql-client]: https://github.com/graphql-rust/graphql-client
 //! [async-tungstenite]: https://github.com/sdroege/async-tungstenite
 //! [ws-stream-wasm]: https://github.com/najamelan/ws_stream_wasm
+//! [examples]: https://github.com/obmarg/graphql-ws-client/tree/main/examples/examples
 
 #![warn(missing_docs)]
 
@@ -32,11 +46,10 @@ pub mod __doc_utils;
 
 pub mod graphql;
 
-// TODO: next shouldn't be public really, and shouldn't allow missing_docs
-#[allow(missing_docs)]
 mod next;
 
 #[cfg(feature = "ws_stream_wasm")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ws_stream_wasm")))]
 /// Integration with the ws_stream_wasm library
 pub mod ws_stream_wasm;
 
@@ -50,6 +63,7 @@ pub use legacy::{
 };
 
 #[cfg(feature = "ws_stream_wasm")]
+#[cfg_attr(docsrs, doc(cfg(feature = "ws_stream_wasm")))]
 #[allow(deprecated)]
 pub use legacy::wasm::{
     wasm_websocket_combined_split, FusedWasmWebsocketSink, WasmWebsocketMessage,
@@ -61,6 +75,7 @@ pub use error::Error;
 
 /// A websocket client for the cynic graphql crate
 #[cfg(feature = "cynic")]
+#[cfg_attr(docsrs, doc(cfg(feature = "cynic")))]
 #[allow(deprecated)]
 #[deprecated(
     since = "0.8.0-rc.1",
@@ -70,6 +85,7 @@ pub type CynicClient<WsMessage> = AsyncWebsocketClient<WsMessage>;
 
 /// A websocket client builder for the cynic graphql crate
 #[cfg(feature = "cynic")]
+#[cfg_attr(docsrs, doc(cfg(feature = "cynic")))]
 #[allow(deprecated)]
 #[deprecated(
     since = "0.8.0-rc.1",
@@ -79,6 +95,7 @@ pub type CynicClientBuilder = AsyncWebsocketClientBuilder;
 
 /// A websocket client for the graphql_client graphql crate
 #[cfg(feature = "client-graphql-client")]
+#[cfg_attr(docsrs, doc(cfg(feature = "client-graphql-client")))]
 #[allow(deprecated)]
 #[deprecated(
     since = "0.8.0-rc.1",
@@ -88,6 +105,7 @@ pub type GraphQLClientClient<WsMessage> = AsyncWebsocketClient<WsMessage>;
 
 /// A websocket client builder for the graphql_client graphql crate
 #[cfg(feature = "client-graphql-client")]
+#[cfg_attr(docsrs, doc(cfg(feature = "client-graphql-client")))]
 #[allow(deprecated)]
 #[deprecated(
     since = "0.8.0-rc.1",

@@ -5,6 +5,7 @@ use ws_stream_wasm::{WsEvent, WsMessage, WsMeta, WsStream};
 use crate::Error;
 
 /// A websocket connection for ws_stream_wasm
+#[cfg_attr(docsrs, doc(cfg(feature = "ws_stream_wasm")))]
 pub struct Connection {
     messages: WsStream,
     event_stream: pharos::Events<WsEvent>,

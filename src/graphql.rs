@@ -40,10 +40,11 @@ pub trait GraphqlOperation: serde::Serialize {
     fn decode(&self, data: serde_json::Value) -> Result<Self::Response, Self::Error>;
 }
 
-#[cfg(feature = "cynic")]
+#[cfg(feature = "client-cynic")]
 mod cynic {
     use super::*;
 
+    #[cfg_attr(docsrs, doc(cfg(feature = "client-cynic")))]
     impl<ResponseData, Variables> GraphqlOperation
         for ::cynic::StreamingOperation<ResponseData, Variables>
     where
@@ -70,6 +71,7 @@ mod graphql_client {
     use std::marker::PhantomData;
 
     /// A streaming operation for a GraphQLQuery
+    #[cfg_attr(docsrs, doc(cfg(feature = "client-graphql-client")))]
     pub struct StreamingOperation<Q: GraphQLQuery> {
         inner: QueryBody<Q::Variables>,
         phantom: PhantomData<Q>,
