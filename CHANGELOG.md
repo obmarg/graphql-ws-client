@@ -11,6 +11,11 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+### New Features
+
+- Added a `streaming_operation` function to `next::ClientBuilder` to make
+  creating a single subscription on a given connection easier.
+
 ## v0.8.0-alpha.2 - 2024-01-30
 
 ### Breaking Changes
