@@ -31,8 +31,8 @@ impl<Operation> Subscription<Operation>
 where
     Operation: GraphqlOperation + Send,
 {
-    /// Stops the operation by sending a Complete message to the server.
-    pub async fn stop_operation(mut self) -> Result<(), Error> {
+    /// Stops the subscription by sending a Complete message to the server.
+    pub async fn stop(mut self) -> Result<(), Error> {
         self.actor
             .send(ConnectionCommand::Cancel(self.id))
             .await
