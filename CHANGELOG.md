@@ -11,6 +11,18 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+### Breaking Changes
+
+- The `next` api is now available at the top level rather than the `next`
+  module.
+
+### Deprecations
+
+These will be removed in a future version, probably in v0.9.0
+
+- `AsyncWebsocketClient` and all its supporting traits and structs are now
+  deprecated.
+
 ### New Features
 
 - Added a `streaming_operation` function to `next::ClientBuilder` to make

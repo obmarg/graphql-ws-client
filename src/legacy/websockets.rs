@@ -4,6 +4,10 @@
 ///
 /// graphql-ws-client doesn't implement the websocket protocol itself.
 /// This trait provides part of the integration with websocket client libraries.
+#[deprecated(
+    since = "0.8.0-rc.1",
+    note = "WebsockeMessage is only used for the deprecated AsyncWebsocketClient.  You should update to use Client instead"
+)]
 pub trait WebsocketMessage: std::fmt::Debug {
     /// The `Error` type for this websocket client.
     type Error: std::error::Error + Send + 'static;

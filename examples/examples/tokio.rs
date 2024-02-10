@@ -3,7 +3,7 @@
 //!
 //! Talks to the the tide subscription example in `async-graphql`
 
-use examples::TokioSpawner;
+use std::future::IntoFuture;
 
 mod schema {
     cynic::use_schema!("../schemas/books.graphql");
@@ -40,7 +40,7 @@ struct BooksChangedSubscription {
 async fn main() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
-    use graphql_ws_client::CynicClientBuilder;
+    use graphql_ws_client::Client;
 
     let mut request = "ws://localhost:8000".into_client_request().unwrap();
     request.headers_mut().insert(
@@ -54,12 +54,8 @@ async fn main() {
 
     println!("Connected");
 
-    let (sink, stream) = connection.split();
-
-    let mut client = CynicClientBuilder::new()
-        .build(stream, sink, TokioSpawner::current())
-        .await
-        .unwrap();
+    let (mut client, actor) = Client::build(connection).await.unwrap();
+    tokio::spawn(actor.into_future());
 
     let mut stream = client.streaming_operation(build_query()).await.unwrap();
     println!("Running subscription apparently?");

@@ -1,9 +1,10 @@
 use async_tungstenite::tungstenite::{self, protocol::CloseFrame};
 use futures::{AsyncRead, AsyncWrite, SinkExt, StreamExt};
 
-use crate::{websockets::WebsocketMessage, Error};
+use crate::Error;
 
-impl WebsocketMessage for tungstenite::Message {
+#[allow(deprecated)]
+impl crate::legacy::websockets::WebsocketMessage for tungstenite::Message {
     type Error = tungstenite::Error;
 
     fn new(text: String) -> Self {

@@ -18,55 +18,32 @@ use futures::{
 use serde::Serialize;
 use serde_json::json;
 
-use super::{
+use crate::{
     graphql::GraphqlOperation,
     logging::trace,
     protocol::{ConnectionInit, Event, Message},
     websockets::WebsocketMessage,
+    Error,
 };
 
 const SUBSCRIPTION_BUFFER_SIZE: usize = 5;
 
 /// A websocket client
+#[deprecated(since = "0.8.0-rc.1", note = "use Client instead")]
 pub struct AsyncWebsocketClient<WsMessage> {
     inner: Arc<ClientInner>,
     sender_sink: mpsc::Sender<WsMessage>,
     next_id: AtomicU64,
 }
 
-#[derive(thiserror::Error, Debug)]
-/// Error type
-pub enum Error {
-    /// Unknown error
-    #[error("unknown: {0}")]
-    Unknown(String),
-    /// Custom error
-    #[error("{0}: {1}")]
-    Custom(String, String),
-    /// Unexpected close frame
-    #[error("got close frame. code: {0}, reason: {1}")]
-    Close(u16, String),
-    /// Decoding / parsing error
-    #[error("message decode error, reason: {0}")]
-    Decode(String),
-    /// Serializing error
-    #[error("couldn't serialize message, reason: {0}")]
-    Serializing(String),
-    /// Sending error
-    #[error("message sending error, reason: {0}")]
-    Send(String),
-    /// Futures spawn error
-    #[error("futures spawn error, reason: {0}")]
-    SpawnHandle(String),
-    /// Sender shutdown error
-    #[error("sender shutdown error, reason: {0}")]
-    SenderShutdown(String),
-}
-
 #[derive(Serialize)]
 pub enum NoPayload {}
 
 /// A websocket client builder
+#[deprecated(
+    since = "0.8.0-rc.1",
+    note = "use ClientBuilder (via Client::build) instead"
+)]
 pub struct AsyncWebsocketClientBuilder<Payload = NoPayload> {
     payload: Option<Payload>,
 }

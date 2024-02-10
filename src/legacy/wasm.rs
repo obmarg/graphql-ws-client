@@ -8,8 +8,6 @@ use pharos::{Observable, ObserveConfig};
 use pin_project_lite::pin_project;
 use ws_stream_wasm::{WsErr, WsEvent, WsMessage, WsMeta, WsStream};
 
-use crate::websockets::WebsocketMessage;
-
 /// Creates a new pair of sink and stream which operate on [`WasmWebsocketMessage`] instead of `WsMessage` and `WsEvent` separately.
 pub async fn wasm_websocket_combined_split(
     mut ws_meta: WsMeta,
@@ -45,7 +43,8 @@ pub enum WasmWebsocketMessage {
     WsEvent(ws_stream_wasm::WsEvent),
 }
 
-impl WebsocketMessage for WasmWebsocketMessage {
+#[allow(deprecated)]
+impl crate::legacy::websockets::WebsocketMessage for WasmWebsocketMessage {
     type Error = ws_stream_wasm::WsErr;
 
     fn new(text: String) -> Self {
