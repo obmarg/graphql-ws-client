@@ -1,10 +1,7 @@
-//! An example of running a multiple subscriptions on a single connection
-//! using `graphql-ws-client`, `async-tungstenite` & the `async_std`
-//! executor.
+//! An example of creating a connection and running a single subscription on it
+//! using `cynic` and `async-tungstenite`
 //!
 //! Talks to the the tide subscription example in `async-graphql`
-
-use std::future::IntoFuture;
 
 mod schema {
     cynic::use_schema!("../schemas/books.graphql");
@@ -55,26 +52,14 @@ async fn main() {
 
     println!("Connected");
 
-    let (mut client, actor) = Client::build(connection).await.unwrap();
-    async_std::task::spawn(actor.into_future());
+    let mut subscription = Client::build(connection)
+        .subscribe(build_query())
+        .await
+        .unwrap();
 
-    // In reality you'd probably want to different subscriptions, but for the sake of this example
-    // these are the same subscriptions
-    let mut first_subscription = client.subscribe(build_query()).await.unwrap();
-    let mut second_subscription = client.subscribe(build_query()).await.unwrap();
-
-    futures::join!(
-        async move {
-            while let Some(item) = first_subscription.next().await {
-                println!("{:?}", item);
-            }
-        },
-        async move {
-            while let Some(item) = second_subscription.next().await {
-                println!("{:?}", item);
-            }
-        }
-    );
+    while let Some(item) = subscription.next().await {
+        println!("{:?}", item);
+    }
 }
 
 fn build_query() -> cynic::StreamingOperation<BooksChangedSubscription> {
