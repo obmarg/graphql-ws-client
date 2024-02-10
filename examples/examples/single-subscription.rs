@@ -1,5 +1,5 @@
-//! An example of using subscriptions with `graphql-ws-client` and
-//! `async-tungstenite`
+//! An example of creating a connection and running a single subscription on it
+//! using `graphql-ws-client` and `async-tungstenite`
 //!
 //! Talks to the the tide subscription example in `async-graphql`
 
@@ -38,7 +38,7 @@ struct BooksChangedSubscription {
 async fn main() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
-    use graphql_ws_client::CynicClientBuilder;
+    use graphql_ws_client::next::Client;
 
     let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
     request.headers_mut().insert(
@@ -52,16 +52,12 @@ async fn main() {
 
     println!("Connected");
 
-    let (sink, stream) = connection.split();
-
-    let mut client = CynicClientBuilder::new()
-        .build(stream, sink, async_executors::AsyncStd)
+    let mut subscription = Client::build(connection)
+        .streaming_operation(build_query())
         .await
         .unwrap();
 
-    let mut stream = client.streaming_operation(build_query()).await.unwrap();
-    println!("Running subscription");
-    while let Some(item) = stream.next().await {
+    while let Some(item) = subscription.next().await {
         println!("{:?}", item);
     }
 }

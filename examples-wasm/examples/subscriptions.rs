@@ -5,7 +5,7 @@
 
 use std::future::IntoFuture;
 
-use graphql_ws_client::{next::ClientBuilder, ws_stream_wasm::Connection};
+use graphql_ws_client::{next::Client, ws_stream_wasm::Connection};
 
 mod schema {
     cynic::use_schema!("../schemas/books.graphql");
@@ -57,7 +57,7 @@ async fn main() {
 
     let connection = Connection::new(ws_conn).await;
 
-    let (mut client, actor) = ClientBuilder::new().build(connection).await.unwrap();
+    let (mut client, actor) = Client::build(connection).await.unwrap();
     wasm_bindgen_futures::spawn_local(actor.into_future());
 
     let mut stream = client.streaming_operation(build_query()).await.unwrap();

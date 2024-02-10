@@ -36,7 +36,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub(super) fn new(
+    pub(super) fn new_internal(
         actor: mpsc::Sender<ConnectionCommand>,
         subscription_buffer_size: usize,
     ) -> Self {

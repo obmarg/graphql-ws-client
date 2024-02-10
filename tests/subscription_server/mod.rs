@@ -3,29 +3,79 @@
 
 use async_graphql::{EmptyMutation, Object, Schema, SimpleObject, Subscription, ID};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse, GraphQLSubscription};
-use axum::{extract::Extension, routing::post, Router, Server};
+use axum::{extract::Extension, routing::post, Router};
 use futures::{Stream, StreamExt};
 use tokio::sync::broadcast::Sender;
 use tokio_stream::wrappers::BroadcastStream;
 
 pub type BooksSchema = Schema<QueryRoot, EmptyMutation, SubscriptionRoot>;
 
-pub async fn start(port: u16, channel: Sender<BookChanged>) {
-    let schema = Schema::build(QueryRoot, EmptyMutation, SubscriptionRoot { channel }).finish();
-
-    let app = Router::new()
-        .route("/", post(graphql_handler))
-        .route_service("/ws", GraphQLSubscription::new(schema.clone()))
-        .layer(Extension(schema));
-
-    tokio::spawn(async move {
-        Server::bind(&format!("127.0.0.1:{port}").parse().unwrap())
-            .serve(app.into_make_service())
-            .await
-            .unwrap();
-    });
+pub struct SubscriptionServer {
+    shutdown: Option<tokio::sync::oneshot::Sender<()>>,
+    port: u16,
+    sender: Sender<BookChanged>,
 }
 
+impl Drop for SubscriptionServer {
+    fn drop(&mut self) {
+        if let Some(shutdown) = self.shutdown.take() {
+            shutdown.send(()).ok();
+        }
+    }
+}
+
+impl SubscriptionServer {
+    pub async fn start() -> SubscriptionServer {
+        let (channel, _) = tokio::sync::broadcast::channel(16);
+
+        let schema = Schema::build(
+            QueryRoot,
+            EmptyMutation,
+            SubscriptionRoot {
+                channel: channel.clone(),
+            },
+        )
+        .finish();
+
+        let app = Router::new()
+            .route("/", post(graphql_handler))
+            .route_service("/ws", GraphQLSubscription::new(schema.clone()))
+            .layer(Extension(schema));
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+
+        let (shutdown_sender, shutdown_receiver) = tokio::sync::oneshot::channel::<()>();
+
+        tokio::spawn(async move {
+            axum::serve(listener, app.with_state(()))
+                .with_graceful_shutdown(async move {
+                    shutdown_receiver.await.ok();
+                })
+                .await
+                .unwrap();
+        });
+
+        SubscriptionServer {
+            port,
+            shutdown: Some(shutdown_sender),
+            sender: channel,
+        }
+    }
+
+    pub fn websocket_url(&self) -> String {
+        format!("ws://localhost:{}/ws", self.port)
+    }
+
+    pub fn send(
+        &self,
+        change: BookChanged,
+    ) -> Result<(), tokio::sync::broadcast::error::SendError<BookChanged>> {
+        self.sender.send(change).map(|_| ())
+    }
+}
+
+#[axum_macros::debug_handler]
 async fn graphql_handler(schema: Extension<BooksSchema>, req: GraphQLRequest) -> GraphQLResponse {
     schema.execute(req.into_inner()).await.into()
 }

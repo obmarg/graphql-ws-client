@@ -1,8 +1,7 @@
-#![cfg(feature = "cynic")]
-
 use std::{future::IntoFuture, time::Duration};
 
 use assert_matches::assert_matches;
+use subscription_server::SubscriptionServer;
 use tokio::time::sleep;
 
 mod subscription_server;
@@ -57,13 +56,11 @@ async fn main_test() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
 
-    let (channel, _) = tokio::sync::broadcast::channel(10);
-
-    subscription_server::start(57432, channel.clone()).await;
+    let server = SubscriptionServer::start().await;
 
     sleep(Duration::from_millis(20)).await;
 
-    let mut request = "ws://localhost:57432/ws".into_client_request().unwrap();
+    let mut request = server.websocket_url().into_client_request().unwrap();
     request.headers_mut().insert(
         "Sec-WebSocket-Protocol",
         HeaderValue::from_str("graphql-transport-ws").unwrap(),
@@ -75,8 +72,7 @@ async fn main_test() {
 
     println!("Connected");
 
-    let (mut client, actor) = graphql_ws_client::next::ClientBuilder::new()
-        .build(connection)
+    let (mut client, actor) = graphql_ws_client::next::Client::build(connection)
         .await
         .unwrap();
 
@@ -104,7 +100,68 @@ async fn main_test() {
     futures::join!(
         async {
             for update in &updates {
-                channel.send(update.to_owned()).unwrap();
+                server.send(update.to_owned()).unwrap();
+            }
+        },
+        async {
+            let received_updates = stream.take(updates.len()).collect::<Vec<_>>().await;
+
+            for (expected, update) in updates.iter().zip(received_updates) {
+                let update = update.unwrap();
+                assert_matches!(update.errors, None);
+                let data = update.data.unwrap();
+                assert_eq!(data.books.id.inner(), expected.id.0);
+            }
+        }
+    );
+}
+
+#[tokio::test]
+async fn oneshot_operation_test() {
+    use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
+    use futures::StreamExt;
+
+    let server = SubscriptionServer::start().await;
+
+    sleep(Duration::from_millis(20)).await;
+
+    let mut request = server.websocket_url().into_client_request().unwrap();
+    request.headers_mut().insert(
+        "Sec-WebSocket-Protocol",
+        HeaderValue::from_str("graphql-transport-ws").unwrap(),
+    );
+
+    let (connection, _) = async_tungstenite::tokio::connect_async(request)
+        .await
+        .unwrap();
+
+    println!("Connected");
+
+    let stream = graphql_ws_client::next::Client::build(connection)
+        .streaming_operation(build_query())
+        .await
+        .unwrap();
+
+    let updates = [
+        subscription_server::BookChanged {
+            id: "123".into(),
+            book: None,
+        },
+        subscription_server::BookChanged {
+            id: "456".into(),
+            book: None,
+        },
+        subscription_server::BookChanged {
+            id: "789".into(),
+            book: None,
+        },
+    ];
+
+    futures::join!(
+        async {
+            sleep(Duration::from_millis(10)).await;
+            for update in &updates {
+                server.send(update.to_owned()).unwrap();
             }
         },
         async {
