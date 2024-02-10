@@ -17,6 +17,7 @@ all APIs might be changed.
   module.
 - `async_tungstenite` is no longer a default feautre, you should explicitly
   enable it if you need it
+- Updated to `async_tungstenite` 0.25
 
 ### Deprecations
 
