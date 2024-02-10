@@ -29,6 +29,7 @@ use crate::{
 const SUBSCRIPTION_BUFFER_SIZE: usize = 5;
 
 /// A websocket client
+#[deprecated(since = "0.8.0-rc.1", note = "use Client instead")]
 pub struct AsyncWebsocketClient<WsMessage> {
     inner: Arc<ClientInner>,
     sender_sink: mpsc::Sender<WsMessage>,
@@ -39,6 +40,10 @@ pub struct AsyncWebsocketClient<WsMessage> {
 pub enum NoPayload {}
 
 /// A websocket client builder
+#[deprecated(
+    since = "0.8.0-rc.1",
+    note = "use ClientBuilder (via Client::build) instead"
+)]
 pub struct AsyncWebsocketClientBuilder<Payload = NoPayload> {
     payload: Option<Payload>,
 }
