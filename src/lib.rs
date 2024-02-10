@@ -38,11 +38,6 @@ pub mod graphql;
 mod next;
 
 #[cfg(feature = "ws_stream_wasm")]
-mod wasm;
-#[cfg(feature = "ws_stream_wasm")]
-pub use wasm::{wasm_websocket_combined_split, FusedWasmWebsocketSink, WasmWebsocketMessage};
-
-#[cfg(feature = "ws_stream_wasm")]
 /// Integration with the ws_stream_wasm library
 pub mod ws_stream_wasm;
 
@@ -53,6 +48,11 @@ mod native;
 pub use legacy::{
     client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, SubscriptionStream},
     websockets,
+};
+
+#[cfg(feature = "ws_stream_wasm")]
+pub use legacy::wasm::{
+    wasm_websocket_combined_split, FusedWasmWebsocketSink, WasmWebsocketMessage,
 };
 
 pub use next::*;
