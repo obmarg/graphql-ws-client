@@ -11,6 +11,7 @@ macro_rules! trace {
 }
 
 #[cfg(not(feature = "no-logging"))]
+#[allow(unused_macros)]
 macro_rules! warning {
     ($($arg:tt)+) => (
         log::warn!(target: "graphql-ws-client", $($arg)+)
@@ -18,9 +19,12 @@ macro_rules! warning {
 }
 
 #[cfg(feature = "no-logging")]
+#[allow(unused_macros)]
 macro_rules! warning {
     ($($t:tt)*) => {};
 }
 
 pub(crate) use trace;
+
+#[allow(unused_imports)]
 pub(crate) use warning;
