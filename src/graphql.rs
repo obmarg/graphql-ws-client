@@ -9,6 +9,10 @@
 //! [graphql-client]: https://github.com/graphql-rust/graphql-client
 
 /// A trait for GraphQL clients.
+#[deprecated(
+    since = "0.8.0-rc.1",
+    note = "this trait is no longer needed with the new Client, please update to use that"
+)]
 pub trait GraphqlClient {
     /// The generic response type for this GraphqlClient implementation
     ///

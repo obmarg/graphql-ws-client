@@ -1,31 +1,30 @@
 //! # graphql-ws-client
 //!
 //! graphql-ws-client implements asynchronous GraphQL-over-Websocket using the
-//! [graphql-transport-ws protocol][protocol].  It tries to be websocket client,
-//! graphql client _and_ async executor agnostic and provides built in support
-//! for:
+//! [graphql-transport-ws protocol][protocol].  It is websocket client, graphql
+//! client _and_ async runtime agnostic.  Built in support is provided for:
 //!
 //! - [Cynic][cynic] & [Graphql-Client][graphql-client] GraphQL clients.
 //! - [async-tungstenite][async-tungstenite] & [ws-stream-wasm][ws-stream-wasm] Websocket Clients .
-//! - The [async-std][async-std] & [tokio][tokio] async runtimes.
+//! - Any async runtime.
 //!
-//! If you'd like to use another client or runtime adding support should
-//! hopefully be trivial.
+//! If you'd like to use another client or adding support should be trivial.
 //!
 //! [protocol]: https://github.com/graphql/graphql-over-http/blob/main/rfcs/GraphQLOverWebSocket.md
 //! [cynic]: https://cynic-rs.dev
 //! [graphql-client]: https://github.com/graphql-rust/graphql-client
 //! [async-tungstenite]: https://github.com/sdroege/async-tungstenite
-//! [async-std]: https://async.rs/
-//! [tokio]: https://tokio.rs/
 //! [ws-stream-wasm]: https://github.com/najamelan/ws_stream_wasm
 
 #![warn(missing_docs)]
 
 mod error;
-mod legacy;
 mod logging;
 mod protocol;
+
+#[doc(hidden)]
+#[deprecated]
+pub mod legacy;
 
 #[doc(hidden)]
 #[path = "doc_utils.rs"]
@@ -51,6 +50,7 @@ pub use legacy::{
 };
 
 #[cfg(feature = "ws_stream_wasm")]
+#[allow(deprecated)]
 pub use legacy::wasm::{
     wasm_websocket_combined_split, FusedWasmWebsocketSink, WasmWebsocketMessage,
 };

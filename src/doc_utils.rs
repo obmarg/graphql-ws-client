@@ -1,14 +1,15 @@
+use futures::future::BoxFuture;
+
 use crate::{next::Message, Error};
 
 pub struct Conn;
 
-#[async_trait::async_trait]
 impl crate::next::Connection for Conn {
-    async fn receive(&mut self) -> Option<Message> {
+    fn receive(&mut self) -> BoxFuture<'_, Option<Message>> {
         unimplemented!()
     }
 
-    async fn send(&mut self, _: Message) -> Result<(), Error> {
+    fn send(&mut self, _: Message) -> BoxFuture<'_, Result<(), Error>> {
         unimplemented!()
     }
 }

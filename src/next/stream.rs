@@ -18,7 +18,7 @@ use super::ConnectionCommand;
 ///
 /// Emits an item for each message received by the subscription.
 #[pin_project::pin_project]
-pub struct SubscriptionStream<Operation>
+pub struct Subscription<Operation>
 where
     Operation: GraphqlOperation,
 {
@@ -27,7 +27,7 @@ where
     pub(super) actor: mpsc::Sender<ConnectionCommand>,
 }
 
-impl<Operation> SubscriptionStream<Operation>
+impl<Operation> Subscription<Operation>
 where
     Operation: GraphqlOperation + Send,
 {
@@ -50,7 +50,7 @@ where
     }
 }
 
-impl<Operation> Stream for SubscriptionStream<Operation>
+impl<Operation> Stream for Subscription<Operation>
 where
     Operation: GraphqlOperation + Unpin,
 {

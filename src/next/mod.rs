@@ -21,7 +21,7 @@ pub use self::{
     actor::ConnectionActor,
     builder::ClientBuilder,
     connection::{Connection, Message},
-    stream::SubscriptionStream,
+    stream::Subscription,
 };
 
 pub struct Client {
@@ -45,10 +45,10 @@ impl Client {
     // Starts a streaming operation on this client.
     ///
     /// Returns a `Stream` of responses.
-    pub async fn streaming_operation<'a, Operation>(
+    pub async fn subscribe<'a, Operation>(
         &mut self,
         op: Operation,
-    ) -> Result<SubscriptionStream<Operation>, Error>
+    ) -> Result<Subscription<Operation>, Error>
     where
         Operation: GraphqlOperation + Unpin + Send + 'static,
     {
@@ -73,7 +73,7 @@ impl Client {
             .await
             .map_err(|error| Error::Send(error.to_string()))?;
 
-        Ok(SubscriptionStream::<Operation> {
+        Ok(Subscription::<Operation> {
             id,
             stream: Box::pin(receiver.map(move |response| {
                 op.decode(response)

@@ -8,7 +8,7 @@ use crate::{graphql::GraphqlOperation, logging::trace, protocol::Event, Error};
 use super::{
     actor::ConnectionActor,
     connection::{Connection, Message},
-    Client, SubscriptionStream,
+    Client, Subscription,
 };
 
 /// Builder for Clients.
@@ -93,10 +93,10 @@ impl ClientBuilder {
     ///
     /// If users want to run mutliple operations on a connection they
     /// should use the `IntoFuture` impl to construct a `Client`
-    pub async fn streaming_operation<'a, Operation>(
+    pub async fn subscribe<'a, Operation>(
         self,
         op: Operation,
-    ) -> Result<SubscriptionStream<Operation>, Error>
+    ) -> Result<Subscription<Operation>, Error>
     where
         Operation: GraphqlOperation + Unpin + Send + 'static,
     {
@@ -104,7 +104,7 @@ impl ClientBuilder {
 
         let mut actor_future = actor.into_future().fuse();
 
-        let subscribe_future = client.streaming_operation(op).fuse();
+        let subscribe_future = client.subscribe(op).fuse();
         futures::pin_mut!(subscribe_future);
 
         // Temporarily run actor_future while we start the subscription

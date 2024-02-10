@@ -1,9 +1,10 @@
+use futures::future::BoxFuture;
+
 use crate::Error;
 
-#[async_trait::async_trait]
 pub trait Connection {
-    async fn receive(&mut self) -> Option<Message>;
-    async fn send(&mut self, message: Message) -> Result<(), Error>;
+    fn receive(&mut self) -> BoxFuture<'_, Option<Message>>;
+    fn send(&mut self, message: Message) -> BoxFuture<'_, Result<(), Error>>;
 }
 
 pub enum Message {

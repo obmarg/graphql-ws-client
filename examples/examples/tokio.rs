@@ -57,7 +57,7 @@ async fn main() {
     let (mut client, actor) = Client::build(connection).await.unwrap();
     tokio::spawn(actor.into_future());
 
-    let mut stream = client.streaming_operation(build_query()).await.unwrap();
+    let mut stream = client.subscribe(build_query()).await.unwrap();
     println!("Running subscription apparently?");
     while let Some(item) = stream.next().await {
         println!("{:?}", item);
