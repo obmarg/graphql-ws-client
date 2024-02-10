@@ -43,11 +43,15 @@ pharos = { version = "0.5.2", optional = true }
 
 [dev-dependencies]
 assert_matches = "1.5"
-async-graphql = "5.0.10"
-async-graphql-axum = "5"
+async-graphql = "7.0.1"
+async-graphql-axum = "7"
 async-tungstenite = { version = "0.24", features = ["tokio-runtime"] }
-axum = "0.6"
+axum = "0.7"
+axum-macros = "0.4"
 cynic = { version = "3" }
 insta = "1.11"
 tokio = { version = "1", features = ["macros"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
+
+graphql-ws-client.path = "."
+graphql-ws-client.features = ["client-cynic", "client-graphql-client", "async-tungstenite"]

@@ -1,8 +1,7 @@
-#![cfg(feature = "cynic")]
-
 use std::{future::IntoFuture, time::Duration};
 
 use assert_matches::assert_matches;
+use subscription_server::SubscriptionServer;
 use tokio::time::sleep;
 
 mod subscription_server;
@@ -57,13 +56,11 @@ async fn main_test() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
 
-    let (channel, _) = tokio::sync::broadcast::channel(10);
-
-    subscription_server::start(57432, channel.clone()).await;
+    let server = SubscriptionServer::start().await;
 
     sleep(Duration::from_millis(20)).await;
 
-    let mut request = "ws://localhost:57432/ws".into_client_request().unwrap();
+    let mut request = server.websocket_url().into_client_request().unwrap();
     request.headers_mut().insert(
         "Sec-WebSocket-Protocol",
         HeaderValue::from_str("graphql-transport-ws").unwrap(),
@@ -103,7 +100,7 @@ async fn main_test() {
     futures::join!(
         async {
             for update in &updates {
-                channel.send(update.to_owned()).unwrap();
+                server.send(update.to_owned()).unwrap();
             }
         },
         async {
@@ -124,13 +121,11 @@ async fn oneshot_operation_test() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
 
-    let (channel, _) = tokio::sync::broadcast::channel(10);
-
-    subscription_server::start(57433, channel.clone()).await;
+    let server = SubscriptionServer::start().await;
 
     sleep(Duration::from_millis(20)).await;
 
-    let mut request = "ws://localhost:57433/ws".into_client_request().unwrap();
+    let mut request = server.websocket_url().into_client_request().unwrap();
     request.headers_mut().insert(
         "Sec-WebSocket-Protocol",
         HeaderValue::from_str("graphql-transport-ws").unwrap(),
@@ -167,7 +162,7 @@ async fn oneshot_operation_test() {
     futures::join!(
         async {
             for update in &updates {
-                channel.send(update.to_owned()).unwrap();
+                server.send(update.to_owned()).unwrap();
             }
         },
         async {
