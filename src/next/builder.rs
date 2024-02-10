@@ -14,7 +14,7 @@ use super::{
 /// Builder for Clients.
 ///
 /// ```rust
-///  use graphql_ws_client::next::{Client};
+///  use graphql_ws_client::Client;
 ///  use std::future::IntoFuture;
 /// #
 /// # async fn example() -> Result<(), graphql_ws_client::Error> {
@@ -33,7 +33,7 @@ impl super::Client {
     /// Creates a ClientBuilder with the given connection.
     ///
     /// ```rust
-    ///  use graphql_ws_client::next::{Client};
+    ///  use graphql_ws_client::Client;
     ///  use std::future::IntoFuture;
     /// # async fn example() -> Result<(), graphql_ws_client::Error> {
     /// # let connection = graphql_ws_client::__doc_utils::Conn;
@@ -78,7 +78,7 @@ impl ClientBuilder {
     /// Initialise a Client and use it to run a single streaming operation
     ///
     /// ```rust
-    ///  use graphql_ws_client::next::{Client};
+    ///  use graphql_ws_client::Client;
     ///  use std::future::IntoFuture;
     /// # async fn example() -> Result<(), graphql_ws_client::Error> {
     /// # let connection = graphql_ws_client::__doc_utils::Conn;

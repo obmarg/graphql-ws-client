@@ -1,7 +1,10 @@
 //! An example of running a multiple subscriptions on a single connection
-//! using `graphql-ws-client` and `async-tungstenite`
+//! using `graphql-ws-client`, `async-tungstenite` & the `async_std`
+//! executor.
 //!
 //! Talks to the the tide subscription example in `async-graphql`
+
+use std::future::IntoFuture;
 
 mod schema {
     cynic::use_schema!("../schemas/books.graphql");
@@ -38,7 +41,7 @@ struct BooksChangedSubscription {
 async fn main() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
-    use graphql_ws_client::CynicClientBuilder;
+    use graphql_ws_client::Client;
 
     let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
     request.headers_mut().insert(
@@ -52,12 +55,8 @@ async fn main() {
 
     println!("Connected");
 
-    let (sink, stream) = connection.split();
-
-    let mut client = CynicClientBuilder::new()
-        .build(stream, sink, async_executors::AsyncStd)
-        .await
-        .unwrap();
+    let (mut client, actor) = Client::build(connection).await.unwrap();
+    async_std::task::spawn(actor.into_future());
 
     // In reality you'd probably want to different subscriptions, but for the sake of this example
     // these are the same subscriptions
