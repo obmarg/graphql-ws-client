@@ -43,7 +43,6 @@ mod logging;
 mod protocol;
 
 #[doc(hidden)]
-#[deprecated]
 pub mod legacy;
 
 #[doc(hidden)]
