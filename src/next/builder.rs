@@ -8,14 +8,17 @@ use crate::{graphql::GraphqlOperation, logging::trace, protocol::Event, Error};
 use super::{
     actor::ConnectionActor,
     connection::{Connection, Message},
-    Client, SubscriptionStream,
+    Client, Subscription,
 };
 
-/// Builder for Clients.
+/// Builder for Graphql over Websocket clients
+///
+/// This can be used to configure the client prior to construction, but can also create
+/// subscriptions directly in the case where users only need to run one per connection.
 ///
 /// ```rust
-///  use graphql_ws_client::Client;
-///  use std::future::IntoFuture;
+/// use graphql_ws_client::Client;
+/// use std::future::IntoFuture;
 /// #
 /// # async fn example() -> Result<(), graphql_ws_client::Error> {
 /// # let connection = graphql_ws_client::__doc_utils::Conn;
@@ -33,8 +36,8 @@ impl super::Client {
     /// Creates a ClientBuilder with the given connection.
     ///
     /// ```rust
-    ///  use graphql_ws_client::Client;
-    ///  use std::future::IntoFuture;
+    /// use graphql_ws_client::Client;
+    /// use std::future::IntoFuture;
     /// # async fn example() -> Result<(), graphql_ws_client::Error> {
     /// # let connection = graphql_ws_client::__doc_utils::Conn;
     /// let (client, actor) = Client::build(connection).await?;
@@ -68,6 +71,8 @@ impl ClientBuilder {
         })
     }
 
+    /// Sets the size of the incoming message buffer that subscriptions created by this client will
+    /// use
     pub fn subscription_buffer_size(self, new: usize) -> Self {
         ClientBuilder {
             subscription_buffer_size: Some(new),
@@ -75,15 +80,15 @@ impl ClientBuilder {
         }
     }
 
-    /// Initialise a Client and use it to run a single streaming operation
+    /// Initialise a Client and use it to run a single subscription
     ///
     /// ```rust
-    ///  use graphql_ws_client::Client;
-    ///  use std::future::IntoFuture;
+    /// use graphql_ws_client::Client;
+    /// use std::future::IntoFuture;
     /// # async fn example() -> Result<(), graphql_ws_client::Error> {
     /// # let connection = graphql_ws_client::__doc_utils::Conn;
     /// # let subscription = graphql_ws_client::__doc_utils::Subscription;
-    /// let stream = Client::build(connection).streaming_operation(subscription).await?;
+    /// let stream = Client::build(connection).subscribe(subscription).await?;
     /// # Ok(())
     /// # }
     /// ```
@@ -93,10 +98,10 @@ impl ClientBuilder {
     ///
     /// If users want to run mutliple operations on a connection they
     /// should use the `IntoFuture` impl to construct a `Client`
-    pub async fn streaming_operation<'a, Operation>(
+    pub async fn subscribe<'a, Operation>(
         self,
         op: Operation,
-    ) -> Result<SubscriptionStream<Operation>, Error>
+    ) -> Result<Subscription<Operation>, Error>
     where
         Operation: GraphqlOperation + Unpin + Send + 'static,
     {
@@ -104,7 +109,7 @@ impl ClientBuilder {
 
         let mut actor_future = actor.into_future().fuse();
 
-        let subscribe_future = client.streaming_operation(op).fuse();
+        let subscribe_future = client.subscribe(op).fuse();
         futures::pin_mut!(subscribe_future);
 
         // Temporarily run actor_future while we start the subscription

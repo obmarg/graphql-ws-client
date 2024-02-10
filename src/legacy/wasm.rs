@@ -9,6 +9,10 @@ use pin_project_lite::pin_project;
 use ws_stream_wasm::{WsErr, WsEvent, WsMessage, WsMeta, WsStream};
 
 /// Creates a new pair of sink and stream which operate on [`WasmWebsocketMessage`] instead of `WsMessage` and `WsEvent` separately.
+#[deprecated(
+    since = "0.8.0-rc.1",
+    note = "use graphql_ws_client::ws_stream_wasm::Connection and the new Client instead"
+)]
 pub async fn wasm_websocket_combined_split(
     mut ws_meta: WsMeta,
     ws_stream: WsStream,
@@ -36,6 +40,7 @@ pub async fn wasm_websocket_combined_split(
 
 #[derive(Debug)]
 /// A WebSocket event abstraction to combine the differentiated WebSocket events and messages of `ws_stream_wasm`.
+#[allow(deprecated)]
 pub enum WasmWebsocketMessage {
     /// A WebSocket message, text or binary, was received.
     WsMessage(ws_stream_wasm::WsMessage),
@@ -91,6 +96,7 @@ impl crate::legacy::websockets::WebsocketMessage for WasmWebsocketMessage {
 pin_project! {
     /// Sink for the [`with`](super::SinkExt::with) method.
     #[must_use = "sinks do nothing unless polled"]
+    #[deprecated]
     pub struct FusedWasmWebsocketSink {
         #[pin]
         sink: SplitSink<WsStream, WsMessage>,

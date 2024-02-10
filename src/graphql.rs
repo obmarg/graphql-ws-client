@@ -9,6 +9,10 @@
 //! [graphql-client]: https://github.com/graphql-rust/graphql-client
 
 /// A trait for GraphQL clients.
+#[deprecated(
+    since = "0.8.0-rc.1",
+    note = "this trait is no longer needed with the new Client, please update to use that"
+)]
 pub trait GraphqlClient {
     /// The generic response type for this GraphqlClient implementation
     ///
@@ -36,10 +40,11 @@ pub trait GraphqlOperation: serde::Serialize {
     fn decode(&self, data: serde_json::Value) -> Result<Self::Response, Self::Error>;
 }
 
-#[cfg(feature = "cynic")]
+#[cfg(feature = "client-cynic")]
 mod cynic {
     use super::*;
 
+    #[cfg_attr(docsrs, doc(cfg(feature = "client-cynic")))]
     impl<ResponseData, Variables> GraphqlOperation
         for ::cynic::StreamingOperation<ResponseData, Variables>
     where
@@ -66,6 +71,7 @@ mod graphql_client {
     use std::marker::PhantomData;
 
     /// A streaming operation for a GraphQLQuery
+    #[cfg_attr(docsrs, doc(cfg(feature = "client-graphql-client")))]
     pub struct StreamingOperation<Q: GraphQLQuery> {
         inner: QueryBody<Q::Variables>,
         phantom: PhantomData<Q>,

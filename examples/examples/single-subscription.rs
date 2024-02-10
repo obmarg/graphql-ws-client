@@ -53,7 +53,7 @@ async fn main() {
     println!("Connected");
 
     let mut subscription = Client::build(connection)
-        .streaming_operation(build_query())
+        .subscribe(build_query())
         .await
         .unwrap();
 

@@ -60,8 +60,8 @@ async fn main() {
 
     // In reality you'd probably want to different subscriptions, but for the sake of this example
     // these are the same subscriptions
-    let mut first_subscription = client.streaming_operation(build_query()).await.unwrap();
-    let mut second_subscription = client.streaming_operation(build_query()).await.unwrap();
+    let mut first_subscription = client.subscribe(build_query()).await.unwrap();
+    let mut second_subscription = client.subscribe(build_query()).await.unwrap();
 
     futures::join!(
         async move {

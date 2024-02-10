@@ -60,7 +60,7 @@ async fn main() {
     let (mut client, actor) = Client::build(connection).await.unwrap();
     wasm_bindgen_futures::spawn_local(actor.into_future());
 
-    let mut stream = client.streaming_operation(build_query()).await.unwrap();
+    let mut stream = client.subscribe(build_query()).await.unwrap();
     info!("Running subscription");
     while let Some(item) = stream.next().await {
         info!("{:?}", item);

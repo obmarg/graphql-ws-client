@@ -55,3 +55,7 @@ tokio-stream = { version = "0.1", features = ["sync"] }
 
 graphql-ws-client.path = "."
 graphql-ws-client.features = ["client-cynic", "client-graphql-client", "async-tungstenite"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

@@ -14,6 +14,11 @@ use super::{
 };
 
 #[must_use]
+/// The `ConnectionActor` contains the main loop for handling incoming
+/// & outgoing messages for a Client.
+///
+/// This type implements `IntoFuture` and should usually be spawned
+/// with an async runtime.
 pub struct ConnectionActor {
     client: Option<mpsc::Receiver<ConnectionCommand>>,
     connection: Box<dyn Connection + Send>,
