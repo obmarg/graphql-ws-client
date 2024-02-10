@@ -5,7 +5,7 @@
 
 use std::future::IntoFuture;
 
-use graphql_ws_client::{next::Client, ws_stream_wasm::Connection};
+use graphql_ws_client::{ws_stream_wasm::Connection, Client};
 
 mod schema {
     cynic::use_schema!("../schemas/books.graphql");

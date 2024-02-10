@@ -72,9 +72,7 @@ async fn main_test() {
 
     println!("Connected");
 
-    let (mut client, actor) = graphql_ws_client::next::Client::build(connection)
-        .await
-        .unwrap();
+    let (mut client, actor) = graphql_ws_client::Client::build(connection).await.unwrap();
 
     tokio::spawn(actor.into_future());
 
@@ -137,7 +135,7 @@ async fn oneshot_operation_test() {
 
     println!("Connected");
 
-    let stream = graphql_ws_client::next::Client::build(connection)
+    let stream = graphql_ws_client::Client::build(connection)
         .streaming_operation(build_query())
         .await
         .unwrap();

@@ -38,7 +38,7 @@ struct BooksChangedSubscription {
 async fn main() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
     use futures::StreamExt;
-    use graphql_ws_client::next::Client;
+    use graphql_ws_client::Client;
 
     let mut request = "ws://localhost:8000/graphql".into_client_request().unwrap();
     request.headers_mut().insert(

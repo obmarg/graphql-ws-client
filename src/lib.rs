@@ -22,7 +22,8 @@
 
 #![warn(missing_docs)]
 
-mod client;
+mod error;
+mod legacy;
 mod logging;
 mod protocol;
 
@@ -31,11 +32,10 @@ mod protocol;
 pub mod __doc_utils;
 
 pub mod graphql;
-pub mod websockets;
 
 // TODO: next shouldn't be public really, and shouldn't allow missing_docs
 #[allow(missing_docs)]
-pub mod next;
+mod next;
 
 #[cfg(feature = "ws_stream_wasm")]
 mod wasm;
@@ -49,7 +49,14 @@ pub mod ws_stream_wasm;
 #[cfg(feature = "async-tungstenite")]
 mod native;
 
-pub use client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, Error, SubscriptionStream};
+pub use legacy::{
+    client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, SubscriptionStream},
+    websockets,
+};
+
+pub use next::*;
+
+pub use error::Error;
 
 /// A websocket client for the cynic graphql crate
 #[cfg(feature = "cynic")]
