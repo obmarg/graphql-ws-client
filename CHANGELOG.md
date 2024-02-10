@@ -11,6 +11,8 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+## v0.8.0-rc.1 - 2024-02-10
+
 ### Breaking Changes
 
 - The `next` api is now available at the top level rather than the `next`
@@ -18,6 +20,7 @@ all APIs might be changed.
 - `async_tungstenite` is no longer a default feautre, you should explicitly
   enable it if you need it
 - Updated to `async_tungstenite` 0.25
+- Renamed `Client::streaming_operation` to subscribe in `next` api.
 
 ### Deprecations
 
@@ -28,7 +31,7 @@ These will be removed in a future version, probably in v0.9.0
 
 ### New Features
 
-- Added a `streaming_operation` function to `next::ClientBuilder` to make
+- Added a `subscribe` function to `next::ClientBuilder` to make
   creating a single subscription on a given connection easier.
 
 ## v0.8.0-alpha.2 - 2024-01-30
