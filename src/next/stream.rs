@@ -114,7 +114,7 @@ async fn producer_handler<Item>(
                 }
             }
             ProducerState::Draining(mut stream) => {
-                return Some((stream.next().await?, ProducerState::Draining(stream)))
+                return Some((stream.next().await?, ProducerState::Draining(stream)));
             }
         }
     }

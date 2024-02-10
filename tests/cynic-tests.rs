@@ -142,8 +142,6 @@ async fn oneshot_operation_test() {
         .await
         .unwrap();
 
-    sleep(Duration::from_millis(100)).await;
-
     let updates = [
         subscription_server::BookChanged {
             id: "123".into(),
@@ -161,6 +159,7 @@ async fn oneshot_operation_test() {
 
     futures::join!(
         async {
+            sleep(Duration::from_millis(10)).await;
             for update in &updates {
                 server.send(update.to_owned()).unwrap();
             }
