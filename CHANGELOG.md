@@ -15,6 +15,8 @@ all APIs might be changed.
 
 - The `next` api is now available at the top level rather than the `next`
   module.
+- `async_tungstenite` is no longer a default feautre, you should explicitly
+  enable it if you need it
 
 ### Deprecations
 

@@ -18,7 +18,7 @@ members = ["examples", "examples-wasm"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["async-tungstenite"]
+default = []
 client-cynic = ["async-tungstenite", "cynic"]
 client-graphql-client = ["async-tungstenite", "graphql_client"]
 ws_stream_wasm = ["dep:ws_stream_wasm", "no-logging", "pharos", "pin-project-lite"]
