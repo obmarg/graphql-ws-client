@@ -1,9 +1,4 @@
-use std::future::Future;
-
-use serde::Serialize;
-use serde_json::json;
-
-use crate::{protocol, Error};
+use crate::Error;
 
 #[async_trait::async_trait]
 pub trait Connection {

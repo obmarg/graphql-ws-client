@@ -1,6 +1,6 @@
-use std::{collections::HashMap, future::IntoFuture};
+use std::future::IntoFuture;
 
-use futures::{channel::mpsc, future::BoxFuture, stream::BoxStream, FutureExt, StreamExt};
+use futures::{channel::mpsc, future::BoxFuture, FutureExt};
 use serde::Serialize;
 
 use crate::{graphql::GraphqlOperation, logging::trace, protocol::Event, Error};
@@ -171,10 +171,13 @@ impl ClientBuilder {
                             break;
                         }
                         event => {
-                            connection.send(Message::Close {
-                                code: Some(4950),
-                                reason: Some("Unexpected message while waiting for ack".into()),
-                            });
+                            connection
+                                .send(Message::Close {
+                                    code: Some(4950),
+                                    reason: Some("Unexpected message while waiting for ack".into()),
+                                })
+                                .await
+                                .ok();
                             return Err(Error::Decode(format!(
                                 "expected a connection_ack or ping, got {}",
                                 event.r#type()
@@ -189,8 +192,7 @@ impl ClientBuilder {
 
         let actor = ConnectionActor::new(connection, command_receiver);
 
-        let client =
-            Client::new_internal(command_sender, self.subscription_buffer_size.unwrap_or(5));
+        let client = Client::new_internal(command_sender, subscription_buffer_size.unwrap_or(5));
 
         Ok((client, actor))
     }
