@@ -1,5 +1,5 @@
-use async_tungstenite::tungstenite::{self, protocol::CloseFrame};
-use futures::{future::BoxFuture, AsyncRead, AsyncWrite, SinkExt, StreamExt};
+use futures::{future::BoxFuture, Sink, SinkExt, Stream, StreamExt};
+use tungstenite::{self, protocol::CloseFrame};
 
 use crate::Error;
 
@@ -38,9 +38,14 @@ impl crate::legacy::websockets::WebsocketMessage for tungstenite::Message {
     }
 }
 
-impl<T> crate::next::Connection for async_tungstenite::WebSocketStream<T>
+impl<T> crate::next::Connection for T
 where
-    T: AsyncRead + AsyncWrite + Unpin + Send + Sync,
+    T: Stream<Item = Result<tungstenite::Message, tungstenite::Error>>
+        + Sink<tungstenite::Message>
+        + Send
+        + Sync
+        + Unpin,
+    <T as Sink<tungstenite::Message>>::Error: std::fmt::Display,
 {
     fn receive(&mut self) -> BoxFuture<'_, Option<crate::next::Message>> {
         Box::pin(async move {

@@ -11,6 +11,24 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+### Breaking Changes
+
+- `async-tungstenite` is no longer automatically enabled when adding any of the
+  client feature flags.
+
+### Changes
+
+- `graphql-ws-client` now depends only on `tungstenite` and not directly on
+  `async-tungstenite` (or `tokio-tungstenite`) This should allow it to work
+  with more versions of the async libraries (provided they support the same
+  `tungstenite` version).
+
+### Bug Fixes
+
+- Fixed `tokio-tungstenite` support by switching the `async_tungstenite`
+  `Connection` impl to a generic impl on any `tungstenite` compatible `Stream`
+  & `Sink`.  
+
 ## v0.8.0-rc.1 - 2024-02-10
 
 ### Breaking Changes

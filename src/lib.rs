@@ -58,7 +58,7 @@ mod next;
 /// Integration with the ws_stream_wasm library
 pub mod ws_stream_wasm;
 
-#[cfg(feature = "async-tungstenite")]
+#[cfg(any(feature = "async-tungstenite", feature = "tungstenite"))]
 mod native;
 
 #[allow(deprecated)]
