@@ -18,6 +18,7 @@ all APIs might be changed.
 - `async_tungstenite` is no longer a default feautre, you should explicitly
   enable it if you need it
 - Updated to `async_tungstenite` 0.25
+- MSRV is now 1.69 (there was no official MSRV before)
 
 ### Deprecations
 
