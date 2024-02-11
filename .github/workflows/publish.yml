@@ -11,6 +11,7 @@ jobs:
     - name: Install markdown-extract
       shell: bash
       run: cargo install markdown-extract
+    - uses: actions/checkout@v3
     - name: Generate changelog
       shell: bash
       run: markdown-extract --no-print-matched-heading "${{ github.ref_name }}" CHANGELOG.md > release-text.md
@@ -31,7 +32,7 @@ jobs:
           registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   publish-release:
-     needs: [publish-crates]
+     needs: [generate-release, publish-crates]
      permissions:
        contents: write
      runs-on: ubuntu-latest
