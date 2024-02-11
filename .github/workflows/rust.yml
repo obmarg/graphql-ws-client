@@ -18,10 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@1.76.0
         with:
-          profile: minimal
-          toolchain: stable
+          components: rustfmt
       - name: Check formatting
         uses: actions-rs/cargo@v1
         with:
@@ -33,10 +32,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@1.69.0
       - uses: Swatinem/rust-cache@v2
       - name: Build
         uses: actions-rs/cargo@v1

@@ -21,6 +21,7 @@ all APIs might be changed.
   enable it if you need it
 - Updated to `async_tungstenite` 0.25
 - Renamed `Client::streaming_operation` to subscribe in `next` api.
+- MSRV is now 1.69 (there was no official MSRV before)
 
 ### Deprecations
 
