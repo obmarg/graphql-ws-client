@@ -44,7 +44,7 @@ where
         Operation::Response: 'static,
     {
         Self {
-            stream: self.stream.join(future).boxed(),
+            stream: join_stream(self.stream, future).boxed(),
             ..self
         }
     }
@@ -61,34 +61,25 @@ where
     }
 }
 
-trait JoinStreamExt<'a> {
-    type Item;
-
-    /// Joins a future onto the execution of a stream returning a stream that also polls
-    /// the given future.
-    ///
-    /// If the future ends the stream will still continue till completion but if the stream
-    /// ends the future will be cancelled.
-    ///
-    /// This can be used when you have the receivng side of a channel and a future that sends
-    /// on that channel - combining the two into a single stream that'll run till the channel
-    /// is exhausted.  If you drop the stream you also cancel the underlying process.
-    fn join(self, future: Fuse<BoxFuture<'static, ()>>) -> impl Stream<Item = Self::Item>;
+/// Joins a future onto the execution of a stream returning a stream that also polls
+/// the given future.
+///
+/// If the future ends the stream will still continue till completion but if the stream
+/// ends the future will be cancelled.
+///
+/// This can be used when you have the receivng side of a channel and a future that sends
+/// on that channel - combining the two into a single stream that'll run till the channel
+/// is exhausted.  If you drop the stream you also cancel the underlying process.
+fn join_stream<Item>(
+    stream: BoxStream<'static, Item>,
+    future: Fuse<BoxFuture<'static, ()>>,
+) -> impl Stream<Item = Item> {
+    futures::stream::unfold(
+        ProducerState::Running(stream.fuse(), future),
+        producer_handler,
+    )
 }
 
-impl<'a, Item> JoinStreamExt<'a> for BoxStream<'static, Item>
-where
-    Item: 'static,
-{
-    type Item = Item;
-
-    fn join(self, future: Fuse<BoxFuture<'static, ()>>) -> impl Stream<Item = Self::Item> + 'a {
-        futures::stream::unfold(
-            ProducerState::Running(self.fuse(), future),
-            producer_handler,
-        )
-    }
-}
 enum ProducerState<'a, Item> {
     Running(
         stream::Fuse<BoxStream<'a, Item>>,
