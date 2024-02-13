@@ -11,6 +11,8 @@ all APIs might be changed.
 
 ## Unreleased - xxxx-xx-xx
 
+## v0.8.0-rc.2 - 2024-02-13
+
 ### Breaking Changes
 
 - `async-tungstenite` is no longer automatically enabled when adding any of the
