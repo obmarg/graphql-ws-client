@@ -1,6 +1,6 @@
 [package]
 name = "graphql-ws-client"
-version = "0.8.0-rc.1"
+version = "0.8.0-rc.2"
 authors = ["Graeme Coupar <graeme@polyandglot.dev>"]
 edition = "2021"
 resolver = "2"
@@ -56,6 +56,7 @@ tokio = { version = "1", features = ["macros"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 
 graphql-ws-client.path = "."
+
 graphql-ws-client.features = ["client-cynic", "client-graphql-client", "async-tungstenite"]
 
 [package.metadata.docs.rs]
