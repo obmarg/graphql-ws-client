@@ -22,7 +22,7 @@ console_log = "1"
 
 [dependencies.graphql-ws-client]
 path = "../"
-version = "0.8.0-rc.2"
+version = "0.8.0"
 default-features = false
 features = ["cynic", "ws_stream_wasm"]
 

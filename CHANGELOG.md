@@ -9,7 +9,38 @@ This project intends to inhere to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html), but has not yet reached 1.0 so
 all APIs might be changed.
 
-## Unreleased - xxxx-xx-xx
+## v0.8.0 - 2024-03-17
+
+### Breaking Changes
+
+- `async_tungstenite` is no longer a default feautre, you should explicitly
+  enable it if you need it.
+- Updated to `tungstenite` 0.21
+- MSRV is now 1.69 (there was no official MSRV before)
+- Subscription IDs sent to the server are now just monotonic numbers rather
+  than uuids.
+
+### Deprecations
+
+These will be removed in a future version, probably in v0.9.0
+
+- `AsyncWebsocketClient` and all its supporting traits and structs are now
+  deprecated.
+- The `async-tungstenite` feature flag is deprecated and will be removed in
+  favour of `tungstenite` eventually.
+
+### New Features
+
+- Added an entirely new client API as a replacement for the old API.
+- Added a `subscribe` function to `next::ClientBuilder` to make
+  creating a single subscription on a given connection easier.
+
+### Changes
+
+- `graphql-ws-client` now depends only on `tungstenite` and not directly on
+  `async-tungstenite` (or `tokio-tungstenite`). This should allow it to work
+  with more versions of the async libraries (provided they support the same
+  `tungstenite` version).
 
 ## v0.8.0-rc.2 - 2024-02-13
 
