@@ -35,27 +35,32 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.69.0
       - uses: Swatinem/rust-cache@v2
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --all-features
+        shell: bash
+        run: |
+          cargo build --all-features
+
       - name: Build tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features --no-run
+        shell: bash
+        run: |
+          cargo test --all-features --no-run
+
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features
+        shell: bash
+        run: |
+          cargo test --all-features
+
       - name: Build examples
-        uses: actions-rs/cargo@v1
-        with:
-          command: build 
-          args: --workspace --examples
-      - name: Test examples
-        uses: actions-rs/cargo@v1
-        with:
-          command: test 
-          args: --workspace --examples
+        shell: bash
+        run: |
+          cargo build --all --examples
+
+      - name: Build example tests
+        shell: bash
+        run: |
+          cargo test --all --examples --no-run
+          cargo test --all --examples
+
+      - name: Run example tests
+        shell: bash
+        run: |
+          cargo test --all --examples
