@@ -3,41 +3,6 @@ use tungstenite::{self, protocol::CloseFrame};
 
 use crate::Error;
 
-#[allow(deprecated)]
-impl crate::legacy::websockets::WebsocketMessage for tungstenite::Message {
-    type Error = tungstenite::Error;
-
-    fn new(text: String) -> Self {
-        tungstenite::Message::Text(text)
-    }
-
-    fn text(&self) -> Option<&str> {
-        match self {
-            tungstenite::Message::Text(text) => Some(text.as_ref()),
-            _ => None,
-        }
-    }
-
-    fn error_message(&self) -> Option<String> {
-        match self {
-            tungstenite::Message::Close(Some(frame)) => Some(frame.reason.to_string()),
-            _ => None,
-        }
-    }
-
-    fn is_ping(&self) -> bool {
-        matches!(self, tungstenite::Message::Ping(_))
-    }
-
-    fn is_pong(&self) -> bool {
-        matches!(self, tungstenite::Message::Pong(_))
-    }
-
-    fn is_close(&self) -> bool {
-        matches!(self, tungstenite::Message::Close(_))
-    }
-}
-
 impl<T> crate::next::Connection for T
 where
     T: Stream<Item = Result<tungstenite::Message, tungstenite::Error>>
