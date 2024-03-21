@@ -9,6 +9,12 @@ This project intends to inhere to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html), but has not yet reached 1.0 so
 all APIs might be changed.
 
+## v0.8.1 - 2024-03-21
+
+### Fixes
+
+- Hopefully fixed the docs.rs build
+
 ## v0.8.0 - 2024-03-17
 
 ### Breaking Changes
