@@ -36,6 +36,7 @@
 //! [ws-stream-wasm]: https://github.com/najamelan/ws_stream_wasm
 //! [examples]: https://github.com/obmarg/graphql-ws-client/tree/main/examples/examples
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
 
 mod error;
