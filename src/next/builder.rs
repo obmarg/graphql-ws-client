@@ -105,7 +105,7 @@ impl ClientBuilder {
     where
         Operation: GraphqlOperation + Unpin + Send + 'static,
     {
-        let (mut client, actor) = self.await?;
+        let (client, actor) = self.await?;
 
         let mut actor_future = actor.into_future().fuse();
 

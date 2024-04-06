@@ -55,7 +55,7 @@ async fn main() {
 
     println!("Connected");
 
-    let (mut client, actor) = Client::build(connection).await.unwrap();
+    let (client, actor) = Client::build(connection).await.unwrap();
     async_std::task::spawn(actor.into_future());
 
     // In reality you'd probably want to different subscriptions, but for the sake of this example
