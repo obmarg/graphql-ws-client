@@ -9,6 +9,14 @@ This project intends to inhere to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html), but has not yet reached 1.0 so
 all APIs might be changed.
 
+## [0.8.2](https://github.com/obmarg/graphql-ws-client/compare/v0.8.1...v0.8.2) - 2024-04-09
+
+### Changes
+- `Client::subscribe` now takes `&self` instead of `&mut self`, to make sharing a
+  `Client` among threads easier ([#88](https://github.com/obmarg/graphql-ws-client/pull/88))
+- `Client` is now clone, again to make sharing among threads easier
+  ([#88](https://github.com/obmarg/graphql-ws-client/pull/88))
+
 ## v0.8.1 - 2024-03-21
 
 ### Fixes

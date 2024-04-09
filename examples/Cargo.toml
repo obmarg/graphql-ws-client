@@ -19,7 +19,7 @@ tokio = { version = "1.15", features = ["rt-multi-thread", "macros"] }
 
 [dependencies.graphql-ws-client]
 path = "../"
-version = "0.8.0"
+version = "0.8.2"
 default-features = false
 features = ["cynic", "async-tungstenite"]
 
