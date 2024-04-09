@@ -11,13 +11,11 @@ all APIs might be changed.
 
 ## [0.8.2](https://github.com/obmarg/graphql-ws-client/compare/v0.8.1...v0.8.2) - 2024-04-09
 
-### Fixed
-- make client clone, remove &mut self from subscribe ([#88](https://github.com/obmarg/graphql-ws-client/pull/88))
-
-### Other
-- add release-plz config ([#86](https://github.com/obmarg/graphql-ws-client/pull/86))
-- use the correct token in release workflow ([#85](https://github.com/obmarg/graphql-ws-client/pull/85))
-- swap publish-crates for release-plz ([#82](https://github.com/obmarg/graphql-ws-client/pull/82))
+### Changes
+- `Client::subscribe` now takes `&self` instead of `&mut self`, to make sharing a
+  `Client` among threads easier ([#88](https://github.com/obmarg/graphql-ws-client/pull/88))
+- `Client` is now clone, again to make sharing among threads easier
+  ([#88](https://github.com/obmarg/graphql-ws-client/pull/88))
 
 ## v0.8.1 - 2024-03-21
 
