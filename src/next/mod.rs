@@ -47,6 +47,7 @@ pub use self::{
 /// }
 /// # Ok(())
 /// # }
+#[derive(Clone)]
 pub struct Client {
     actor: mpsc::Sender<ConnectionCommand>,
     subscription_buffer_size: usize,
@@ -69,7 +70,7 @@ impl Client {
     ///
     /// Returns a `Stream` of responses.
     pub async fn subscribe<'a, Operation>(
-        &mut self,
+        &self,
         op: Operation,
     ) -> Result<Subscription<Operation>, Error>
     where
@@ -87,7 +88,8 @@ impl Client {
         let request = serde_json::to_string(&message)
             .map_err(|error| Error::Serializing(error.to_string()))?;
 
-        self.actor
+        let mut actor = self.actor.clone();
+        actor
             .send(ConnectionCommand::Subscribe {
                 request,
                 sender,
@@ -102,7 +104,7 @@ impl Client {
                 op.decode(response)
                     .map_err(|err| Error::Decode(err.to_string()))
             })),
-            actor: self.actor.clone(),
+            actor,
         })
     }
 

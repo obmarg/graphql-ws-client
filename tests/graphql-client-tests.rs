@@ -37,7 +37,7 @@ async fn main_test() {
 
     println!("Connected");
 
-    let (mut client, actor) = graphql_ws_client::Client::build(connection).await.unwrap();
+    let (client, actor) = graphql_ws_client::Client::build(connection).await.unwrap();
 
     tokio::spawn(actor.into_future());
 
