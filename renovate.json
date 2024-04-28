@@ -9,13 +9,13 @@
     {
       "groupName": "example-dependencies",
       "matchPaths": [
-        "examples",
+        "examples"
       ]
     },
     {
       "groupName": "example-wasm-dependencies",
       "matchPaths": [
-        "examples-wasm",
+        "examples-wasm"
       ]
     },
     {
@@ -35,7 +35,7 @@
         "digest",
         "patch",
         "pin"
-      ],
+      ]
     }
   ],
   "schedule": [
