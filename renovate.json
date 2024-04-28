@@ -1,6 +1,45 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "branchPrefix": "renovate-",
   "extends": [
-    "config:recommended"
-  ]
+    "config:recommended",
+    ":semanticCommitType(chore)"
+  ],
+  "packageRules": [
+    {
+      "groupName": "example-dependencies",
+      "matchPaths": [
+        "examples",
+      ]
+    },
+    {
+      "groupName": "example-wasm-dependencies",
+      "matchPaths": [
+        "examples-wasm",
+      ]
+    },
+    {
+      "groupName": "dependencies-non-major",
+      "matchCurrentVersion": "!/^0/",
+      "matchUpdateTypes": [
+        "digest",
+        "minor",
+        "patch",
+        "pin"
+      ]
+    },
+    {
+      "groupName": "dependencies-non-major",
+      "matchCurrentVersion": "/^0/",
+      "matchUpdateTypes": [
+        "digest",
+        "patch",
+        "pin"
+      ],
+    }
+  ],
+  "schedule": [
+    "after 10am on the first day of the month"
+  ],
+  "semanticCommitScope": null
 }
