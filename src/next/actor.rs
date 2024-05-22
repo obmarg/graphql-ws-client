@@ -1,12 +1,17 @@
 use std::{
     collections::{hash_map::Entry, HashMap},
     future::IntoFuture,
+    time::Duration,
 };
 
 use futures::{channel::mpsc, future::BoxFuture, FutureExt, SinkExt, StreamExt};
 use serde_json::{json, Value};
 
-use crate::{logging::trace, protocol::Event, Error};
+use crate::{
+    logging::{trace, warning},
+    protocol::Event,
+    Error,
+};
 
 use super::{
     connection::{Connection, Message},
@@ -23,17 +28,20 @@ pub struct ConnectionActor {
     client: Option<mpsc::Receiver<ConnectionCommand>>,
     connection: Box<dyn Connection + Send>,
     operations: HashMap<usize, mpsc::Sender<Value>>,
+    keep_alive_duration: Option<Duration>,
 }
 
 impl ConnectionActor {
     pub(super) fn new(
         connection: Box<dyn Connection + Send>,
         client: mpsc::Receiver<ConnectionCommand>,
+        keep_alive_duration: Option<Duration>,
     ) -> Self {
         ConnectionActor {
             client: Some(client),
             connection,
             operations: HashMap::new(),
+            keep_alive_duration,
         }
     }
 
@@ -150,18 +158,44 @@ impl ConnectionActor {
             if let Some(client) = &mut self.client {
                 let mut next_command = client.next().fuse();
                 let mut next_message = self.connection.receive().fuse();
-                futures::select! {
-                    command = next_command => {
-                        let Some(command) = command else {
-                            self.client.take();
-                            continue;
-                        };
+                if let Some(keep_alive_duration) = self.keep_alive_duration {
+                    let mut keep_alive = futures_timer::Delay::new(keep_alive_duration).fuse();
+                    futures::select! {
+                        _ = keep_alive => {
+                            warning!(
+                                "No messages received within keep-alive ({:?}s) from server. Closing the connection",
+                                keep_alive_duration);
+                            return Some(Next::Command(ConnectionCommand::Close(
+                                4503,
+                                "Service unavailable. keep-alive failure".to_string(),
+                            )));
+                        },
+                        command = next_command => {
+                            let Some(command) = command else {
+                                self.client.take();
+                                continue;
+                            };
 
-                        return Some(Next::Command(command));
-                    },
-                    message = next_message => {
-                        return Some(Next::Message(message?));
-                    },
+                            return Some(Next::Command(command));
+                        },
+                        message = next_message => {
+                            return Some(Next::Message(message?));
+                        },
+                    }
+                } else {
+                    futures::select! {
+                        command = next_command => {
+                            let Some(command) = command else {
+                                self.client.take();
+                                continue;
+                            };
+
+                            return Some(Next::Command(command));
+                        },
+                        message = next_message => {
+                            return Some(Next::Message(message?));
+                        },
+                    }
                 }
             }
 
@@ -170,8 +204,6 @@ impl ConnectionActor {
                 // then we should shut down
                 return None;
             }
-
-            return Some(Next::Message(self.connection.receive().await?));
         }
     }
 }

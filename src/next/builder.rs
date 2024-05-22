@@ -1,4 +1,4 @@
-use std::future::IntoFuture;
+use std::{future::IntoFuture, time::Duration};
 
 use futures::{channel::mpsc, future::BoxFuture, FutureExt};
 use serde::Serialize;
@@ -30,6 +30,7 @@ pub struct ClientBuilder {
     payload: Option<serde_json::Value>,
     subscription_buffer_size: Option<usize>,
     connection: Box<dyn Connection + Send>,
+    keep_alive_duration: Option<Duration>,
 }
 
 impl super::Client {
@@ -52,6 +53,7 @@ impl super::Client {
             payload: None,
             subscription_buffer_size: None,
             connection: Box::new(connection),
+            keep_alive_duration: None,
         }
     }
 }
@@ -76,6 +78,15 @@ impl ClientBuilder {
     pub fn subscription_buffer_size(self, new: usize) -> Self {
         ClientBuilder {
             subscription_buffer_size: Some(new),
+            ..self
+        }
+    }
+
+    /// Sets the duration within which if Client does not receive Ping messages
+    /// the connection will be closed
+    pub fn keep_alive_duration(self, new: Duration) -> Self {
+        ClientBuilder {
+            keep_alive_duration: Some(new),
             ..self
         }
     }
@@ -146,6 +157,7 @@ impl ClientBuilder {
         let Self {
             payload,
             subscription_buffer_size,
+            keep_alive_duration,
             mut connection,
         } = self;
 
@@ -195,7 +207,7 @@ impl ClientBuilder {
 
         let (command_sender, command_receiver) = mpsc::channel(5);
 
-        let actor = ConnectionActor::new(connection, command_receiver);
+        let actor = ConnectionActor::new(connection, command_receiver, keep_alive_duration);
 
         let client = Client::new_internal(command_sender, subscription_buffer_size.unwrap_or(5));
 
