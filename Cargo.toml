@@ -19,17 +19,17 @@ members = ["examples", "examples-wasm"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = []
+default = ["logging"]
+logging = ["dep:log"]
 async-tungstenite = ["tungstenite"]
 client-cynic = ["cynic"]
 client-graphql-client = ["graphql_client"]
-ws_stream_wasm = ["dep:ws_stream_wasm", "no-logging", "pharos", "pin-project-lite"]
-no-logging = []
+ws_stream_wasm = ["dep:ws_stream_wasm", "pharos", "pin-project-lite"]
 
 [dependencies]
 async-trait = "0.1"
 futures = "0.3"
-log = "0.4"
+log = { version = "0.4", optional = true }
 pin-project = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
