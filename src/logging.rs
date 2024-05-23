@@ -1,16 +1,16 @@
-#[cfg(not(feature = "no-logging"))]
+#[cfg(all(feature = "logging", not(target_arch = "wasm32")))]
 macro_rules! trace {
     ($($arg:tt)+) => (
         log::trace!(target: "graphql-ws-client", $($arg)+)
     )
 }
 
-#[cfg(feature = "no-logging")]
+#[cfg(any(not(feature = "logging"), target_arch = "wasm32"))]
 macro_rules! trace {
     ($($t:tt)*) => {};
 }
 
-#[cfg(not(feature = "no-logging"))]
+#[cfg(all(feature = "logging", not(target_arch = "wasm32")))]
 #[allow(unused_macros)]
 macro_rules! warning {
     ($($arg:tt)+) => (
@@ -18,7 +18,7 @@ macro_rules! warning {
     )
 }
 
-#[cfg(feature = "no-logging")]
+#[cfg(any(not(feature = "logging"), target_arch = "wasm32"))]
 #[allow(unused_macros)]
 macro_rules! warning {
     ($($t:tt)*) => {};
