@@ -170,7 +170,7 @@ impl ConnectionActor {
                     _ = keep_alive => {
                         warning!(
                             "No messages received within keep-alive ({:?}s) from server. Closing the connection",
-                            keep_alive_duration
+                            self.keep_alive_duration
                         );
                         return Some(Next::Command(ConnectionCommand::Close(
                             4503,
