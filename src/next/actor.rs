@@ -19,6 +19,7 @@ use crate::{
 
 use super::{
     connection::{Connection, Message},
+    keepalive::{KeepAlive, KeepAliveSettings},
     ConnectionCommand,
 };
 
@@ -32,7 +33,7 @@ pub struct ConnectionActor {
     client: Option<mpsc::Receiver<ConnectionCommand>>,
     connection: Box<dyn Connection + Send>,
     operations: HashMap<usize, mpsc::Sender<Value>>,
-    keep_alive_duration: Option<Duration>,
+    keep_alive: KeepAlive,
 }
 
 impl ConnectionActor {
@@ -45,7 +46,10 @@ impl ConnectionActor {
             client: Some(client),
             connection,
             operations: HashMap::new(),
-            keep_alive_duration,
+            keep_alive: KeepAlive::new(KeepAliveSettings {
+                interval: None,
+                allowed_failures: 10,
+            }),
         }
     }
 
@@ -98,6 +102,7 @@ impl ConnectionActor {
                 code: Some(code),
                 reason: Some(reason),
             }),
+            ConnectionCommand::Ping => Some(Message::Ping),
         }
     }
 
@@ -163,19 +168,16 @@ impl ConnectionActor {
                 let mut next_command = client.next().fuse();
                 let mut next_message = self.connection.receive().fuse();
 
-                let keep_alive = delay_or_pending(self.keep_alive_duration);
-                pin_mut!(keep_alive);
+                let keep_alive_actor = self.keep_alive.run();
+                pin_mut!(keep_alive_actor);
 
                 futures::select! {
-                    _ = keep_alive => {
-                        warning!(
-                            "No messages received within keep-alive ({:?}s) from server. Closing the connection",
-                            self.keep_alive_duration
-                        );
-                        return Some(Next::Command(ConnectionCommand::Close(
-                            4503,
-                            "Service unavailable. keep-alive failure".to_string(),
-                        )));
+                    command = keep_alive_actor => {
+                        let Some(command) = command else {
+                            return self.report_timeout();
+                        };
+
+                        return Some(Next::Command(command));
                     },
                     command = next_command => {
                         let Some(command) = command else {
@@ -186,6 +188,7 @@ impl ConnectionActor {
                         return Some(Next::Command(command));
                     },
                     message = next_message => {
+                        self.keep_alive.kick();
                         return Some(Next::Message(message?));
                     },
                 }
@@ -197,6 +200,17 @@ impl ConnectionActor {
                 return None;
             }
         }
+    }
+
+    fn report_timeout(&self) -> Option<Next> {
+        warning!(
+            "No messages received within keep-alive ({:?}s) from server. Closing the connection",
+            self.keep_alive.interval()
+        );
+        return Some(Next::Command(ConnectionCommand::Close(
+            4503,
+            "Service unavailable. keep-alive failure".to_string(),
+        )));
     }
 }
 
