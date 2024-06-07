@@ -1,6 +1,9 @@
-use std::{future::IntoFuture, time::Duration};
+use std::{
+    future::{Future, IntoFuture},
+    time::Duration,
+};
 
-use futures_lite::{future, pin};
+use futures_lite::future;
 use serde::Serialize;
 
 use crate::{graphql::GraphqlOperation, logging::trace, protocol::Event, Error};
@@ -9,6 +12,7 @@ use super::{
     actor::ConnectionActor,
     connection::{Connection, Message},
     keepalive::KeepAliveSettings,
+    production_future::read_from_producer,
     Client, Subscription,
 };
 
@@ -127,24 +131,19 @@ impl ClientBuilder {
     {
         let (client, actor) = self.await?;
 
-        enum Either {
-            ActorDied,
-            Subscribed(Result<Subscription<Operation>, Error>),
-        }
-
         let actor_future = actor.into_future();
         let subscribe_future = client.subscribe(op);
 
         let (stream, actor_future) = run_startup(subscribe_future, actor_future).await?;
 
-        Ok(stream.join(actor_future.fuse()))
+        Ok(stream.join(actor_future))
     }
 }
 
 impl IntoFuture for ClientBuilder {
     type Output = Result<(Client, ConnectionActor), Error>;
 
-    type IntoFuture = future::Boxed<'static, Self::Output>;
+    type IntoFuture = future::Boxed<Self::Output>;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.build())
@@ -219,66 +218,19 @@ impl ClientBuilder {
     }
 }
 
-#[pin_project::pin_project]
-pub struct StartupFuture<SubscribeFut, Operation>
-where
-    SubscribeFut: Future<Output = Result<Subscription<Operation>, Error>>,
-    Operation: GraphqlOperation,
-{
-    #[pin]
-    subscribe: SubscribeFut,
-    pub actor: Option<BoxFuture<'static, ()>>,
-}
-
-impl<SubscribeFut, Operation> Future for StartupFuture<SubscribeFut, Operation>
-where
-    SubscribeFut: Future<Output = Result<Subscription<Operation>, Error>>,
-    Operation: GraphqlOperation,
-{
-    type Output = Result<(Subscription<Operation>, BoxFuture<'static, ()>), Error>;
-
-    fn poll(
-        self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<Self::Output> {
-        let this = self.project();
-
-        let Some(actor) = this.actor else {
-            return Poll::Ready(Err(Error::Unknown(
-                "internal error: startup future polled twice".into(),
-            )));
-        };
-
-        match this.subscribe.poll(cx) {
-            Poll::Ready(Ok(subscription)) => {
-                return Poll::Ready(Ok((subscription, this.actor.take().unwrap())))
-            }
-            Poll::Ready(Err(e)) => return Poll::Ready(Err(e)),
-            Poll::Pending => {}
-        }
-
-        use futures_lite::future::FutureExt;
-        if actor.poll(cx).is_ready() {
-            return Poll::Ready(Err(Error::Unknown(
-                "actor ended before subscription started".into(),
-            )));
-        }
-
-        Poll::Pending
-    }
-}
-
 async fn run_startup<SubscribeFut, Operation>(
     subscribe: SubscribeFut,
-    actor: BoxFuture<'static, ()>,
-) -> Result<(Subscription<Operation>, BoxFuture<'static, ()>), Error>
+    actor: future::Boxed<()>,
+) -> Result<(Subscription<Operation>, future::Boxed<()>), Error>
 where
     SubscribeFut: Future<Output = Result<Subscription<Operation>, Error>>,
     Operation: GraphqlOperation,
 {
-    StartupFuture {
-        subscribe,
-        actor: Some(actor),
+    match read_from_producer(subscribe, actor).await {
+        Some((Ok(subscription), actor)) => Ok((subscription, actor)),
+        Some((Err(err), _)) => Err(err),
+        None => Err(Error::Unknown(
+            "actor ended before subscription started".into(),
+        )),
     }
-    .await
 }

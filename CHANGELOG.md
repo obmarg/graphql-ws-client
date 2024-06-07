@@ -9,6 +9,12 @@ This project intends to inhere to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html), but has not yet reached 1.0 so
 all APIs might be changed.
 
+## Unreleased
+
+### Changes
+
+- MSRV is now 1.76
+
 ## v0.9.0 - 2024-06-08
 
 ### Breaking Changes

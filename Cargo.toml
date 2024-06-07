@@ -11,7 +11,7 @@ autoexamples = false
 documentation = "https://docs.rs/graphql-ws-client"
 readme = "README.md"
 repository = "https://github.com/obmarg/graphql-ws-client"
-rust-version = "1.69"
+rust-version = "1.76"
 
 [workspace]
 members = ["examples", "examples-wasm"]
@@ -21,13 +21,15 @@ members = ["examples", "examples-wasm"]
 [features]
 default = ["logging"]
 logging = ["dep:log"]
+tungstenite = ["dep:tungstenite", "dep:futures"]
 client-cynic = ["cynic"]
 client-graphql-client = ["graphql_client"]
 ws_stream_wasm = ["dep:ws_stream_wasm", "dep:pharos"]
 
 [dependencies]
+async-channel = "2"
 futures-lite = "2"
-futures = "0.3"
+futures-timer = "3"
 log = { version = "0.4", optional = true }
 pin-project = "1"
 serde = { version = "1.0", features = ["derive"] }
@@ -37,10 +39,10 @@ thiserror = "1.0"
 cynic = { version = "3", optional = true }
 tungstenite = { version = "0.23", optional = true }
 graphql_client = { version = "0.14.0", optional = true }
+futures = { version = "0.3", optional = true }
 
 ws_stream_wasm = { version = "0.7", optional = true }
 pharos = { version = "0.5.2", optional = true }
-futures-timer = "3.0.3"
 
 [dev-dependencies]
 assert_matches = "1.5"
