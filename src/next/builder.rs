@@ -127,22 +127,12 @@ impl ClientBuilder {
     {
         let (client, actor) = self.await?;
 
-        let mut actor_future = actor.into_future().fuse();
+        let actor_future = actor.into_future();
+        let subscribe_future = client.subscribe(op);
 
-        let subscribe_future = client.subscribe(op).fuse();
-        futures::pin_mut!(subscribe_future);
+        let (stream, actor_future) = run_startup(subscribe_future, actor_future).await?;
 
-        // Temporarily run actor_future while we start the subscription
-        let stream = futures::select! {
-            () = actor_future => {
-                return Err(Error::Unknown("actor ended before subscription started".into()))
-            },
-            result = subscribe_future => {
-                result?
-            }
-        };
-
-        Ok(stream.join(actor_future))
+        Ok(stream.join(actor_future.fuse()))
     }
 }
 
@@ -222,4 +212,68 @@ impl ClientBuilder {
 
         Ok((client, actor))
     }
+}
+
+#[pin_project::pin_project]
+pub struct StartupFuture<SubscribeFut, Operation>
+where
+    SubscribeFut: Future<Output = Result<Subscription<Operation>, Error>>,
+    Operation: GraphqlOperation,
+{
+    #[pin]
+    subscribe: SubscribeFut,
+    pub actor: Option<BoxFuture<'static, ()>>,
+}
+
+impl<SubscribeFut, Operation> Future for StartupFuture<SubscribeFut, Operation>
+where
+    SubscribeFut: Future<Output = Result<Subscription<Operation>, Error>>,
+    Operation: GraphqlOperation,
+{
+    type Output = Result<(Subscription<Operation>, BoxFuture<'static, ()>), Error>;
+
+    fn poll(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        let this = self.project();
+
+        let Some(actor) = this.actor else {
+            return Poll::Ready(Err(Error::Unknown(
+                "internal error: startup future polled twice".into(),
+            )));
+        };
+
+        match this.subscribe.poll(cx) {
+            Poll::Ready(Ok(subscription)) => {
+                return Poll::Ready(Ok((subscription, this.actor.take().unwrap())))
+            }
+            Poll::Ready(Err(e)) => return Poll::Ready(Err(e)),
+            Poll::Pending => {}
+        }
+
+        use futures_lite::future::FutureExt;
+        if actor.poll(cx).is_ready() {
+            return Poll::Ready(Err(Error::Unknown(
+                "actor ended before subscription started".into(),
+            )));
+        }
+
+        Poll::Pending
+    }
+}
+
+async fn run_startup<SubscribeFut, Operation>(
+    subscribe: SubscribeFut,
+    actor: BoxFuture<'static, ()>,
+) -> Result<(Subscription<Operation>, BoxFuture<'static, ()>), Error>
+where
+    SubscribeFut: Future<Output = Result<Subscription<Operation>, Error>>,
+    Operation: GraphqlOperation,
+{
+    StartupFuture {
+        subscribe,
+        actor: Some(actor),
+    }
+    .await
 }
