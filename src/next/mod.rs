@@ -1,6 +1,9 @@
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
+use std::{
+    fmt,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
 };
 
 use futures::{channel::mpsc, SinkExt, StreamExt};
@@ -47,7 +50,7 @@ pub use self::{
 /// }
 /// # Ok(())
 /// # }
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Client {
     actor: mpsc::Sender<ConnectionCommand>,
     subscription_buffer_size: usize,
@@ -129,4 +132,12 @@ pub(super) enum ConnectionCommand {
     },
     Cancel(usize),
     Close(u16, String),
+}
+
+impl fmt::Debug for Client {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Client")
+            .field("subscription_buffer_size", &self.subscription_buffer_size)
+            .finish_non_exhaustive()
+    }
 }
