@@ -6,7 +6,6 @@ use std::{
     },
 };
 
-use futures::{channel::mpsc, SinkExt, StreamExt};
 use serde_json::Value;
 
 use crate::{
@@ -53,14 +52,14 @@ pub use self::{
 /// # }
 #[derive(Clone)]
 pub struct Client {
-    actor: mpsc::Sender<ConnectionCommand>,
+    actor: async_channel::Sender<ConnectionCommand>,
     subscription_buffer_size: usize,
     next_id: Arc<AtomicUsize>,
 }
 
 impl Client {
     pub(super) fn new_internal(
-        actor: mpsc::Sender<ConnectionCommand>,
+        actor: async_channel::Sender<ConnectionCommand>,
         subscription_buffer_size: usize,
     ) -> Self {
         Client {
@@ -80,7 +79,7 @@ impl Client {
     where
         Operation: GraphqlOperation + Unpin + Send + 'static,
     {
-        let (sender, receiver) = mpsc::channel(self.subscription_buffer_size);
+        let (sender, receiver) = async_channel::bounded(self.subscription_buffer_size);
 
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
 
@@ -128,7 +127,7 @@ pub(super) enum ConnectionCommand {
     Subscribe {
         /// The full subscribe request as a JSON encoded string.
         request: String,
-        sender: mpsc::Sender<Value>,
+        sender: async_channel::Sender<Value>,
         id: usize,
     },
     Ping,

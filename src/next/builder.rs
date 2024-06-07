@@ -1,6 +1,6 @@
 use std::{future::IntoFuture, time::Duration};
 
-use futures::{channel::mpsc, future::BoxFuture, FutureExt};
+use futures_lite::{future, pin};
 use serde::Serialize;
 
 use crate::{graphql::GraphqlOperation, logging::trace, protocol::Event, Error};
@@ -127,6 +127,11 @@ impl ClientBuilder {
     {
         let (client, actor) = self.await?;
 
+        enum Either {
+            ActorDied,
+            Subscribed(Result<Subscription<Operation>, Error>),
+        }
+
         let actor_future = actor.into_future();
         let subscribe_future = client.subscribe(op);
 
@@ -139,7 +144,7 @@ impl ClientBuilder {
 impl IntoFuture for ClientBuilder {
     type Output = Result<(Client, ConnectionActor), Error>;
 
-    type IntoFuture = BoxFuture<'static, Self::Output>;
+    type IntoFuture = future::Boxed<'static, Self::Output>;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.build())
@@ -204,7 +209,7 @@ impl ClientBuilder {
             }
         }
 
-        let (command_sender, command_receiver) = mpsc::channel(5);
+        let (command_sender, command_receiver) = async_channel::bounded(5);
 
         let actor = ConnectionActor::new(connection, command_receiver, keep_alive);
 

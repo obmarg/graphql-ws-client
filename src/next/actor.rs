@@ -3,7 +3,7 @@ use std::{
     future::IntoFuture,
 };
 
-use futures::{channel::mpsc, future::BoxFuture, stream::BoxStream, FutureExt, SinkExt, StreamExt};
+use futures_lite::future;
 use serde_json::{json, Value};
 
 use crate::{
@@ -203,7 +203,7 @@ enum Next {
 impl IntoFuture for ConnectionActor {
     type Output = ();
 
-    type IntoFuture = BoxFuture<'static, ()>;
+    type IntoFuture = future::Boxed<'static, ()>;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.run())

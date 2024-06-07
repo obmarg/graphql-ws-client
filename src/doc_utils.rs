@@ -1,5 +1,3 @@
-use futures::{future::BoxFuture, Future};
-
 use crate::{next::Message, Error};
 
 pub struct Conn;
