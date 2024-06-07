@@ -47,7 +47,7 @@ pub use self::{
 /// }
 /// # Ok(())
 /// # }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Client {
     actor: mpsc::Sender<ConnectionCommand>,
     subscription_buffer_size: usize,
