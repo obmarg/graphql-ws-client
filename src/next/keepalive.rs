@@ -1,39 +1,25 @@
-use std::{
-    future::pending,
-    time::{Duration, Instant},
-};
+use std::{future::pending, time::Duration};
 
-use futures::{future::FusedFuture, Future, FutureExt};
+use futures::Stream;
 
 use crate::ConnectionCommand;
 
+#[derive(Clone)]
 pub(super) struct KeepAliveSettings {
     /// How often to send a keep alive ping
     pub(super) interval: Option<Duration>,
 
-    /// How many pings must be sent without a pong
-    /// before the connection is considered dropped
-    pub(super) allowed_failures: usize,
+    /// How many pings can be sent without receiving a reply before
+    /// the connection is considered dropped
+    pub(super) retries: usize,
 }
 
-pub(super) struct KeepAlive {
-    settings: KeepAliveSettings,
-
-    starting_time: Instant,
-    state: KeepAliveState,
-}
-
-impl KeepAlive {
-    pub fn new(settings: KeepAliveSettings) -> Self {
-        KeepAlive {
-            settings,
-            starting_time: Instant::now(),
-            state: KeepAliveState::Running,
+impl Default for KeepAliveSettings {
+    fn default() -> Self {
+        Self {
+            interval: None,
+            retries: 3,
         }
-    }
-
-    pub fn interval(&self) -> Option<Duration> {
-        self.settings.interval
     }
 }
 
@@ -43,49 +29,37 @@ enum KeepAliveState {
     TimingOut { failure_count: usize },
 }
 
-impl KeepAlive {
-    /// Notifies the keep alive actor of other traffic.
-    pub fn kick(&mut self) {
-        self.starting_time = Instant::now();
-        self.state = KeepAliveState::Running;
-    }
+impl KeepAliveSettings {
+    pub(super) fn run(&self) -> impl Stream<Item = ConnectionCommand> + 'static {
+        let settings = self.clone();
 
-    pub fn received_pong(&mut self) {
-        self.starting_time = Instant::now();
-        self.state = KeepAliveState::Running;
-    }
-
-    pub(super) fn run(
-        &mut self,
-    ) -> impl FusedFuture + Future<Output = Option<ConnectionCommand>> + '_ {
-        async move {
-            match self.settings.interval {
+        futures::stream::unfold(KeepAliveState::Running, move |mut state| async move {
+            match settings.interval {
                 Some(duration) => futures_timer::Delay::new(duration).await,
                 None => pending::<()>().await,
             }
 
-            match self.state {
+            match state {
                 KeepAliveState::Running => {
-                    self.state = KeepAliveState::StartedKeepAlive;
+                    state = KeepAliveState::StartedKeepAlive;
                 }
                 KeepAliveState::StartedKeepAlive => {
-                    self.state = KeepAliveState::TimingOut { failure_count: 1 };
+                    state = KeepAliveState::TimingOut { failure_count: 0 };
                 }
                 KeepAliveState::TimingOut { failure_count } => {
-                    self.state = KeepAliveState::TimingOut {
+                    state = KeepAliveState::TimingOut {
                         failure_count: failure_count + 1,
                     };
                 }
             }
 
-            if self.state.failure_count() > self.settings.allowed_failures {
+            if state.failure_count() > settings.retries {
                 // returning None aborts
                 return None;
             }
 
-            return Some(ConnectionCommand::Ping);
-        }
-        .fuse()
+            Some((ConnectionCommand::Ping, state))
+        })
     }
 }
 
