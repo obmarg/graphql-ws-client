@@ -8,6 +8,7 @@ use crate::{graphql::GraphqlOperation, logging::trace, protocol::Event, Error};
 use super::{
     actor::ConnectionActor,
     connection::{Connection, Message},
+    keepalive::KeepAliveSettings,
     Client, Subscription,
 };
 
@@ -30,7 +31,7 @@ pub struct ClientBuilder {
     payload: Option<serde_json::Value>,
     subscription_buffer_size: Option<usize>,
     connection: Box<dyn Connection + Send>,
-    keep_alive_duration: Option<Duration>,
+    keep_alive: KeepAliveSettings,
 }
 
 impl super::Client {
@@ -53,7 +54,7 @@ impl super::Client {
             payload: None,
             subscription_buffer_size: None,
             connection: Box::new(connection),
-            keep_alive_duration: None,
+            keep_alive: KeepAliveSettings::default(),
         }
     }
 }
@@ -82,13 +83,21 @@ impl ClientBuilder {
         }
     }
 
-    /// Sets the duration within which if Client does not receive Ping messages
-    /// the connection will be closed
-    pub fn keep_alive_duration(self, new: Duration) -> Self {
-        ClientBuilder {
-            keep_alive_duration: Some(new),
-            ..self
-        }
+    /// Sets the interval between keep alives.
+    ///
+    /// Any incoming messages automatically reset this interval so keep alives may not be sent
+    /// on busy connections even if this is set.
+    pub fn keep_alive_interval(mut self, new: Duration) -> Self {
+        self.keep_alive.interval = Some(new);
+        self
+    }
+
+    /// The number of keepalive retries before a connection is considered broken.
+    ///
+    /// This defaults to 3, but has no effect if `keep_alive_interval` is not called.
+    pub fn keep_alive_retries(mut self, count: usize) -> Self {
+        self.keep_alive.retries = count;
+        self
     }
 
     /// Initialise a Client and use it to run a single subscription
@@ -157,8 +166,8 @@ impl ClientBuilder {
         let Self {
             payload,
             subscription_buffer_size,
-            keep_alive_duration,
             mut connection,
+            keep_alive,
         } = self;
 
         connection.send(Message::init(payload)).await?;
@@ -207,7 +216,7 @@ impl ClientBuilder {
 
         let (command_sender, command_receiver) = mpsc::channel(5);
 
-        let actor = ConnectionActor::new(connection, command_receiver, keep_alive_duration);
+        let actor = ConnectionActor::new(connection, command_receiver, keep_alive);
 
         let client = Client::new_internal(command_sender, subscription_buffer_size.unwrap_or(5));
 

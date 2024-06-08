@@ -1,14 +1,9 @@
 use std::{
     collections::{hash_map::Entry, HashMap},
-    future::{pending, IntoFuture},
-    time::Duration,
+    future::IntoFuture,
 };
 
-use futures::{
-    channel::mpsc,
-    future::{BoxFuture, FusedFuture},
-    pin_mut, FutureExt, SinkExt, StreamExt,
-};
+use futures::{channel::mpsc, future::BoxFuture, stream::BoxStream, FutureExt, SinkExt, StreamExt};
 use serde_json::{json, Value};
 
 use crate::{
@@ -19,6 +14,7 @@ use crate::{
 
 use super::{
     connection::{Connection, Message},
+    keepalive::KeepAliveSettings,
     ConnectionCommand,
 };
 
@@ -32,20 +28,22 @@ pub struct ConnectionActor {
     client: Option<mpsc::Receiver<ConnectionCommand>>,
     connection: Box<dyn Connection + Send>,
     operations: HashMap<usize, mpsc::Sender<Value>>,
-    keep_alive_duration: Option<Duration>,
+    keep_alive: KeepAliveSettings,
+    keep_alive_actor: BoxStream<'static, ConnectionCommand>,
 }
 
 impl ConnectionActor {
     pub(super) fn new(
         connection: Box<dyn Connection + Send>,
         client: mpsc::Receiver<ConnectionCommand>,
-        keep_alive_duration: Option<Duration>,
+        keep_alive: KeepAliveSettings,
     ) -> Self {
         ConnectionActor {
             client: Some(client),
             connection,
             operations: HashMap::new(),
-            keep_alive_duration,
+            keep_alive_actor: Box::pin(keep_alive.run()),
+            keep_alive,
         }
     }
 
@@ -98,6 +96,7 @@ impl ConnectionActor {
                 code: Some(code),
                 reason: Some(reason),
             }),
+            ConnectionCommand::Ping => Some(Message::Ping),
         }
     }
 
@@ -162,20 +161,15 @@ impl ConnectionActor {
             if let Some(client) = &mut self.client {
                 let mut next_command = client.next().fuse();
                 let mut next_message = self.connection.receive().fuse();
-
-                let keep_alive = delay_or_pending(self.keep_alive_duration);
-                pin_mut!(keep_alive);
+                let mut next_keep_alive = self.keep_alive_actor.next().fuse();
 
                 futures::select! {
-                    _ = keep_alive => {
-                        warning!(
-                            "No messages received within keep-alive ({:?}s) from server. Closing the connection",
-                            self.keep_alive_duration
-                        );
-                        return Some(Next::Command(ConnectionCommand::Close(
-                            4503,
-                            "Service unavailable. keep-alive failure".to_string(),
-                        )));
+                    command = next_keep_alive => {
+                        let Some(command) = command else {
+                            return self.keep_alive.report_timeout();
+                        };
+
+                        return Some(Next::Command(command));
                     },
                     command = next_command => {
                         let Some(command) = command else {
@@ -186,6 +180,7 @@ impl ConnectionActor {
                         return Some(Next::Command(command));
                     },
                     message = next_message => {
+                        self.keep_alive_actor = Box::pin(self.keep_alive.run());
                         return Some(Next::Message(message?));
                     },
                 }
@@ -261,12 +256,15 @@ impl Event {
     }
 }
 
-fn delay_or_pending(duration: Option<Duration>) -> impl FusedFuture {
-    async move {
-        match duration {
-            Some(duration) => futures_timer::Delay::new(duration).await,
-            None => pending::<()>().await,
-        }
+impl KeepAliveSettings {
+    fn report_timeout(&self) -> Option<Next> {
+        warning!(
+            "No messages received within keep-alive ({:?}s) from server. Closing the connection",
+            self.interval.unwrap()
+        );
+        Some(Next::Command(ConnectionCommand::Close(
+            4503,
+            "Service unavailable. keep-alive failure".to_string(),
+        )))
     }
-    .fuse()
 }

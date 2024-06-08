@@ -18,6 +18,7 @@ use crate::{
 mod actor;
 mod builder;
 mod connection;
+mod keepalive;
 mod stream;
 
 pub use self::{
@@ -130,6 +131,7 @@ pub(super) enum ConnectionCommand {
         sender: mpsc::Sender<Value>,
         id: usize,
     },
+    Ping,
     Cancel(usize),
     Close(u16, String),
 }
