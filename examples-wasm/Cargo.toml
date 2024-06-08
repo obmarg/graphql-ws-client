@@ -9,7 +9,6 @@ publish = false
 
 [dependencies]
 async-std = { version = "1.9", features = ["attributes"] }
-async_executors = { version = "0.7", features = ["async_std"] }
 cynic = { version = "3" }
 futures = { version = "0.3"}
 log = "0.4"

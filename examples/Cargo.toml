@@ -10,7 +10,6 @@ publish = false
 [dependencies]
 async-std = { version = "1.9", features = ["attributes"] }
 async-tungstenite = { version = "0.26", features = ["async-std-runtime", "tokio-runtime"] }
-async_executors = { version = "0.7", features = ["async_std"] }
 cynic = { version = "3" }
 futures = { version = "0.3"}
 graphql_client = { version = "0.14" }
