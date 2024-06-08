@@ -5,7 +5,8 @@
 //! client _and_ async runtime agnostic.  Built in support is provided for:
 //!
 //! - [Cynic][cynic] & [Graphql-Client][graphql-client] GraphQL clients.
-//! - [async-tungstenite][async-tungstenite] & [ws-stream-wasm][ws-stream-wasm] Websocket Clients .
+//! - [async-tungstenite][async-tungstenite], [tokio-tungstenite][tokio-tungstenite]
+//!   & [ws-stream-wasm][ws-stream-wasm] Websocket Clients .
 //! - Any async runtime.
 //!
 //! If you'd like to use another client or adding support should be trivial.
@@ -33,6 +34,7 @@
 //! [cynic]: https://cynic-rs.dev
 //! [graphql-client]: https://github.com/graphql-rust/graphql-client
 //! [async-tungstenite]: https://github.com/sdroege/async-tungstenite
+//! [tokio-tungstenite]: https://github.com/snapview/tokio-tungstenite
 //! [ws-stream-wasm]: https://github.com/najamelan/ws_stream_wasm
 //! [examples]: https://github.com/obmarg/graphql-ws-client/tree/main/examples/examples
 
@@ -56,7 +58,8 @@ mod next;
 /// Integration with the ws_stream_wasm library
 pub mod ws_stream_wasm;
 
-#[cfg(any(feature = "async-tungstenite", feature = "tungstenite"))]
+#[cfg(feature = "tungstenite")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tungstenite")))]
 mod native;
 
 pub use next::*;

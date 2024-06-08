@@ -3,6 +3,7 @@ use tungstenite::{self, protocol::CloseFrame};
 
 use crate::Error;
 
+#[cfg_attr(docsrs, doc(cfg(feature = "tungstenite")))]
 impl<T> crate::next::Connection for T
 where
     T: Stream<Item = Result<tungstenite::Message, tungstenite::Error>>

@@ -15,12 +15,16 @@ all APIs might be changed.
 
 - The `no-logging` feature has been removed in favour of a default `logging`
   feature ([#97](https://github.com/obmarg/graphql-ws-client/pull/97))
+- The deprecated `async-tungstenite` feature has been removed. Use the
+  `tungstenite` feature instead, which works with `async-tungtenite`,
+  `tokio-tungstenite` and any other library that provides a
+  `futures::{Stream, Sink}` based tungsetenite interface.
 
 ### New Features
 
-- Added keep-alive functionality.  When enabled this will send periodic pings
-  when the connection appears inactive.  If these pings are not replied to, the
-  connection will be considered broken. 
+- Added keep-alive functionality. When enabled this will send periodic pings
+  when the connection appears inactive. If these pings are not replied to, the
+  connection will be considered broken.
   ([#93](https://github.com/obmarg/graphql-ws-client/pull/93),
   [#94](https://github.com/obmarg/graphql-ws-client/pull/94),
   [#103](https://github.com/obmarg/graphql-ws-client/pull/103))
@@ -28,7 +32,7 @@ all APIs might be changed.
 
 ### Changes
 
-- simplify keep alive implementation 
+- simplify keep alive implementation
 - pin release-plz version ([#91](https://github.com/obmarg/graphql-ws-client/pull/91))
 
 ### Contributors
@@ -41,6 +45,7 @@ Thanks to the people who contributed to this release:
 ## [0.8.2](https://github.com/obmarg/graphql-ws-client/compare/v0.8.1...v0.8.2) - 2024-04-09
 
 ### Changes
+
 - `Client::subscribe` now takes `&self` instead of `&mut self`, to make sharing a
   `Client` among threads easier ([#88](https://github.com/obmarg/graphql-ws-client/pull/88))
 - `Client` is now clone, again to make sharing among threads easier
@@ -103,7 +108,7 @@ These will be removed in a future version, probably in v0.9.0
 
 - Fixed `tokio-tungstenite` support by switching the `async_tungstenite`
   `Connection` impl to a generic impl on any `tungstenite` compatible `Stream`
-  & `Sink`.  
+  & `Sink`.
 
 ## v0.8.0-rc.1 - 2024-02-10
 

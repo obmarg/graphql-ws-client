@@ -21,7 +21,6 @@ members = ["examples", "examples-wasm"]
 [features]
 default = ["logging"]
 logging = ["dep:log"]
-async-tungstenite = ["tungstenite"]
 client-cynic = ["cynic"]
 client-graphql-client = ["graphql_client"]
 ws_stream_wasm = ["dep:ws_stream_wasm", "dep:pharos"]
@@ -56,7 +55,7 @@ tokio-stream = { version = "0.1", features = ["sync"] }
 
 graphql-ws-client.path = "."
 
-graphql-ws-client.features = ["client-cynic", "client-graphql-client", "async-tungstenite"]
+graphql-ws-client.features = ["client-cynic", "client-graphql-client", "tungstenite"]
 
 [package.metadata.docs.rs]
 all-features = true
