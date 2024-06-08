@@ -1,8 +1,8 @@
-use futures::{Sink, SinkExt};
 use futures_lite::{Stream, StreamExt};
+use futures_sink::Sink;
 use tungstenite::{self, protocol::CloseFrame};
 
-use crate::{Error, Message};
+use crate::{sink_ext::SinkExt, Error, Message};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "tungstenite")))]
 impl<T> crate::next::Connection for T

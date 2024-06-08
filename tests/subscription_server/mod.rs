@@ -4,7 +4,7 @@
 use async_graphql::{EmptyMutation, Object, Schema, SimpleObject, Subscription, ID};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse, GraphQLSubscription};
 use axum::{extract::Extension, routing::post, Router};
-use futures::{Stream, StreamExt};
+use futures_lite::{Stream, StreamExt};
 use tokio::sync::broadcast::Sender;
 use tokio_stream::wrappers::BroadcastStream;
 
@@ -116,6 +116,6 @@ pub struct SubscriptionRoot {
 impl SubscriptionRoot {
     async fn books(&self, _mutation_type: MutationType) -> impl Stream<Item = BookChanged> {
         println!("Subscription received");
-        BroadcastStream::new(self.channel.subscribe()).filter_map(|r| async move { r.ok() })
+        BroadcastStream::new(self.channel.subscribe()).filter_map(|r| r.ok())
     }
 }

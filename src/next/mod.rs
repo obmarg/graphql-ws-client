@@ -34,7 +34,7 @@ pub use self::{
 /// ```rust,no_run
 /// use graphql_ws_client::Client;
 /// use std::future::IntoFuture;
-/// use futures::StreamExt;
+/// use futures_lite::StreamExt;
 /// # use graphql_ws_client::__doc_utils::spawn;
 /// # async fn example() -> Result<(), graphql_ws_client::Error> {
 /// # let connection = graphql_ws_client::__doc_utils::Conn;
