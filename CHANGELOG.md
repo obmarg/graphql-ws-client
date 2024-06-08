@@ -11,6 +11,13 @@ all APIs might be changed.
 
 ## Unreleased
 
+## v0.10.1 - 2024-06-08
+
+### Bug Fixes
+
+- Fixed some compile errors when `ws_stream_wasm` was enabled and `tungstenite`
+  was not ([#111](https://github.com/obmarg/graphql-ws-client/pull/111))
+
 ## v0.10.0 - 2024-06-08
 
 ### Breaking Changes
