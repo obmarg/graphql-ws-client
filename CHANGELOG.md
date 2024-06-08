@@ -15,19 +15,31 @@ all APIs might be changed.
 
 ### Breaking Changes
 
-- [**breaking**] Connection functions now return impl Future ([#108](https://github.com/obmarg/graphql-ws-client/pull/108))
-- [**breaking**] remove deprecated async-tungstenite feature ([#106](https://github.com/obmarg/graphql-ws-client/pull/106))
-- [**breaking**] remove deprecated legacy api ([#81](https://github.com/obmarg/graphql-ws-client/pull/81))
-
-### Changes
-
-- use futures-lite over futures where possible ([#107](https://github.com/obmarg/graphql-ws-client/pull/107))
-- clean up some unused dependencies ([#105](https://github.com/obmarg/graphql-ws-client/pull/105))
-- update deps to latest version ([#100](https://github.com/obmarg/graphql-ws-client/pull/100))
+- All Connection trait functions now return impl Future instead of BoxFuture 
+  ([#108](https://github.com/obmarg/graphql-ws-client/pull/108))
+- Removed the legacy API that was deprecated in v0.8.0 
+  ([#81](https://github.com/obmarg/graphql-ws-client/pull/81))
+- The deprecated `async-tungstenite` feature has been removed. Use the
+  `tungstenite` feature instead, which works with `async-tungtenite`,
+  `tokio-tungstenite` and any other library that provides a
+  `futures::{Stream, Sink}` based tungsetenite interface.
+  ([#106](https://github.com/obmarg/graphql-ws-client/pull/106))
 
 ### Changes
 
 - MSRV is now 1.76
+- Updated dependencies ([#100](https://github.com/obmarg/graphql-ws-client/pull/100))
+  - `tungstenite` `0.23`
+  - `graphql_client` `0.14`
+- Removed unused dependencies ([#105](https://github.com/obmarg/graphql-ws-client/pull/105))
+  - `async-trait`
+  - `pin-project-lite`
+
+### Contributors
+
+Thanks to the people who contributed to this release:
+
+- @carlocorradini
 
 ## v0.9.0 - 2024-06-08
 
@@ -35,10 +47,6 @@ all APIs might be changed.
 
 - The `no-logging` feature has been removed in favour of a default `logging`
   feature ([#97](https://github.com/obmarg/graphql-ws-client/pull/97))
-- The deprecated `async-tungstenite` feature has been removed. Use the
-  `tungstenite` feature instead, which works with `async-tungtenite`,
-  `tokio-tungstenite` and any other library that provides a
-  `futures::{Stream, Sink}` based tungsetenite interface.
 
 ### New Features
 
