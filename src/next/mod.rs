@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-use futures::{channel::mpsc, SinkExt, StreamExt};
+use futures_lite::StreamExt;
 use serde_json::Value;
 
 use crate::{
@@ -19,6 +19,7 @@ mod actor;
 mod builder;
 mod connection;
 mod keepalive;
+mod production_future;
 mod stream;
 
 pub use self::{
@@ -53,14 +54,14 @@ pub use self::{
 /// # }
 #[derive(Clone)]
 pub struct Client {
-    actor: mpsc::Sender<ConnectionCommand>,
+    actor: async_channel::Sender<ConnectionCommand>,
     subscription_buffer_size: usize,
     next_id: Arc<AtomicUsize>,
 }
 
 impl Client {
     pub(super) fn new_internal(
-        actor: mpsc::Sender<ConnectionCommand>,
+        actor: async_channel::Sender<ConnectionCommand>,
         subscription_buffer_size: usize,
     ) -> Self {
         Client {
@@ -80,7 +81,7 @@ impl Client {
     where
         Operation: GraphqlOperation + Unpin + Send + 'static,
     {
-        let (sender, receiver) = mpsc::channel(self.subscription_buffer_size);
+        let (sender, receiver) = async_channel::bounded(self.subscription_buffer_size);
 
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
 
@@ -92,7 +93,7 @@ impl Client {
         let request = serde_json::to_string(&message)
             .map_err(|error| Error::Serializing(error.to_string()))?;
 
-        let mut actor = self.actor.clone();
+        let actor = self.actor.clone();
         actor
             .send(ConnectionCommand::Subscribe {
                 request,
@@ -116,7 +117,7 @@ impl Client {
     ///
     /// This will stop all running subscriptions and shut down the ConnectionActor wherever
     /// it is running.
-    pub async fn close(mut self, code: u16, description: impl Into<String>) {
+    pub async fn close(self, code: u16, description: impl Into<String>) {
         self.actor
             .send(ConnectionCommand::Close(code, description.into()))
             .await
@@ -128,7 +129,7 @@ pub(super) enum ConnectionCommand {
     Subscribe {
         /// The full subscribe request as a JSON encoded string.
         request: String,
-        sender: mpsc::Sender<Value>,
+        sender: async_channel::Sender<Value>,
         id: usize,
     },
     Ping,

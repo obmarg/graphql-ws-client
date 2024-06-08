@@ -3,7 +3,7 @@ use std::{
     future::IntoFuture,
 };
 
-use futures::{channel::mpsc, future::BoxFuture, stream::BoxStream, FutureExt, SinkExt, StreamExt};
+use futures_lite::{future, stream, FutureExt, StreamExt};
 use serde_json::{json, Value};
 
 use crate::{
@@ -25,17 +25,17 @@ use super::{
 /// This type implements `IntoFuture` and should usually be spawned
 /// with an async runtime.
 pub struct ConnectionActor {
-    client: Option<mpsc::Receiver<ConnectionCommand>>,
+    client: Option<async_channel::Receiver<ConnectionCommand>>,
     connection: Box<dyn Connection + Send>,
-    operations: HashMap<usize, mpsc::Sender<Value>>,
+    operations: HashMap<usize, async_channel::Sender<Value>>,
     keep_alive: KeepAliveSettings,
-    keep_alive_actor: BoxStream<'static, ConnectionCommand>,
+    keep_alive_actor: stream::Boxed<ConnectionCommand>,
 }
 
 impl ConnectionActor {
     pub(super) fn new(
         connection: Box<dyn Connection + Send>,
-        client: mpsc::Receiver<ConnectionCommand>,
+        client: async_channel::Receiver<ConnectionCommand>,
         keep_alive: KeepAliveSettings,
     ) -> Self {
         ConnectionActor {
@@ -157,32 +157,35 @@ impl ConnectionActor {
     }
 
     async fn next(&mut self) -> Option<Next> {
+        enum Select {
+            Command(Option<ConnectionCommand>),
+            Message(Option<Message>),
+            KeepAlive(Option<ConnectionCommand>),
+        }
         loop {
             if let Some(client) = &mut self.client {
-                let mut next_command = client.next().fuse();
-                let mut next_message = self.connection.receive().fuse();
-                let mut next_keep_alive = self.keep_alive_actor.next().fuse();
+                let command = async { Select::Command(client.recv().await.ok()) };
+                let message = async { Select::Message(self.connection.receive().await) };
+                let keep_alive = async { Select::KeepAlive(self.keep_alive_actor.next().await) };
 
-                futures::select! {
-                    command = next_keep_alive => {
-                        let Some(command) = command else {
-                            return self.keep_alive.report_timeout();
-                        };
-
+                match command.or(message).or(keep_alive).await {
+                    Select::Command(Some(command)) => {
                         return Some(Next::Command(command));
-                    },
-                    command = next_command => {
-                        let Some(command) = command else {
-                            self.client.take();
-                            continue;
-                        };
-
-                        return Some(Next::Command(command));
-                    },
-                    message = next_message => {
+                    }
+                    Select::Command(None) => {
+                        self.client.take();
+                        continue;
+                    }
+                    Select::Message(message) => {
                         self.keep_alive_actor = Box::pin(self.keep_alive.run());
                         return Some(Next::Message(message?));
-                    },
+                    }
+                    Select::KeepAlive(Some(command)) => {
+                        return Some(Next::Command(command));
+                    }
+                    Select::KeepAlive(None) => {
+                        return self.keep_alive.report_timeout();
+                    }
                 }
             }
 
@@ -203,7 +206,7 @@ enum Next {
 impl IntoFuture for ConnectionActor {
     type Output = ();
 
-    type IntoFuture = BoxFuture<'static, ()>;
+    type IntoFuture = future::Boxed<()>;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.run())

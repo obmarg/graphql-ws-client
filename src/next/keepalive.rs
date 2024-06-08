@@ -1,6 +1,6 @@
 use std::{future::pending, time::Duration};
 
-use futures::Stream;
+use futures_lite::{stream, Stream};
 
 use crate::ConnectionCommand;
 
@@ -33,7 +33,7 @@ impl KeepAliveSettings {
     pub(super) fn run(&self) -> impl Stream<Item = ConnectionCommand> + 'static {
         let settings = self.clone();
 
-        futures::stream::unfold(KeepAliveState::Running, move |mut state| async move {
+        stream::unfold(KeepAliveState::Running, move |mut state| async move {
             match settings.interval {
                 Some(duration) => futures_timer::Delay::new(duration).await,
                 None => pending::<()>().await,

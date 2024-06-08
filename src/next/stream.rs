@@ -3,14 +3,9 @@ use std::{
     task::{Context, Poll},
 };
 
-use futures::{
-    channel::mpsc,
-    future::{self, BoxFuture, Fuse},
-    stream::{self, BoxStream},
-    SinkExt, Stream, StreamExt,
-};
+use futures_lite::{future, stream, Stream, StreamExt};
 
-use crate::{graphql::GraphqlOperation, Error};
+use crate::{graphql::GraphqlOperation, next::production_future::read_from_producer, Error};
 
 use super::ConnectionCommand;
 
@@ -23,8 +18,8 @@ where
     Operation: GraphqlOperation,
 {
     pub(super) id: usize,
-    pub(super) stream: BoxStream<'static, Result<Operation::Response, Error>>,
-    pub(super) actor: mpsc::Sender<ConnectionCommand>,
+    pub(super) stream: stream::Boxed<Result<Operation::Response, Error>>,
+    pub(super) actor: async_channel::Sender<ConnectionCommand>,
 }
 
 impl<Operation> Subscription<Operation>
@@ -32,14 +27,14 @@ where
     Operation: GraphqlOperation + Send,
 {
     /// Stops the subscription by sending a Complete message to the server.
-    pub async fn stop(mut self) -> Result<(), Error> {
+    pub async fn stop(self) -> Result<(), Error> {
         self.actor
             .send(ConnectionCommand::Cancel(self.id))
             .await
             .map_err(|error| Error::Send(error.to_string()))
     }
 
-    pub(super) fn join(self, future: Fuse<BoxFuture<'static, ()>>) -> Self
+    pub(super) fn join(self, future: future::Boxed<()>) -> Self
     where
         Operation::Response: 'static,
     {
@@ -71,21 +66,18 @@ where
 /// on that channel - combining the two into a single stream that'll run till the channel
 /// is exhausted.  If you drop the stream you also cancel the underlying process.
 fn join_stream<Item>(
-    stream: BoxStream<'static, Item>,
-    future: Fuse<BoxFuture<'static, ()>>,
+    stream: stream::Boxed<Item>,
+    future: future::Boxed<()>,
 ) -> impl Stream<Item = Item> {
-    futures::stream::unfold(
-        ProducerState::Running(stream.fuse(), future),
-        producer_handler,
-    )
+    stream::unfold(ProducerState::Running(stream, future), producer_handler)
 }
 
 enum ProducerState<'a, Item> {
     Running(
-        stream::Fuse<BoxStream<'a, Item>>,
-        future::Fuse<BoxFuture<'a, ()>>,
+        Pin<Box<dyn Stream<Item = Item> + Send + 'a>>,
+        future::Boxed<()>,
     ),
-    Draining(stream::Fuse<BoxStream<'a, Item>>),
+    Draining(Pin<Box<dyn Stream<Item = Item> + Send + 'a>>),
 }
 
 async fn producer_handler<Item>(
@@ -93,15 +85,12 @@ async fn producer_handler<Item>(
 ) -> Option<(Item, ProducerState<'_, Item>)> {
     loop {
         match state {
-            ProducerState::Running(mut stream, mut producer) => {
-                futures::select! {
-                    output = stream.next() => {
-                        return Some((output?, ProducerState::Running(stream, producer)));
+            ProducerState::Running(mut stream, producer) => {
+                match read_from_producer(stream.next(), producer).await {
+                    Some((item, producer)) => {
+                        return Some((item?, ProducerState::Running(stream, producer)));
                     }
-                    _ = producer => {
-                        state = ProducerState::Draining(stream);
-                        continue;
-                    }
+                    None => state = ProducerState::Draining(stream),
                 }
             }
             ProducerState::Draining(mut stream) => {

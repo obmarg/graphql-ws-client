@@ -1,6 +1,9 @@
-use std::{future::IntoFuture, time::Duration};
+use std::{
+    future::{Future, IntoFuture},
+    time::Duration,
+};
 
-use futures::{channel::mpsc, future::BoxFuture, FutureExt};
+use futures_lite::future;
 use serde::Serialize;
 
 use crate::{graphql::GraphqlOperation, logging::trace, protocol::Event, Error};
@@ -9,6 +12,7 @@ use super::{
     actor::ConnectionActor,
     connection::{Connection, Message},
     keepalive::KeepAliveSettings,
+    production_future::read_from_producer,
     Client, Subscription,
 };
 
@@ -127,20 +131,10 @@ impl ClientBuilder {
     {
         let (client, actor) = self.await?;
 
-        let mut actor_future = actor.into_future().fuse();
+        let actor_future = actor.into_future();
+        let subscribe_future = client.subscribe(op);
 
-        let subscribe_future = client.subscribe(op).fuse();
-        futures::pin_mut!(subscribe_future);
-
-        // Temporarily run actor_future while we start the subscription
-        let stream = futures::select! {
-            () = actor_future => {
-                return Err(Error::Unknown("actor ended before subscription started".into()))
-            },
-            result = subscribe_future => {
-                result?
-            }
-        };
+        let (stream, actor_future) = run_startup(subscribe_future, actor_future).await?;
 
         Ok(stream.join(actor_future))
     }
@@ -149,7 +143,7 @@ impl ClientBuilder {
 impl IntoFuture for ClientBuilder {
     type Output = Result<(Client, ConnectionActor), Error>;
 
-    type IntoFuture = BoxFuture<'static, Self::Output>;
+    type IntoFuture = future::Boxed<Self::Output>;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.build())
@@ -214,12 +208,29 @@ impl ClientBuilder {
             }
         }
 
-        let (command_sender, command_receiver) = mpsc::channel(5);
+        let (command_sender, command_receiver) = async_channel::bounded(5);
 
         let actor = ConnectionActor::new(connection, command_receiver, keep_alive);
 
         let client = Client::new_internal(command_sender, subscription_buffer_size.unwrap_or(5));
 
         Ok((client, actor))
+    }
+}
+
+async fn run_startup<SubscribeFut, Operation>(
+    subscribe: SubscribeFut,
+    actor: future::Boxed<()>,
+) -> Result<(Subscription<Operation>, future::Boxed<()>), Error>
+where
+    SubscribeFut: Future<Output = Result<Subscription<Operation>, Error>>,
+    Operation: GraphqlOperation,
+{
+    match read_from_producer(subscribe, actor).await {
+        Some((Ok(subscription), actor)) => Ok((subscription, actor)),
+        Some((Err(err), _)) => Err(err),
+        None => Err(Error::Unknown(
+            "actor ended before subscription started".into(),
+        )),
     }
 }

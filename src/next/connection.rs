@@ -1,4 +1,5 @@
-use futures::future::BoxFuture;
+use std::future::Future;
+use std::pin::Pin;
 
 use crate::Error;
 
@@ -9,10 +10,13 @@ use crate::Error;
 /// If users wish to add support for a new client they should implement this trait.
 pub trait Connection {
     /// Receive the next message on this connection.
-    fn receive(&mut self) -> BoxFuture<'_, Option<Message>>;
+    fn receive(&mut self) -> Pin<Box<dyn Future<Output = Option<Message>> + Send + '_>>;
 
     /// Send a message with on connection
-    fn send(&mut self, message: Message) -> BoxFuture<'_, Result<(), Error>>;
+    fn send(
+        &mut self,
+        message: Message,
+    ) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + '_>>;
 }
 
 /// A websocket message

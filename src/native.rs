@@ -1,7 +1,10 @@
-use futures::{future::BoxFuture, Sink, SinkExt, Stream, StreamExt};
+use std::{future::Future, pin::Pin};
+
+use futures::{future::BoxFuture, Sink, SinkExt};
+use futures_lite::{Stream, StreamExt};
 use tungstenite::{self, protocol::CloseFrame};
 
-use crate::Error;
+use crate::{Error, Message};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "tungstenite")))]
 impl<T> crate::next::Connection for T
@@ -13,7 +16,7 @@ where
         + Unpin,
     <T as Sink<tungstenite::Message>>::Error: std::fmt::Display,
 {
-    fn receive(&mut self) -> BoxFuture<'_, Option<crate::next::Message>> {
+    fn receive(&mut self) -> Pin<Box<dyn Future<Output = Option<Message>> + Send + '_>> {
         Box::pin(async move {
             loop {
                 match self.next().await? {
