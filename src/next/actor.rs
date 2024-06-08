@@ -13,7 +13,7 @@ use crate::{
 };
 
 use super::{
-    connection::{Connection, Message},
+    connection::{Message, ObjectSafeConnection},
     keepalive::KeepAliveSettings,
     ConnectionCommand,
 };
@@ -26,7 +26,7 @@ use super::{
 /// with an async runtime.
 pub struct ConnectionActor {
     client: Option<async_channel::Receiver<ConnectionCommand>>,
-    connection: Box<dyn Connection + Send>,
+    connection: Box<dyn ObjectSafeConnection>,
     operations: HashMap<usize, async_channel::Sender<Value>>,
     keep_alive: KeepAliveSettings,
     keep_alive_actor: stream::Boxed<ConnectionCommand>,
@@ -34,7 +34,7 @@ pub struct ConnectionActor {
 
 impl ConnectionActor {
     pub(super) fn new(
-        connection: Box<dyn Connection + Send>,
+        connection: Box<dyn ObjectSafeConnection>,
         client: async_channel::Receiver<ConnectionCommand>,
         keep_alive: KeepAliveSettings,
     ) -> Self {

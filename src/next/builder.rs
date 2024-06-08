@@ -10,7 +10,7 @@ use crate::{graphql::GraphqlOperation, logging::trace, protocol::Event, Error};
 
 use super::{
     actor::ConnectionActor,
-    connection::{Connection, Message},
+    connection::{Connection, Message, ObjectSafeConnection},
     keepalive::KeepAliveSettings,
     production_future::read_from_producer,
     Client, Subscription,
@@ -34,7 +34,7 @@ use super::{
 pub struct ClientBuilder {
     payload: Option<serde_json::Value>,
     subscription_buffer_size: Option<usize>,
-    connection: Box<dyn Connection + Send>,
+    connection: Box<dyn ObjectSafeConnection>,
     keep_alive: KeepAliveSettings,
 }
 
