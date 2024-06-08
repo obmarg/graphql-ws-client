@@ -9,6 +9,25 @@ This project intends to inhere to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html), but has not yet reached 1.0 so
 all APIs might be changed.
 
+## v0.8.3 - 2024-06-08
+
+### New Features
+
+- send periodic pings for keep alives ([#103](https://github.com/obmarg/graphql-ws-client/pull/103))
+- impl debug for client ([#101](https://github.com/obmarg/graphql-ws-client/pull/101))
+- add keep-alive capability ([#93](https://github.com/obmarg/graphql-ws-client/pull/93))
+
+### Bug Fixes
+
+- swap no-logging feature for logging feature ([#97](https://github.com/obmarg/graphql-ws-client/pull/97))
+
+### Changes
+
+- Fix compilation error in actor mod ([#96](https://github.com/obmarg/graphql-ws-client/pull/96))
+- release-plz config tweaks ([#95](https://github.com/obmarg/graphql-ws-client/pull/95))
+- simplify keep alive implementation ([#94](https://github.com/obmarg/graphql-ws-client/pull/94))
+- pin release-plz version ([#91](https://github.com/obmarg/graphql-ws-client/pull/91))
+
 ## [0.8.2](https://github.com/obmarg/graphql-ws-client/compare/v0.8.1...v0.8.2) - 2024-04-09
 
 ### Changes
