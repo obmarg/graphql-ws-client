@@ -9,6 +9,35 @@ This project intends to inhere to [Semantic
 Versioning](http://semver.org/spec/v2.0.0.html), but has not yet reached 1.0 so
 all APIs might be changed.
 
+## v0.9.0 - 2024-06-08
+
+### Breaking Changes
+
+- The `no-logging` feature has been removed in favour of a default `logging`
+  feature ([#97](https://github.com/obmarg/graphql-ws-client/pull/97))
+
+### New Features
+
+- Added keep-alive functionality.  When enabled this will send periodic pings
+  when the connection appears inactive.  If these pings are not replied to, the
+  connection will be considered broken. 
+  ([#93](https://github.com/obmarg/graphql-ws-client/pull/93),
+  [#94](https://github.com/obmarg/graphql-ws-client/pull/94),
+  [#103](https://github.com/obmarg/graphql-ws-client/pull/103))
+- Client is now Debug ([#101](https://github.com/obmarg/graphql-ws-client/pull/101))
+
+### Changes
+
+- simplify keep alive implementation 
+- pin release-plz version ([#91](https://github.com/obmarg/graphql-ws-client/pull/91))
+
+### Contributors
+
+Thanks to the people who contributed to this release:
+
+- @rhishikeshj
+- @carlocorradini
+
 ## [0.8.2](https://github.com/obmarg/graphql-ws-client/compare/v0.8.1...v0.8.2) - 2024-04-09
 
 ### Changes
