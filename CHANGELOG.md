@@ -11,6 +11,16 @@ all APIs might be changed.
 
 ## Unreleased
 
+## v0.10.1 - 2024-06-08
+
+### Bug Fixes
+
+- remove futures from ws_stream_wasm module ([#111](https://github.com/obmarg/graphql-ws-client/pull/111))
+
+### Changes
+
+- configure github release name ([#109](https://github.com/obmarg/graphql-ws-client/pull/109))
+
 ## v0.10.0 - 2024-06-08
 
 ### Breaking Changes
