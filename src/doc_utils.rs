@@ -1,15 +1,15 @@
-use std::{future::Future, pin::Pin};
+use std::future::Future;
 
 use crate::{next::Message, Error};
 
 pub struct Conn;
 
 impl crate::next::Connection for Conn {
-    fn receive(&mut self) -> Pin<Box<dyn Future<Output = Option<Message>> + Send + '_>> {
+    async fn receive(&mut self) -> Option<Message> {
         unimplemented!()
     }
 
-    fn send(&mut self, _: Message) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + '_>> {
+    async fn send(&mut self, _: Message) -> Result<(), Error> {
         unimplemented!()
     }
 }

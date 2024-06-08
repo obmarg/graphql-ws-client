@@ -10,13 +10,10 @@ use crate::Error;
 /// If users wish to add support for a new client they should implement this trait.
 pub trait Connection {
     /// Receive the next message on this connection.
-    fn receive(&mut self) -> Pin<Box<dyn Future<Output = Option<Message>> + Send + '_>>;
+    fn receive(&mut self) -> impl Future<Output = Option<Message>> + Send;
 
     /// Send a message with on connection
-    fn send(
-        &mut self,
-        message: Message,
-    ) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + '_>>;
+    fn send(&mut self, message: Message) -> impl Future<Output = Result<(), Error>> + Send;
 }
 
 /// A websocket message
@@ -67,5 +64,29 @@ impl Message {
             serde_json::to_string(&crate::protocol::Message::Complete::<()> { id: id.to_string() })
                 .unwrap(),
         )
+    }
+}
+
+/// An object safe wrapper around the Connection trait, allowing us
+/// to use it dynamically
+pub(crate) trait ObjectSafeConnection: Send {
+    fn receive(&mut self) -> Pin<Box<dyn Future<Output = Option<Message>> + Send + '_>>;
+
+    fn send(
+        &mut self,
+        message: Message,
+    ) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + '_>>;
+}
+
+impl<T: Connection + Sized + Send> ObjectSafeConnection for T {
+    fn receive(&mut self) -> Pin<Box<dyn Future<Output = Option<Message>> + Send + '_>> {
+        Box::pin(Connection::receive(self))
+    }
+
+    fn send(
+        &mut self,
+        message: Message,
+    ) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + '_>> {
+        Box::pin(Connection::send(self, message))
     }
 }
