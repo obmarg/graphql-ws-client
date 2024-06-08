@@ -44,9 +44,6 @@ mod logging;
 mod protocol;
 
 #[doc(hidden)]
-pub mod legacy;
-
-#[doc(hidden)]
 #[path = "doc_utils.rs"]
 pub mod __doc_utils;
 
@@ -62,59 +59,6 @@ pub mod ws_stream_wasm;
 #[cfg(any(feature = "async-tungstenite", feature = "tungstenite"))]
 mod native;
 
-#[allow(deprecated)]
-pub use legacy::{
-    client::{AsyncWebsocketClient, AsyncWebsocketClientBuilder, SubscriptionStream},
-    websockets,
-};
-
-#[cfg(feature = "ws_stream_wasm")]
-#[cfg_attr(docsrs, doc(cfg(feature = "ws_stream_wasm")))]
-#[allow(deprecated)]
-pub use legacy::wasm::{
-    wasm_websocket_combined_split, FusedWasmWebsocketSink, WasmWebsocketMessage,
-};
-
 pub use next::*;
 
 pub use error::Error;
-
-/// A websocket client for the cynic graphql crate
-#[cfg(feature = "cynic")]
-#[cfg_attr(docsrs, doc(cfg(feature = "cynic")))]
-#[allow(deprecated)]
-#[deprecated(
-    since = "0.8.0-rc.1",
-    note = "graphql-ws-client no longer needs client specific types.  Use the general purpose Client instead"
-)]
-pub type CynicClient<WsMessage> = AsyncWebsocketClient<WsMessage>;
-
-/// A websocket client builder for the cynic graphql crate
-#[cfg(feature = "cynic")]
-#[cfg_attr(docsrs, doc(cfg(feature = "cynic")))]
-#[allow(deprecated)]
-#[deprecated(
-    since = "0.8.0-rc.1",
-    note = "graphql-ws-client no longer needs client specific types.  Use the general purpose Client instead"
-)]
-pub type CynicClientBuilder = AsyncWebsocketClientBuilder;
-
-/// A websocket client for the graphql_client graphql crate
-#[cfg(feature = "client-graphql-client")]
-#[cfg_attr(docsrs, doc(cfg(feature = "client-graphql-client")))]
-#[allow(deprecated)]
-#[deprecated(
-    since = "0.8.0-rc.1",
-    note = "graphql-ws-client no longer needs client specific types.  Use the general purpose Client instead"
-)]
-pub type GraphQLClientClient<WsMessage> = AsyncWebsocketClient<WsMessage>;
-
-/// A websocket client builder for the graphql_client graphql crate
-#[cfg(feature = "client-graphql-client")]
-#[cfg_attr(docsrs, doc(cfg(feature = "client-graphql-client")))]
-#[allow(deprecated)]
-#[deprecated(
-    since = "0.8.0-rc.1",
-    note = "graphql-ws-client no longer needs client specific types.  Use the general purpose Client instead"
-)]
-pub type GraphQLClientClientBuilder = AsyncWebsocketClientBuilder;
