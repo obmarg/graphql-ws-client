@@ -11,6 +11,20 @@ all APIs might be changed.
 
 ## Unreleased
 
+## v0.10.0 - 2024-06-08
+
+### Breaking Changes
+
+- [**breaking**] Connection functions now return impl Future ([#108](https://github.com/obmarg/graphql-ws-client/pull/108))
+- [**breaking**] remove deprecated async-tungstenite feature ([#106](https://github.com/obmarg/graphql-ws-client/pull/106))
+- [**breaking**] remove deprecated legacy api ([#81](https://github.com/obmarg/graphql-ws-client/pull/81))
+
+### Changes
+
+- use futures-lite over futures where possible ([#107](https://github.com/obmarg/graphql-ws-client/pull/107))
+- clean up some unused dependencies ([#105](https://github.com/obmarg/graphql-ws-client/pull/105))
+- update deps to latest version ([#100](https://github.com/obmarg/graphql-ws-client/pull/100))
+
 ### Changes
 
 - MSRV is now 1.76
