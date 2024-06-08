@@ -14,7 +14,7 @@
 //! ```rust
 //! use graphql_ws_client::Client;
 //! use std::future::IntoFuture;
-//! use futures::StreamExt;
+//! use futures_lite::StreamExt;
 //! # async fn example() -> Result<(), graphql_ws_client::Error> {
 //! # let connection = graphql_ws_client::__doc_utils::Conn;
 //! # let subscription = graphql_ws_client::__doc_utils::Subscription;
@@ -44,6 +44,7 @@
 mod error;
 mod logging;
 mod protocol;
+mod sink_ext;
 
 #[doc(hidden)]
 #[path = "doc_utils.rs"]

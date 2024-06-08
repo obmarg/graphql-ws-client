@@ -1,8 +1,8 @@
-use futures::{FutureExt, SinkExt, StreamExt};
+use futures_lite::{FutureExt, StreamExt};
 use pharos::{Observable, ObserveConfig};
 use ws_stream_wasm::{WsEvent, WsMessage, WsMeta, WsStream};
 
-use crate::Error;
+use crate::{sink_ext::SinkExt, Error};
 
 /// A websocket connection for ws_stream_wasm
 #[cfg_attr(docsrs, doc(cfg(feature = "ws_stream_wasm")))]
@@ -72,14 +72,10 @@ impl crate::next::Connection for Connection {
 
 impl Connection {
     async fn next(&mut self) -> Option<EventOrMessage> {
-        futures::select! {
-            event = self.event_stream.next().fuse() => {
-                event.map(EventOrMessage::Event)
-            }
-            message = self.messages.next().fuse() => {
-                message.map(EventOrMessage::Message)
-            }
-        }
+        let event = async { self.event_stream.next().await.map(EventOrMessage::Event) };
+        let message = async { self.messages.next().await.map(EventOrMessage::Message) };
+
+        event.race(message).await
     }
 }
 

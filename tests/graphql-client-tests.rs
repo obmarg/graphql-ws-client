@@ -1,6 +1,7 @@
 use std::{future::IntoFuture, time::Duration};
 
 use assert_matches::assert_matches;
+use futures_lite::{future, StreamExt};
 use graphql_client::GraphQLQuery;
 use graphql_ws_client::graphql::StreamingOperation;
 use subscription_server::SubscriptionServer;
@@ -19,7 +20,6 @@ struct BooksChanged;
 #[tokio::test]
 async fn main_test() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
-    use futures::StreamExt;
 
     let server = SubscriptionServer::start().await;
 
@@ -60,7 +60,7 @@ async fn main_test() {
         },
     ];
 
-    futures::join!(
+    future::zip(
         async {
             for update in &updates {
                 server.send(update.to_owned()).unwrap();
@@ -75,14 +75,14 @@ async fn main_test() {
                 let data = update.data.unwrap();
                 assert_eq!(data.books.id, expected.id.0);
             }
-        }
-    );
+        },
+    )
+    .await;
 }
 
 #[tokio::test]
 async fn oneshot_operation_test() {
     use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
-    use futures::StreamExt;
 
     let server = SubscriptionServer::start().await;
 
@@ -120,7 +120,7 @@ async fn oneshot_operation_test() {
         },
     ];
 
-    futures::join!(
+    future::zip(
         async {
             sleep(Duration::from_millis(10)).await;
             for update in &updates {
@@ -136,8 +136,9 @@ async fn oneshot_operation_test() {
                 let data = update.data.unwrap();
                 assert_eq!(data.books.id, expected.id.0);
             }
-        }
-    );
+        },
+    )
+    .await;
 }
 
 fn build_query() -> graphql_ws_client::graphql::StreamingOperation<BooksChanged> {
