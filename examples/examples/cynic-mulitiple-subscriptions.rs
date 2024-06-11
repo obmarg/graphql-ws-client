@@ -66,12 +66,12 @@ async fn main() {
     futures::join!(
         async move {
             while let Some(item) = first_subscription.next().await {
-                println!("{:?}", item);
+                println!("{item:?}");
             }
         },
         async move {
             while let Some(item) = second_subscription.next().await {
-                println!("{:?}", item);
+                println!("{item:?}");
             }
         }
     );

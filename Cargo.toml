@@ -58,8 +58,24 @@ tokio-stream = { version = "0.1", features = ["sync"] }
 
 graphql-ws-client.path = "."
 
-graphql-ws-client.features = ["client-cynic", "client-graphql-client", "tungstenite"]
+graphql-ws-client.features = [
+    "client-cynic",
+    "client-graphql-client",
+    "tungstenite",
+]
 
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+multiple_crate_versions = "allow"
+
+[lints]
+workspace = true

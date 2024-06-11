@@ -58,7 +58,7 @@ async fn main() {
         .unwrap();
 
     while let Some(item) = subscription.next().await {
-        println!("{:?}", item);
+        println!("{item:?}");
     }
 }
 

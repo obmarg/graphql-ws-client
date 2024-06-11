@@ -74,6 +74,10 @@ impl Client {
     // Starts a streaming operation on this client.
     ///
     /// Returns a `Stream` of responses.
+    ///
+    /// # Errors
+    ///
+    /// Will return `Err` if subscribe operation fails.
     pub async fn subscribe<'a, Operation>(
         &self,
         op: Operation,
@@ -115,7 +119,7 @@ impl Client {
 
     /// Gracefully closes the connection
     ///
-    /// This will stop all running subscriptions and shut down the ConnectionActor wherever
+    /// This will stop all running subscriptions and shut down the [`ConnectionActor`] wherever
     /// it is running.
     pub async fn close(self, code: u16, description: impl Into<String>) {
         self.actor

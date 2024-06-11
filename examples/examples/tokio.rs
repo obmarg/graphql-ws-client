@@ -60,7 +60,7 @@ async fn main() {
     let mut stream = client.subscribe(build_query()).await.unwrap();
     println!("Running subscription apparently?");
     while let Some(item) = stream.next().await {
-        println!("{:?}", item);
+        println!("{item:?}");
     }
 }
 

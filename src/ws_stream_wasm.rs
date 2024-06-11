@@ -4,7 +4,7 @@ use ws_stream_wasm::{WsEvent, WsMessage, WsMeta, WsStream};
 
 use crate::{sink_ext::SinkExt, Error};
 
-/// A websocket connection for ws_stream_wasm
+/// A websocket connection for [ws_stream_wasm](https://docs.rs/ws_stream/latest/ws_stream)
 #[cfg_attr(docsrs, doc(cfg(feature = "ws_stream_wasm")))]
 pub struct Connection {
     messages: WsStream,
@@ -13,7 +13,11 @@ pub struct Connection {
 }
 
 impl Connection {
-    /// Creates a new Connection from a WsMeta & WsTream combo
+    /// Creates a new Connection from a [`WsMeta`] and [`WsTream`] combo
+    ///
+    /// # Panics
+    ///
+    /// Will panic if `meta.observe` fails.
     pub async fn new((mut meta, messages): (WsMeta, WsStream)) -> Self {
         let event_stream = meta.observe(ObserveConfig::default()).await.unwrap();
 

@@ -56,7 +56,7 @@ mod next;
 
 #[cfg(feature = "ws_stream_wasm")]
 #[cfg_attr(docsrs, doc(cfg(feature = "ws_stream_wasm")))]
-/// Integration with the ws_stream_wasm library
+/// Integration with the [ws_stream_wasm](https://docs.rs/ws_stream/latest/ws_stream) library
 pub mod ws_stream_wasm;
 
 #[cfg(feature = "tungstenite")]

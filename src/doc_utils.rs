@@ -27,4 +27,4 @@ impl crate::graphql::GraphqlOperation for Subscription {
     }
 }
 
-pub fn spawn<T>(_future: impl Future<Output = T> + Send + 'static) {}
+pub fn spawn<T>(_: impl Future<Output = T> + Send + 'static) {}

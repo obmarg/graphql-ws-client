@@ -9,9 +9,12 @@ publish = false
 
 [dependencies]
 async-std = { version = "1.9", features = ["attributes"] }
-async-tungstenite = { version = "0.26", features = ["async-std-runtime", "tokio-runtime"] }
+async-tungstenite = { version = "0.26", features = [
+    "async-std-runtime",
+    "tokio-runtime",
+] }
 cynic = { version = "3" }
-futures = { version = "0.3"}
+futures = { version = "0.3" }
 graphql_client = { version = "0.14" }
 serde = "1"
 tokio = { version = "1.15", features = ["rt-multi-thread", "macros"] }
@@ -22,6 +25,8 @@ version = "0.10.1"
 default-features = false
 features = ["cynic", "tungstenite"]
 
-
 [dev-dependencies]
 insta = "1.11"
+
+[lints]
+workspace = true

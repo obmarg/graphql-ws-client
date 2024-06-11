@@ -27,6 +27,10 @@ where
     Operation: GraphqlOperation + Send,
 {
     /// Stops the subscription by sending a Complete message to the server.
+    ///
+    /// # Errors
+    ///
+    /// Will return `Err` if the stop operation fails.
     pub async fn stop(self) -> Result<(), Error> {
         self.actor
             .send(ConnectionCommand::Cancel(self.id))

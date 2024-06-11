@@ -69,9 +69,9 @@ pub enum Event {
 impl Event {
     pub fn id(&self) -> Option<&str> {
         match self {
-            Event::Next { id, .. } => Some(id.as_ref()),
-            Event::Complete { id, .. } => Some(id.as_ref()),
-            Event::Error { id, .. } => Some(id.as_ref()),
+            Event::Next { id, .. } | Event::Complete { id, .. } | Event::Error { id, .. } => {
+                Some(id.as_ref())
+            }
             Event::Ping { .. } | Event::Pong { .. } | Event::ConnectionAck { .. } => None,
         }
     }

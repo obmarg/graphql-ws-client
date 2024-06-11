@@ -50,7 +50,7 @@ impl ConnectionActor {
     async fn run(mut self) {
         while let Some(next) = self.next().await {
             let response = match next {
-                Next::Command(cmd) => self.handle_command(cmd).await,
+                Next::Command(cmd) => self.handle_command(cmd),
                 Next::Message(message) => self.handle_message(message).await,
             };
 
@@ -75,7 +75,7 @@ impl ConnectionActor {
             .ok();
     }
 
-    async fn handle_command(&mut self, cmd: ConnectionCommand) -> Option<Message> {
+    fn handle_command(&mut self, cmd: ConnectionCommand) -> Option<Message> {
         match cmd {
             ConnectionCommand::Subscribe {
                 request,
@@ -119,9 +119,8 @@ impl ConnectionActor {
 
         match event {
             event @ (Event::Next { .. } | Event::Error { .. }) => {
-                let id = match event.id().unwrap().parse::<usize>().ok() {
-                    Some(id) => id,
-                    None => return Some(Message::close(Reason::UnknownSubscription)),
+                let Some(id) = event.id().unwrap().parse::<usize>().ok() else {
+                    return Some(Message::close(&Reason::UnknownSubscription));
                 };
 
                 let sender = self.operations.entry(id);
@@ -140,9 +139,8 @@ impl ConnectionActor {
                 None
             }
             Event::Complete { id } => {
-                let id = match id.parse::<usize>().ok() {
-                    Some(id) => id,
-                    None => return Some(Message::close(Reason::UnknownSubscription)),
+                let Some(id) = id.parse::<usize>().ok() else {
+                    return Some(Message::close(&Reason::UnknownSubscription));
                 };
 
                 trace!("Stream complete");
@@ -150,7 +148,7 @@ impl ConnectionActor {
                 self.operations.remove(&id);
                 None
             }
-            Event::ConnectionAck { .. } => Some(Message::close(Reason::UnexpectedAck)),
+            Event::ConnectionAck { .. } => Some(Message::close(&Reason::UnexpectedAck)),
             Event::Ping { .. } => Some(Message::Pong),
             Event::Pong { .. } => None,
         }
@@ -169,7 +167,7 @@ impl ConnectionActor {
                 let keep_alive = async { Select::KeepAlive(self.keep_alive_actor.next().await) };
 
                 match command.or(message).or(keep_alive).await {
-                    Select::Command(Some(command)) => {
+                    Select::Command(Some(command)) | Select::KeepAlive(Some(command)) => {
                         return Some(Next::Command(command));
                     }
                     Select::Command(None) => {
@@ -180,11 +178,8 @@ impl ConnectionActor {
                         self.keep_alive_actor = Box::pin(self.keep_alive.run());
                         return Some(Next::Message(message?));
                     }
-                    Select::KeepAlive(Some(command)) => {
-                        return Some(Next::Command(command));
-                    }
                     Select::KeepAlive(None) => {
-                        return self.keep_alive.report_timeout();
+                        return Some(self.keep_alive.report_timeout());
                     }
                 }
             }
@@ -235,7 +230,7 @@ enum Reason {
 }
 
 impl Message {
-    fn close(reason: Reason) -> Self {
+    fn close(reason: &Reason) -> Self {
         match reason {
             Reason::UnexpectedAck => Message::Close {
                 code: Some(4855),
@@ -260,14 +255,14 @@ impl Event {
 }
 
 impl KeepAliveSettings {
-    fn report_timeout(&self) -> Option<Next> {
+    fn report_timeout(&self) -> Next {
         warning!(
             "No messages received within keep-alive ({:?}s) from server. Closing the connection",
             self.interval.unwrap()
         );
-        Some(Next::Command(ConnectionCommand::Close(
+        Next::Command(ConnectionCommand::Close(
             4503,
             "Service unavailable. keep-alive failure".to_string(),
-        )))
+        ))
     }
 }

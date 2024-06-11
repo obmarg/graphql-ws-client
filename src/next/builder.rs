@@ -39,7 +39,7 @@ pub struct ClientBuilder {
 }
 
 impl super::Client {
-    /// Creates a ClientBuilder with the given connection.
+    /// Creates a `ClientBuilder` with the given connection.
     ///
     /// ```rust
     /// use graphql_ws_client::Client;
@@ -65,6 +65,10 @@ impl super::Client {
 
 impl ClientBuilder {
     /// Add payload to `connection_init`
+    ///
+    /// # Errors
+    ///
+    /// Will return `Err` if `payload` serialization fails.
     pub fn payload<NewPayload>(self, payload: NewPayload) -> Result<ClientBuilder, Error>
     where
         NewPayload: Serialize,
@@ -80,6 +84,7 @@ impl ClientBuilder {
 
     /// Sets the size of the incoming message buffer that subscriptions created by this client will
     /// use
+    #[must_use]
     pub fn subscription_buffer_size(self, new: usize) -> Self {
         ClientBuilder {
             subscription_buffer_size: Some(new),
@@ -91,6 +96,7 @@ impl ClientBuilder {
     ///
     /// Any incoming messages automatically reset this interval so keep alives may not be sent
     /// on busy connections even if this is set.
+    #[must_use]
     pub fn keep_alive_interval(mut self, new: Duration) -> Self {
         self.keep_alive.interval = Some(new);
         self
@@ -99,6 +105,7 @@ impl ClientBuilder {
     /// The number of keepalive retries before a connection is considered broken.
     ///
     /// This defaults to 3, but has no effect if `keep_alive_interval` is not called.
+    #[must_use]
     pub fn keep_alive_retries(mut self, count: usize) -> Self {
         self.keep_alive.retries = count;
         self
@@ -120,8 +127,12 @@ impl ClientBuilder {
     /// Note that this takes ownership of the client, so it cannot be
     /// used to run any more operations.
     ///
-    /// If users want to run mutliple operations on a connection they
+    /// If users want to run multiple operations on a connection they
     /// should use the `IntoFuture` impl to construct a `Client`
+    ///
+    /// # Errors
+    ///
+    /// Will return `Err` if subscribe operation fails.
     pub async fn subscribe<'a, Operation>(
         self,
         op: Operation,
@@ -156,6 +167,10 @@ impl ClientBuilder {
     /// Accepts an already built websocket connection, and returns the connection
     /// and a future that must be awaited somewhere - if the future is dropped the
     /// connection will also drop.
+    ///
+    /// # Errors
+    ///
+    /// Will return `Err` if build operation fails.
     pub async fn build(self) -> Result<(Client, ConnectionActor), Error> {
         let Self {
             payload,
@@ -176,7 +191,7 @@ impl ClientBuilder {
                         reason.unwrap_or_default(),
                     ))
                 }
-                Some(Message::Ping) | Some(Message::Pong) => {}
+                Some(Message::Ping | Message::Pong) => {}
                 Some(message @ Message::Text(_)) => {
                     let event = message.deserialize::<Event>()?;
                     match event {

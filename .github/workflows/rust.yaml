@@ -1,0 +1,51 @@
+name: rust
+
+on:
+    push:
+        branches: [main, staging, trying]
+    pull_request:
+        branches: [main]
+
+env:
+    CARGO_INCREMENTAL: 0
+    CARGO_TERM_COLOR: always
+    CI: 1
+    RUSTFLAGS: "-W rust-2021-compatibility -D warnings"
+    RUST_BACKTRACE: short
+
+jobs:
+    check:
+        # Skip draft release PRs
+        if: github.actor_id != '166155226' || github.event_name != 'pull_request' || github.event.pull_request.draft == false
+
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+            - uses: dtolnay/rust-toolchain@1.76.0
+              with:
+                  components: clippy, rustfmt
+            - name: Check format
+              run: cargo fmt --all --check
+            - name: Check lint
+              run: cargo clippy --all --all-features
+
+    build:
+        # Skip draft release PRs
+        if: github.actor_id != '166155226' || github.event_name != 'pull_request' || github.event.pull_request.draft == false
+
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+            - uses: dtolnay/rust-toolchain@1.76.0
+            - uses: Swatinem/rust-cache@v2
+            - name: Build
+              run: cargo build --workspace --all-features
+            - name: Examples
+              run: cargo build --workspace --all-features --examples
+            - name: Test
+              run: cargo test --workspace --all-features
