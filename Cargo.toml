@@ -6,6 +6,13 @@ edition = "2021"
 resolver = "2"
 description = "A graphql over websockets client"
 keywords = ["graphql", "client", "api", "websockets", "subscriptions"]
+categories = [
+    "asynchronous",
+    "network-programming",
+    "wasm",
+    "web-programming",
+    "web-programming::websocket",
+]
 license = "Apache-2.0"
 autoexamples = false
 documentation = "https://docs.rs/graphql-ws-client"

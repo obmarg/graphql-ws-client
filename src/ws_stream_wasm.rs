@@ -46,9 +46,8 @@ impl crate::next::Connection for Connection {
                 EventOrMessage::Event(WsEvent::Open | WsEvent::Closing) => {
                     continue;
                 }
-
                 EventOrMessage::Message(WsMessage::Text(text)) => return Some(Message::Text(text)),
-
+                #[allow(clippy::match_same_arms)]
                 EventOrMessage::Message(WsMessage::Binary(_)) => {
                     // We shouldn't receive binary messages, but ignore them if we do
                     continue;
