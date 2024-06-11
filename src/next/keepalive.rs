@@ -4,7 +4,7 @@ use futures_lite::{stream, Stream};
 
 use crate::ConnectionCommand;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(super) struct KeepAliveSettings {
     /// How often to send a keep alive ping
     pub(super) interval: Option<Duration>,

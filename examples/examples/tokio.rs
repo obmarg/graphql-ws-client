@@ -54,7 +54,7 @@ async fn main() {
 
     println!("Connected");
 
-    let (client, actor) = Client::build(connection).await.unwrap();
+    let (client, actor) = Client::builder().build(connection).await.unwrap();
     tokio::spawn(actor.into_future());
 
     let mut stream = client.subscribe(build_query()).await.unwrap();
