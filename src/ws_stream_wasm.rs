@@ -33,6 +33,7 @@ impl crate::next::Connection for Connection {
     async fn receive(&mut self) -> Option<crate::next::Message> {
         use crate::next::Message;
         loop {
+            #[allow(clippy::match_same_arms)] // FIXME Remove when MSRV >= 1.78.0
             match self.next().await? {
                 EventOrMessage::Event(WsEvent::Closed(close)) => {
                     return Some(Message::Close {
@@ -47,7 +48,6 @@ impl crate::next::Connection for Connection {
                     continue;
                 }
                 EventOrMessage::Message(WsMessage::Text(text)) => return Some(Message::Text(text)),
-                #[allow(clippy::match_same_arms)]
                 EventOrMessage::Message(WsMessage::Binary(_)) => {
                     // We shouldn't receive binary messages, but ignore them if we do
                     continue;
