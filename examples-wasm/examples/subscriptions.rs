@@ -57,7 +57,7 @@ async fn main() {
 
     let connection = Connection::new(ws_conn).await;
 
-    let (client, actor) = Client::build(connection).await.unwrap();
+    let (client, actor) = Client::builder().build(connection).await.unwrap();
     wasm_bindgen_futures::spawn_local(actor.into_future());
 
     let mut stream = client.subscribe(build_query()).await.unwrap();

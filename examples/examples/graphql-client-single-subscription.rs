@@ -32,10 +32,11 @@ async fn main() {
 
     println!("Connected");
 
-    let mut subscription = Client::build(connection)
-        .subscribe(StreamingOperation::<BooksChanged>::new(
-            books_changed::Variables,
-        ))
+    let mut subscription = Client::builder()
+        .subscribe(
+            connection,
+            StreamingOperation::<BooksChanged>::new(books_changed::Variables),
+        )
         .await
         .unwrap();
 

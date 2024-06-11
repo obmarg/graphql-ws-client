@@ -24,7 +24,7 @@ mod stream;
 
 pub use self::{
     actor::ConnectionActor,
-    builder::ClientBuilder,
+    builder::next::ClientBuilder,
     connection::{Connection, Message},
     stream::Subscription,
 };
