@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-        fetch-depth: 0
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@1.76.0
         with:
           components: rustfmt
