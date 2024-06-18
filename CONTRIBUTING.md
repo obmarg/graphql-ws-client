@@ -1,6 +1,6 @@
 # Contributing
 
-If you want to contribute to graphql-ws-client, that's great! There's plenty
+If you want to contribute to graphql-ws-client, that's great!  There's plenty
 of improvements to make, features that still need built and probably a bug or
 two hiding in there.
 
@@ -9,22 +9,22 @@ interactions with the project.
 
 There's a few different ways to contribute:
 
--   If you've found a bug or have an idea for a feature you'd like to implement,
-    please [create an issue][NewIssue] to discuss or send a message [on
-    discord][Discord].
--   If you'd like to contribute to an existing issue feel free to comment on the
-    issue and let us know. If anything isn't clear someone will be happy to
-    explain (the project is still fairly new, and I have treated the issue
-    tracker like a notepad occasionally, sorry about that 😬).
--   If you'd like to contribute but you're not sure how:
-    -   We have [Good First Issues][GFI] labelled.
-    -   We [use milestones][Milestones] to plan what's going into the next release,
-        any free work in there would be great to pick up.
-    -   The documentation (on [docs.rs](https://docs.rs/graphql-ws-client)) could
-        always be improved.
-    -   You can just try to use graphql-ws-client in a project - we'd appreciate
-        any bug reports or feedback on the API, and it's always nice seeing what
-        people build.
+- If you've found a bug or have an idea for a feature you'd like to implement,
+  please [create an issue][NewIssue] to discuss or send a message [on
+  discord][Discord].
+- If you'd like to contribute to an existing issue feel free to comment on the
+  issue and let us know. If anything isn't clear someone will be happy to
+  explain (the project is still fairly new, and I have treated the issue
+  tracker like a notepad occasionally, sorry about that 😬).
+- If you'd like to contribute but you're not sure how:
+  - We have [Good First Issues][GFI] labelled.
+  - We [use milestones][Milestones] to plan what's going into the next release,
+    any free work in there would be great to pick up.
+  - The documentation (on [docs.rs](https://docs.rs/graphql-ws-client)) could
+    always be improved.
+  - You can just try to use graphql-ws-client in a project - we'd appreciate
+    any bug reports or feedback on the API, and it's always nice seeing what
+    people build.
 
 ## Getting Help
 

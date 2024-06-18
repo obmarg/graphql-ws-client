@@ -35,8 +35,8 @@ It supports the websocket libraries
 
 The library offers integrations with some popular GraphQL clients with feature flags:
 
--   [graphql-client](https://github.com/graphql-rust/graphql-client): `features = ["client-graphql-client"]`
--   [cynic](https://github.com/obmarg/cynic): `features = ["client-cynic"]`
+- [graphql-client](https://github.com/graphql-rust/graphql-client): `features = ["client-graphql-client"]`
+- [cynic](https://github.com/obmarg/cynic): `features = ["client-cynic"]`
 
 ## Documentation
 
