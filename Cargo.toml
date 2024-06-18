@@ -79,9 +79,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 unsafe_code = "forbid"
 
 [workspace.lints.clippy]
-pedantic = { level = "warn", priority = -1 }
 cargo = { level = "warn", priority = -1 }
-module_name_repetitions = "allow"
 multiple_crate_versions = "allow"
 
 [lints]
