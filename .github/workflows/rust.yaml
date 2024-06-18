@@ -45,7 +45,13 @@ jobs:
             - uses: Swatinem/rust-cache@v2
             - name: Build
               run: cargo build --workspace --all-features
-            - name: Examples
-              run: cargo build --workspace --all-features --examples
-            - name: Test
+            - name: Build tests
+              run: cargo test --workspace --all-features --no-run
+            - name: Run tests
               run: cargo test --workspace --all-features
+            - name: Build examples
+              run: cargo build --workspace --all-features --examples
+            - name: Build examples tests
+              run: cargo test --workspace --all-features --examples --no-run
+            - name: Run examples tests
+              run: cargo test --workspace --all-features --examples
