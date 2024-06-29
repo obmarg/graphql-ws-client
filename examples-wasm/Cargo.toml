@@ -10,7 +10,7 @@ publish = false
 [dependencies]
 async-std = { version = "1.9", features = ["attributes"] }
 cynic = { version = "3" }
-futures = { version = "0.3"}
+futures = { version = "0.3" }
 log = "0.4"
 
 # wasm-specific
@@ -27,3 +27,6 @@ features = ["cynic", "ws_stream_wasm"]
 
 [dev-dependencies]
 insta = "1.11"
+
+[lints]
+workspace = true

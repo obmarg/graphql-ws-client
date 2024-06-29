@@ -13,7 +13,7 @@ There's a few different ways to contribute:
   please [create an issue][NewIssue] to discuss or send a message [on
   discord][Discord].
 - If you'd like to contribute to an existing issue feel free to comment on the
-  issue and let us know.  If anything isn't clear someone will be happy to
+  issue and let us know. If anything isn't clear someone will be happy to
   explain (the project is still fairly new, and I have treated the issue
   tracker like a notepad occasionally, sorry about that 😬).
 - If you'd like to contribute but you're not sure how:
@@ -49,9 +49,10 @@ You can do this by:
    understand the context around & reason for the changes.
 5. A maintainer will review the PR as soon as possible, and once it is approved
    will merge and make a release.
-   
+
 [COC]: ./CODE_OF_CONDUCT.md
 [Discord]: https://discord.gg/Y5xDmDP
 [Discussions]: https://github.com/obmarg/graphql-ws-client/discussions/new
 [GFI]: https://github.com/obmarg/graphql-ws-client/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
 [Milestones]: https://github.com/obmarg/graphql-ws-client/milestones
+[NewIssue]: https://github.com/obmarg/graphql-ws-client/issues/new/choose

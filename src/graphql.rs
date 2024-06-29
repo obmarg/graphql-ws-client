@@ -23,7 +23,7 @@ pub trait GraphqlOperation: serde::Serialize {
 
 #[cfg(feature = "client-cynic")]
 mod cynic {
-    use super::*;
+    use super::GraphqlOperation;
 
     #[cfg_attr(docsrs, doc(cfg(feature = "client-cynic")))]
     impl<ResponseData, Variables> GraphqlOperation
@@ -47,11 +47,11 @@ pub use self::graphql_client::StreamingOperation;
 
 #[cfg(feature = "client-graphql-client")]
 mod graphql_client {
-    use super::*;
+    use super::GraphqlOperation;
     use ::graphql_client::{GraphQLQuery, QueryBody, Response};
     use std::marker::PhantomData;
 
-    /// A streaming operation for a GraphQLQuery
+    /// A streaming operation for a [`GraphQLQuery`]
     #[cfg_attr(docsrs, doc(cfg(feature = "client-graphql-client")))]
     pub struct StreamingOperation<Q: GraphQLQuery> {
         inner: QueryBody<Q::Variables>,
@@ -59,7 +59,7 @@ mod graphql_client {
     }
 
     impl<Q: GraphQLQuery> StreamingOperation<Q> {
-        /// Constructs a StreamingOperation
+        /// Constructs a [`StreamingOperation`]
         pub fn new(variables: Q::Variables) -> Self {
             Self {
                 inner: Q::build_query(variables),

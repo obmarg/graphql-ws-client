@@ -31,6 +31,7 @@ use super::{
 /// # Ok(())
 /// # }
 /// ```
+#[must_use]
 pub struct ClientBuilder {
     payload: Option<serde_json::Value>,
     subscription_buffer_size: Option<usize>,
@@ -39,7 +40,7 @@ pub struct ClientBuilder {
 }
 
 impl super::Client {
-    /// Creates a ClientBuilder with the given connection.
+    /// Creates a `ClientBuilder` with the given connection.
     ///
     /// ```rust
     /// use graphql_ws_client::Client;
@@ -65,6 +66,10 @@ impl super::Client {
 
 impl ClientBuilder {
     /// Add payload to `connection_init`
+    ///
+    /// # Errors
+    ///
+    /// Will return `Err` if `payload` serialization fails.
     pub fn payload<NewPayload>(self, payload: NewPayload) -> Result<ClientBuilder, Error>
     where
         NewPayload: Serialize,
@@ -120,7 +125,7 @@ impl ClientBuilder {
     /// Note that this takes ownership of the client, so it cannot be
     /// used to run any more operations.
     ///
-    /// If users want to run mutliple operations on a connection they
+    /// If users want to run multiple operations on a connection they
     /// should use the `IntoFuture` impl to construct a `Client`
     pub async fn subscribe<'a, Operation>(
         self,
@@ -176,7 +181,7 @@ impl ClientBuilder {
                         reason.unwrap_or_default(),
                     ))
                 }
-                Some(Message::Ping) | Some(Message::Pong) => {}
+                Some(Message::Ping | Message::Pong) => {}
                 Some(message @ Message::Text(_)) => {
                     let event = message.deserialize::<Event>()?;
                     match event {

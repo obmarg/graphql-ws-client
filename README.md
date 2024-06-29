@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>Graphql Websocket Client</h1>
+  <h1>GraphQL Websocket Client</h1>
 
   <p>
     <strong>Runtime agnostic graphql websocket client</strong>
@@ -12,9 +12,9 @@
   </p>
 
   <h4>
-    <a href="https://github.com/obmarg/graphql-ws-client/tree/master/examples/examples">Examples</a>
+    <a href="https://github.com/obmarg/graphql-ws-client/tree/main/examples/examples">Examples</a>
     <span> | </span>
-    <a href="https://github.com/obmarg/graphql-ws-client/blob/master/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/obmarg/graphql-ws-client/blob/main/CHANGELOG.md">Changelog</a>
   </h4>
 </div>
 
@@ -41,8 +41,8 @@ The library offers integrations with some popular GraphQL clients with feature f
 
 The documentation is quite limited at the moment, here are some sources:
 
-1. The provided [examples](https://github.com/obmarg/graphql-ws-client/tree/master/examples/examples)
-2. The reference documentation on [docs.rs](https://docs.rs/graphql-ws-client/)
+1. The provided [examples](https://github.com/obmarg/graphql-ws-client/tree/main/examples/examples)
+2. The reference documentation on [docs.rs](https://docs.rs/graphql-ws-client)
 
 ## Logging
 

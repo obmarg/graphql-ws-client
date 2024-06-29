@@ -22,9 +22,9 @@ all APIs might be changed.
 
 ### Breaking Changes
 
-- All Connection trait functions now return impl Future instead of BoxFuture 
+- All Connection trait functions now return impl Future instead of BoxFuture
   ([#108](https://github.com/obmarg/graphql-ws-client/pull/108))
-- Removed the legacy API that was deprecated in v0.8.0 
+- Removed the legacy API that was deprecated in v0.8.0
   ([#81](https://github.com/obmarg/graphql-ws-client/pull/81))
 - The deprecated `async-tungstenite` feature has been removed. Use the
   `tungstenite` feature instead, which works with `async-tungtenite`,
