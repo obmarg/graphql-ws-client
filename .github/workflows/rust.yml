@@ -43,8 +43,6 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - name: Check lint
-        run: cargo clippy --all --all-features
       - name: Build
         run: cargo build --workspace --all-features
       - name: Build tests
@@ -57,3 +55,5 @@ jobs:
         run: cargo test --workspace --all-features --examples --no-run
       - name: Run examples tests
         run: cargo test --workspace --all-features --examples
+      - name: Run clippy
+        run: cargo clippy --all --all-features
