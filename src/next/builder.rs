@@ -129,10 +129,6 @@ impl ClientBuilder {
     ///
     /// If users want to run multiple operations on a connection they
     /// should use the `IntoFuture` impl to construct a `Client`
-    ///
-    /// # Errors
-    ///
-    /// Will return `Err` if subscribe operation fails.
     pub async fn subscribe<'a, Operation>(
         self,
         op: Operation,
@@ -167,10 +163,6 @@ impl ClientBuilder {
     /// Accepts an already built websocket connection, and returns the connection
     /// and a future that must be awaited somewhere - if the future is dropped the
     /// connection will also drop.
-    ///
-    /// # Errors
-    ///
-    /// Will return `Err` if build operation fails.
     pub async fn build(self) -> Result<(Client, ConnectionActor), Error> {
         let Self {
             payload,

@@ -71,13 +71,9 @@ impl Client {
         }
     }
 
-    // Starts a streaming operation on this client.
+    /// Starts a streaming operation on this client.
     ///
     /// Returns a `Stream` of responses.
-    ///
-    /// # Errors
-    ///
-    /// Will return `Err` if subscribe operation fails.
     pub async fn subscribe<'a, Operation>(
         &self,
         op: Operation,

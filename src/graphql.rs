@@ -18,10 +18,6 @@ pub trait GraphqlOperation: serde::Serialize {
 
     /// Decodes a `GenericResponse` into the actual response that will be returned
     /// to users for this operation.
-    ///
-    /// # Errors
-    ///
-    /// Will return `Err` if decode operation fails.
     fn decode(&self, data: serde_json::Value) -> Result<Self::Response, Self::Error>;
 }
 
