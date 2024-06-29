@@ -31,6 +31,7 @@ use super::{
 /// # Ok(())
 /// # }
 /// ```
+#[must_use]
 pub struct ClientBuilder {
     payload: Option<serde_json::Value>,
     subscription_buffer_size: Option<usize>,
@@ -84,7 +85,6 @@ impl ClientBuilder {
 
     /// Sets the size of the incoming message buffer that subscriptions created by this client will
     /// use
-    #[must_use]
     pub fn subscription_buffer_size(self, new: usize) -> Self {
         ClientBuilder {
             subscription_buffer_size: Some(new),
@@ -96,7 +96,6 @@ impl ClientBuilder {
     ///
     /// Any incoming messages automatically reset this interval so keep alives may not be sent
     /// on busy connections even if this is set.
-    #[must_use]
     pub fn keep_alive_interval(mut self, new: Duration) -> Self {
         self.keep_alive.interval = Some(new);
         self
@@ -105,7 +104,6 @@ impl ClientBuilder {
     /// The number of keepalive retries before a connection is considered broken.
     ///
     /// This defaults to 3, but has no effect if `keep_alive_interval` is not called.
-    #[must_use]
     pub fn keep_alive_retries(mut self, count: usize) -> Self {
         self.keep_alive.retries = count;
         self
