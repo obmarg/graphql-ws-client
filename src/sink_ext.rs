@@ -7,7 +7,7 @@ use std::{
 use futures_lite::ready;
 use futures_sink::Sink;
 
-/// A very limited clone of [futures::sink::SinkExt](1) to avoid having to 
+/// A very limited clone of [futures::sink::SinkExt](1) to avoid having to
 /// pull the original in
 ///
 /// [1]: https://docs.rs/futures/latest/futures/sink/trait.SinkExt.html
