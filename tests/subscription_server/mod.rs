@@ -116,6 +116,6 @@ pub struct SubscriptionRoot {
 impl SubscriptionRoot {
     async fn books(&self, _mutation_type: MutationType) -> impl Stream<Item = BookChanged> {
         println!("Subscription received");
-        BroadcastStream::new(self.channel.subscribe()).filter_map(std::result::Result::ok)
+        BroadcastStream::new(self.channel.subscribe()).filter_map(Result::ok)
     }
 }

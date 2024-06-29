@@ -7,7 +7,10 @@ use std::{
 use futures_lite::ready;
 use futures_sink::Sink;
 
-/// A very limited clone of [futures::sink::SinkExt](https://docs.rs/futures/latest/futures/sink/trait.SinkExt.html) to avoid having to pull the original in
+/// A very limited clone of [futures::sink::SinkExt](1) to avoid having to 
+/// pull the original in
+///
+/// [1]: https://docs.rs/futures/latest/futures/sink/trait.SinkExt.html
 pub trait SinkExt<Item>: Sink<Item> {
     fn send(&mut self, item: Item) -> Send<'_, Self, Item>
     where
