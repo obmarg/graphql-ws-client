@@ -120,7 +120,7 @@ impl ConnectionActor {
         match event {
             event @ (Event::Next { .. } | Event::Error { .. }) => {
                 let Some(id) = event.id().unwrap().parse::<usize>().ok() else {
-                    return Some(Message::close(&Reason::UnknownSubscription));
+                    return Some(Message::close(Reason::UnknownSubscription));
                 };
 
                 let sender = self.operations.entry(id);
@@ -140,7 +140,7 @@ impl ConnectionActor {
             }
             Event::Complete { id } => {
                 let Some(id) = id.parse::<usize>().ok() else {
-                    return Some(Message::close(&Reason::UnknownSubscription));
+                    return Some(Message::close(Reason::UnknownSubscription));
                 };
 
                 trace!("Stream complete");
@@ -148,7 +148,7 @@ impl ConnectionActor {
                 self.operations.remove(&id);
                 None
             }
-            Event::ConnectionAck { .. } => Some(Message::close(&Reason::UnexpectedAck)),
+            Event::ConnectionAck { .. } => Some(Message::close(Reason::UnexpectedAck)),
             Event::Ping { .. } => Some(Message::Pong),
             Event::Pong { .. } => None,
         }
@@ -230,7 +230,7 @@ enum Reason {
 }
 
 impl Message {
-    fn close(reason: &Reason) -> Self {
+    fn close(reason: Reason) -> Self {
         match reason {
             Reason::UnexpectedAck => Message::Close {
                 code: Some(4855),
