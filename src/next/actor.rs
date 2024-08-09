@@ -149,7 +149,7 @@ impl ConnectionActor {
                 None
             }
             Event::ConnectionAck { .. } => Some(Message::close(Reason::UnexpectedAck)),
-            Event::Ping { .. } => Some(Message::Pong),
+            Event::Ping { .. } => Some(Message::graphql_pong()),
             Event::Pong { .. } => None,
         }
     }
