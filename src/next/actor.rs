@@ -96,7 +96,7 @@ impl ConnectionActor {
                 code: Some(code),
                 reason: Some(reason),
             }),
-            ConnectionCommand::Ping => Some(Message::Ping),
+            ConnectionCommand::Ping => Some(Message::graphql_ping()),
         }
     }
 

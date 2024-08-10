@@ -59,6 +59,10 @@ impl Message {
         Self::Text(serde_json::to_string(&crate::protocol::Message::Pong::<()>).unwrap())
     }
 
+    pub(crate) fn graphql_ping() -> Self {
+        Self::Text(serde_json::to_string(&crate::protocol::Message::Ping::<()>).unwrap())
+    }
+
     pub(crate) fn complete(id: usize) -> Self {
         Self::Text(
             serde_json::to_string(&crate::protocol::Message::Complete::<()> { id: id.to_string() })

@@ -15,12 +15,15 @@ all APIs might be changed.
 
 - Fixed ping responses not following the graphql-transport-ws protocol
   ([#116](https://github.com/obmarg/graphql-ws-client/pull/116))
+- `graphql-transport-ws` ping messages are now sent, instead of websocket ping 
+  frames, when using the `KeepAliveSettings` ([#117](https://github.com/obmarg/graphql-ws-client/pull/117))
 
 ### Contributors
 
 Thanks to the people who contributed to this release:
 
 - @vorporeal
+- @szgupta
 
 ## v0.10.1 - 2024-06-08
 
