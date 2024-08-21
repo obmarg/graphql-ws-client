@@ -26,7 +26,7 @@ all APIs might be changed.
 ### Bug Fixes
 
 - graphql-transport-ws pings are now responded to with graphql-tranport-ws pongs,
-  rather than websocket pongs.([#116](https://github.com/obmarg/graphql-ws-client/pull/116))
+  rather than websocket pongs ([#116](https://github.com/obmarg/graphql-ws-client/pull/116))
 - Keep alives now send `graphql-transport-ws` ping messages instead of websocket ping 
   frames ([#117](https://github.com/obmarg/graphql-ws-client/pull/117))
 
