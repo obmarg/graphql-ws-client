@@ -11,6 +11,17 @@ all APIs might be changed.
 
 ## Unreleased
 
+### Bug Fixes
+
+- Fixed ping responses not following the graphql-transport-ws protocol
+  ([#116](https://github.com/obmarg/graphql-ws-client/pull/116))
+
+### Contributors
+
+Thanks to the people who contributed to this release:
+
+- @vorporeal
+
 ## v0.10.1 - 2024-06-08
 
 ### Bug Fixes
