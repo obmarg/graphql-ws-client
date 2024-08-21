@@ -11,12 +11,24 @@ all APIs might be changed.
 
 ## Unreleased
 
+## v0.10.2 - 2024-08-21
+
 ### Bug Fixes
 
-- Fixed ping responses not following the graphql-transport-ws protocol
-  ([#116](https://github.com/obmarg/graphql-ws-client/pull/116))
-- `graphql-transport-ws` ping messages are now sent, instead of websocket ping 
-  frames, when using the `KeepAliveSettings` ([#117](https://github.com/obmarg/graphql-ws-client/pull/117))
+- send graphql-specific ping instead of ws ping frame
+  ([#117](https://github.com/obmarg/graphql-ws-client/pull/117))
+
+### Changes
+
+- Tidied up some documentation ([#114](https://github.com/obmarg/graphql-ws-client/pull/114))
+- Handled some clippy lints ([#114](https://github.com/obmarg/graphql-ws-client/pull/114))
+
+### Bug Fixes
+
+- graphql-transport-ws pings are now responded to with graphql-tranport-ws pongs,
+  rather than websocket pongs ([#116](https://github.com/obmarg/graphql-ws-client/pull/116))
+- Keep alives now send `graphql-transport-ws` ping messages instead of websocket ping 
+  frames ([#117](https://github.com/obmarg/graphql-ws-client/pull/117))
 
 ### Contributors
 
@@ -24,6 +36,7 @@ Thanks to the people who contributed to this release:
 
 - @vorporeal
 - @szgupta
+- @carlocorradini
 
 ## v0.10.1 - 2024-06-08
 
