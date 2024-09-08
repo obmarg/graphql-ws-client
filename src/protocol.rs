@@ -61,11 +61,11 @@ pub enum Event {
     #[serde(rename = "complete")]
     Complete { id: String },
     #[serde(rename = "connection_ack")]
-    ConnectionAck { payload: Option<serde_json::Value> },
+    ConnectionAck {},
     #[serde(rename = "ping")]
-    Ping { payload: Option<serde_json::Value> },
+    Ping {},
     #[serde(rename = "pong")]
-    Pong { payload: Option<serde_json::Value> },
+    Pong {},
 }
 
 impl Event {
