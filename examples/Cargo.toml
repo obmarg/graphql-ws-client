@@ -9,7 +9,7 @@ publish = false
 
 [dependencies]
 async-std = { version = "1.9", features = ["attributes"] }
-async-tungstenite = { version = "0.26", features = [
+async-tungstenite = { version = "0.28", features = [
     "async-std-runtime",
     "tokio-runtime",
 ] }

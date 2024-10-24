@@ -311,9 +311,9 @@ dependencies = [
 
 [[package]]
 name = "async-tungstenite"
-version = "0.26.1"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67824e7945b9a2bf2057a363ab01b103e3217962afe0f3b789e6df8b13ac0a86"
+checksum = "90e661b6cb0a6eb34d02c520b052daa3aa9ac0cc02495c9d066bbce13ead132b"
 dependencies = [
  "async-std",
  "futures-io",
@@ -321,7 +321,7 @@ dependencies = [
  "log",
  "pin-project-lite",
  "tokio",
- "tungstenite 0.23.0",
+ "tungstenite 0.24.0",
 ]
 
 [[package]]
@@ -1067,7 +1067,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-stream",
- "tungstenite 0.23.0",
+ "tungstenite 0.24.0",
  "ws_stream_wasm",
 ]
 
@@ -2202,9 +2202,9 @@ dependencies = [
 
 [[package]]
 name = "tungstenite"
-version = "0.23.0"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e2e2ce1e47ed2994fd43b04c8f618008d4cabdd5ee34027cf14f9d918edd9c8"
+checksum = "18e5b8366ee7a95b16d32197d0b2604b43a0be89dc5fac9f8e96ccafbaedda8a"
 dependencies = [
  "byteorder",
  "bytes",
