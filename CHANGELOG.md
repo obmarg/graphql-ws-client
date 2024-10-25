@@ -11,6 +11,18 @@ all APIs might be changed.
 
 ## Unreleased
 
+## v0.11.0 - 2024-10-25
+
+### Changes
+
+- Updated tungstenite bounds to support 0.24 as well as 0.23. ([#121](https://github.com/obmarg/graphql-ws-client/pull/121))
+
+### Contributors
+
+Thanks to the people who contributed to this release:
+
+- @Sytten
+
 ## v0.10.2 - 2024-08-21
 
 ### Bug Fixes
