@@ -182,12 +182,6 @@ impl ConnectionActor {
     }
 }
 
-impl Drop for ConnectionActor {
-    fn drop(&mut self) {
-        println!("Dropping ConnectionActor");
-    }
-}
-
 enum Next {
     Command(ConnectionCommand),
     Message(Message),
