@@ -45,6 +45,7 @@ pub enum Message<'a, Operation> {
     Pong,
 }
 
+#[allow(dead_code)]
 #[derive(serde::Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Event {
