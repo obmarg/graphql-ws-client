@@ -3,7 +3,7 @@ use std::pin::Pin;
 
 use crate::Error;
 
-/// Abstrction around a websocket connection.
+/// Abstraction around a websocket connection.
 ///
 /// Built in implementations are provided for `ws_stream_wasm` & `async_tungstenite`.
 ///
