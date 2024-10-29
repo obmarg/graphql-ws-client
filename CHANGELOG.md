@@ -11,6 +11,12 @@ all APIs might be changed.
 
 ## Unreleased
 
+## v0.11.1 - 2024-10-29
+
+### Bug Fixes
+
+- infinite loop ([#124](https://github.com/obmarg/graphql-ws-client/pull/124))
+
 ## v0.11.0 - 2024-10-25
 
 ### Changes
