@@ -15,7 +15,14 @@ all APIs might be changed.
 
 ### Bug Fixes
 
-- infinite loop ([#124](https://github.com/obmarg/graphql-ws-client/pull/124))
+- Fixed an infinite loop in the actor that could occur when all `Client`
+  instances are dropped and there are still ongoing operations ([#124](https://github.com/obmarg/graphql-ws-client/pull/124))
+
+### Contributors
+
+Thanks to the people who contributed to this release:
+
+- @Sytten
 
 ## v0.11.0 - 2024-10-25
 
