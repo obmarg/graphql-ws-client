@@ -118,7 +118,10 @@ impl ConnectionActor {
         };
 
         match event {
-            event @ (Event::Next { .. } | Event::Error { .. }) => {
+            event @ (Event::Next { .. }
+            | Event::Data { .. }
+            | Event::Error { .. }
+            | Event::ConnectionError { .. }) => {
                 let Some(id) = event.id().unwrap().parse::<usize>().ok() else {
                     return Some(Message::close(Reason::UnknownSubscription));
                 };
@@ -151,6 +154,8 @@ impl ConnectionActor {
             Event::ConnectionAck { .. } => Some(Message::close(Reason::UnexpectedAck)),
             Event::Ping { .. } => Some(Message::graphql_pong()),
             Event::Pong { .. } => None,
+            Event::ConnectionKeepAlive { .. } => None,
+            Event::KeepAlive { .. } => None,
         }
     }
 
@@ -236,6 +241,7 @@ impl Message {
 impl Event {
     fn forwarding_payload(self) -> Option<Value> {
         match self {
+            Event::Data { payload, .. } => payload,
             Event::Next { payload, .. } => Some(payload),
             Event::Error { payload, .. } => Some(json!({"errors": payload})),
             _ => None,

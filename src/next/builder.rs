@@ -195,6 +195,9 @@ impl ClientBuilder {
                             trace!("connection_ack received, handshake completed");
                             break;
                         }
+                        Event::KeepAlive { .. } => {
+                            continue;
+                        }
                         event => {
                             connection
                                 .send(Message::Close {
