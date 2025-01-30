@@ -59,6 +59,11 @@ pub enum Event {
         id: String,
         payload: Vec<serde_json::Value>,
     },
+    #[serde(rename = "connection_error")]
+    ConnectionError {
+        id: String,
+        payload: Vec<serde_json::Value>,
+    },
     #[serde(rename = "complete")]
     Complete { id: String },
     #[serde(rename = "connection_ack")]
@@ -67,26 +72,42 @@ pub enum Event {
     Ping { payload: Option<serde_json::Value> },
     #[serde(rename = "pong")]
     Pong { payload: Option<serde_json::Value> },
+    #[serde(rename = "ka")]
+    KeepAlive { payload: Option<serde_json::Value> },
+    #[serde(rename = "connection_keep_alive")]
+    ConnectionKeepAlive { payload: Option<serde_json::Value> },
+    #[serde(rename = "data")]
+    Data {
+        id: String,
+        payload: Option<serde_json::Value>,
+    },
 }
 
 impl Event {
     pub fn id(&self) -> Option<&str> {
         match self {
-            Event::Next { id, .. } | Event::Complete { id, .. } | Event::Error { id, .. } => {
-                Some(id.as_ref())
-            }
+            Event::Next { id, .. }
+            | Event::Data { id, .. }
+            | Event::Complete { id, .. }
+            | Event::Error { id, .. }
+            | Event::ConnectionError { id, .. } => Some(id.as_ref()),
             Event::Ping { .. } | Event::Pong { .. } | Event::ConnectionAck { .. } => None,
+            Event::KeepAlive { .. } | Event::ConnectionKeepAlive { .. } => None,
         }
     }
 
     pub fn r#type(&self) -> &'static str {
         match self {
             Event::Next { .. } => "next",
+            Event::Data { .. } => "data",
             Event::Complete { .. } => "complete",
             Event::Error { .. } => "error",
+            Event::ConnectionError { .. } => "connection_error",
             Event::Ping { .. } => "ping",
             Event::Pong { .. } => "pong",
             Event::ConnectionAck { .. } => "connection_ack",
+            Event::KeepAlive { .. } => "ka",
+            Event::ConnectionKeepAlive { .. } => "connection_keep_alive",
         }
     }
 }
