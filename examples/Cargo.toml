@@ -14,16 +14,17 @@ async-tungstenite = { version = "0.31", features = [
     "tokio-runtime",
 ] }
 cynic = { version = "3" }
-futures = { version = "0.3" }
+futures = { version = "0.3.31" }
 graphql_client = { version = "0.14" }
 serde = "1"
 tokio = { version = "1.15", features = ["rt-multi-thread", "macros"] }
+tokio-tungstenite = "0.27"
 
 [dependencies.graphql-ws-client]
 path = "../"
 version = "0.12.0"
 default-features = false
-features = ["cynic", "tungstenite-0.27"]
+features = ["client-cynic", "client-graphql-client", "tungstenite-0.27"]
 
 [lints]
 workspace = true
