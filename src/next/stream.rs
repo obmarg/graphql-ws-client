@@ -17,7 +17,8 @@ pub struct Subscription<Operation>
 where
     Operation: GraphqlOperation,
 {
-    pub(super) id: usize,
+    /// The ID of the subscription.
+    pub id: usize,
     pub(super) stream: stream::Boxed<Result<Operation::Response, Error>>,
     pub(super) actor: async_channel::Sender<ConnectionCommand>,
 }
