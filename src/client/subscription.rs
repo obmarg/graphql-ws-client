@@ -41,11 +41,20 @@ impl<Operation> Subscription<Operation>
 where
     Operation: GraphqlOperation + Send,
 {
-    /// Stops the subscription by sending a Complete message to the server.
+    /// Returns the identifier for this subscription. 
+    ///
+    /// This can be used with [`crate::Client::stop`] to stop
+    /// a running subscription without needing access to the `Subscription`
+    /// itself.
+    pub fn id(&self) -> SubscriptionId {
+        self.id
+    }
+
+    /// Stops this subscription
     ///
     /// # Errors
     ///
-    /// Will return `Err` if the stop operation fails.
+    /// Will return `Err` if the connection actor has already been shut down.
     pub async fn stop(self) -> Result<(), Error> {
         self.actor
             .send(ConnectionCommand::Cancel(self.id))

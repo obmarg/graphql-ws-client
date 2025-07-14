@@ -121,6 +121,18 @@ impl Client {
         })
     }
 
+    /// Stops a subscription by id
+    ///
+    /// # Errors
+    ///
+    /// Will return `Err` if the connection actor has already been shut down.
+    pub async fn stop(self, subscription_id: SubscriptionId) -> Result<(), Error> {
+        self.actor
+            .send(ConnectionCommand::Cancel(subscription_id))
+            .await
+            .map_err(|error| Error::Send(error.to_string()))
+    }
+
     /// Gracefully closes the connection
     ///
     /// This will stop all running subscriptions and shut down the [`ConnectionActor`] wherever
