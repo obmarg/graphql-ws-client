@@ -12,14 +12,27 @@ use super::ConnectionCommand;
 /// A `futures::Stream` for a subscription.
 ///
 /// Emits an item for each message received by the subscription.
-#[pin_project::pin_project]
+#[pin_project::pin_project(PinnedDrop)]
 pub struct Subscription<Operation>
 where
     Operation: GraphqlOperation,
 {
     pub(super) id: usize,
-    pub(super) stream: stream::Boxed<Result<Operation::Response, Error>>,
+    pub(super) stream: Option<stream::Boxed<Result<Operation::Response, Error>>>,
     pub(super) actor: async_channel::Sender<ConnectionCommand>,
+    pub(super) drop_sender: async_channel::Sender<usize>,
+}
+
+#[pin_project::pinned_drop]
+impl<Operation> PinnedDrop for Subscription<Operation>
+where
+    Operation: GraphqlOperation,
+{
+    fn drop(self: Pin<&mut Self>) {
+        // We try_send here but the drop_sender channel _should_ be unbounded so
+        // this should always work if the connection actor is still alive.
+        self.drop_sender.try_send(self.id).ok();
+    }
 }
 
 impl<Operation> Subscription<Operation>
@@ -38,14 +51,15 @@ where
             .map_err(|error| Error::Send(error.to_string()))
     }
 
-    pub(super) fn join(self, future: future::Boxed<()>) -> Self
+    pub(super) fn join(mut self, future: future::Boxed<()>) -> Self
     where
         Operation::Response: 'static,
     {
-        Self {
-            stream: join_stream(self.stream, future).boxed(),
-            ..self
-        }
+        self.stream = self
+            .stream
+            .take()
+            .map(|stream| join_stream(stream, future).boxed());
+        self
     }
 }
 
@@ -56,7 +70,10 @@ where
     type Item = Result<Operation::Response, Error>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        self.project().stream.as_mut().poll_next(cx)
+        match self.project().stream.as_mut() {
+            None => Poll::Ready(None),
+            Some(stream) => stream.poll_next(cx),
+        }
     }
 }
 

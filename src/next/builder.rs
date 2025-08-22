@@ -214,10 +214,15 @@ impl ClientBuilder {
         }
 
         let (command_sender, command_receiver) = async_channel::bounded(5);
+        let (drop_sender, drop_receiver) = async_channel::unbounded();
 
-        let actor = ConnectionActor::new(connection, command_receiver, keep_alive);
+        let actor = ConnectionActor::new(connection, command_receiver, drop_receiver, keep_alive);
 
-        let client = Client::new_internal(command_sender, subscription_buffer_size.unwrap_or(5));
+        let client = Client::new_internal(
+            command_sender,
+            drop_sender,
+            subscription_buffer_size.unwrap_or(5),
+        );
 
         Ok((client, actor))
     }

@@ -55,6 +55,7 @@ pub use self::{
 #[derive(Clone)]
 pub struct Client {
     actor: async_channel::Sender<ConnectionCommand>,
+    drop_sender: async_channel::Sender<usize>,
     subscription_buffer_size: usize,
     next_id: Arc<AtomicUsize>,
 }
@@ -62,10 +63,12 @@ pub struct Client {
 impl Client {
     pub(super) fn new_internal(
         actor: async_channel::Sender<ConnectionCommand>,
+        drop_sender: async_channel::Sender<usize>,
         subscription_buffer_size: usize,
     ) -> Self {
         Client {
             actor,
+            drop_sender,
             subscription_buffer_size,
             next_id: Arc::new(AtomicUsize::new(0)),
         }
@@ -105,11 +108,12 @@ impl Client {
 
         Ok(Subscription::<Operation> {
             id,
-            stream: Box::pin(receiver.map(move |response| {
+            stream: Some(Box::pin(receiver.map(move |response| {
                 op.decode(response)
                     .map_err(|err| Error::Decode(err.to_string()))
-            })),
+            }))),
             actor,
+            drop_sender: self.drop_sender.clone(),
         })
     }
 
