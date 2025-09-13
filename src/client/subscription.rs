@@ -58,6 +58,7 @@ where
         let Some(drop_sender) = self.drop_sender.take() else {
             return;
         };
+
         // We try_send here but the drop_sender channel _should_ be unbounded so
         // this should always work if the connection actor is still alive.
         drop_sender.try_send(self.id).ok();
