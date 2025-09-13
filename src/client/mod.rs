@@ -21,14 +21,14 @@ mod conection_id;
 mod connection;
 mod keepalive;
 mod production_future;
-mod stream;
+mod subscription;
 
 pub use self::{
     actor::ConnectionActor,
     builder::ClientBuilder,
     conection_id::SubscriptionId,
     connection::{Connection, Message},
-    stream::Subscription,
+    subscription::Subscription,
 };
 
 /// A GraphQL over Websocket client
