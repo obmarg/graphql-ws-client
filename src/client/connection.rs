@@ -1,7 +1,7 @@
 use std::future::Future;
 use std::pin::Pin;
 
-use crate::Error;
+use crate::{Error, SubscriptionId};
 
 /// Abstraction around a websocket connection.
 ///
@@ -63,7 +63,7 @@ impl Message {
         Self::Text(serde_json::to_string(&crate::protocol::Message::Ping::<()>).unwrap())
     }
 
-    pub(crate) fn complete(id: usize) -> Self {
+    pub(crate) fn complete(id: SubscriptionId) -> Self {
         Self::Text(
             serde_json::to_string(&crate::protocol::Message::Complete::<()> { id: id.to_string() })
                 .unwrap(),

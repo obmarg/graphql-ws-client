@@ -25,4 +25,10 @@ pub enum Error {
     /// Sender shutdown error
     #[error("sender shutdown error, reason: {0}")]
     SenderShutdown(String),
+    /// Too many existing connections have been created.
+    ///
+    /// Note that this would require a usize to be exhausted so is quite
+    /// unlikely
+    #[error("connection ID space exhausted.  please restart the client")]
+    ConnectionIdsExhausted,
 }

@@ -17,6 +17,7 @@ use crate::{
 
 mod actor;
 mod builder;
+mod conection_id;
 mod connection;
 mod keepalive;
 mod production_future;
@@ -25,6 +26,7 @@ mod stream;
 pub use self::{
     actor::ConnectionActor,
     builder::ClientBuilder,
+    conection_id::SubscriptionId,
     connection::{Connection, Message},
     stream::Subscription,
 };
@@ -55,7 +57,7 @@ pub use self::{
 #[derive(Clone)]
 pub struct Client {
     actor: async_channel::Sender<ConnectionCommand>,
-    drop_sender: async_channel::Sender<usize>,
+    drop_sender: async_channel::Sender<SubscriptionId>,
     subscription_buffer_size: usize,
     next_id: Arc<AtomicUsize>,
 }
@@ -63,14 +65,14 @@ pub struct Client {
 impl Client {
     pub(super) fn new_internal(
         actor: async_channel::Sender<ConnectionCommand>,
-        drop_sender: async_channel::Sender<usize>,
+        drop_sender: async_channel::Sender<SubscriptionId>,
         subscription_buffer_size: usize,
     ) -> Self {
         Client {
             actor,
             drop_sender,
             subscription_buffer_size,
-            next_id: Arc::new(AtomicUsize::new(0)),
+            next_id: Arc::new(AtomicUsize::new(1)),
         }
     }
 
@@ -95,6 +97,8 @@ impl Client {
 
         let request = serde_json::to_string(&message)
             .map_err(|error| Error::Serializing(error.to_string()))?;
+
+        let id = SubscriptionId::new(id).ok_or(Error::ConnectionIdsExhausted)?;
 
         let actor = self.actor.clone();
         actor
@@ -134,10 +138,10 @@ pub(super) enum ConnectionCommand {
         /// The full subscribe request as a JSON encoded string.
         request: String,
         sender: async_channel::Sender<Value>,
-        id: usize,
+        id: SubscriptionId,
     },
     Ping,
-    Cancel(usize),
+    Cancel(SubscriptionId),
     Close(u16, String),
 }
 

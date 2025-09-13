@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 use crate::{
     logging::{trace, warning},
     protocol::Event,
-    Error,
+    Error, SubscriptionId,
 };
 
 use super::{
@@ -27,8 +27,8 @@ use super::{
 pub struct ConnectionActor {
     client: async_channel::Receiver<ConnectionCommand>,
     connection: Box<dyn ObjectSafeConnection>,
-    dropped_ids: async_channel::Receiver<usize>,
-    operations: HashMap<usize, async_channel::Sender<Value>>,
+    dropped_ids: async_channel::Receiver<SubscriptionId>,
+    operations: HashMap<SubscriptionId, async_channel::Sender<Value>>,
     keep_alive: KeepAliveSettings,
     keep_alive_actor: stream::Boxed<ConnectionCommand>,
 }
@@ -37,7 +37,7 @@ impl ConnectionActor {
     pub(super) fn new(
         connection: Box<dyn ObjectSafeConnection>,
         client: async_channel::Receiver<ConnectionCommand>,
-        dropped_ids: async_channel::Receiver<usize>,
+        dropped_ids: async_channel::Receiver<SubscriptionId>,
         keep_alive: KeepAliveSettings,
     ) -> Self {
         ConnectionActor {
@@ -122,7 +122,7 @@ impl ConnectionActor {
 
         match event {
             event @ (Event::Next { .. } | Event::Error { .. }) => {
-                let Some(id) = event.id().unwrap().parse::<usize>().ok() else {
+                let Some(id) = event.id().and_then(SubscriptionId::from_str) else {
                     return Some(Message::close(Reason::UnknownSubscription));
                 };
 
@@ -142,7 +142,7 @@ impl ConnectionActor {
                 None
             }
             Event::Complete { id } => {
-                let Some(id) = id.parse::<usize>().ok() else {
+                let Some(id) = SubscriptionId::from_str(&id) else {
                     return Some(Message::close(Reason::UnknownSubscription));
                 };
 
