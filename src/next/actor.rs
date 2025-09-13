@@ -27,6 +27,7 @@ use super::{
 pub struct ConnectionActor {
     client: async_channel::Receiver<ConnectionCommand>,
     connection: Box<dyn ObjectSafeConnection>,
+    dropped_ids: async_channel::Receiver<usize>,
     operations: HashMap<usize, async_channel::Sender<Value>>,
     keep_alive: KeepAliveSettings,
     keep_alive_actor: stream::Boxed<ConnectionCommand>,
@@ -36,11 +37,13 @@ impl ConnectionActor {
     pub(super) fn new(
         connection: Box<dyn ObjectSafeConnection>,
         client: async_channel::Receiver<ConnectionCommand>,
+        dropped_ids: async_channel::Receiver<usize>,
         keep_alive: KeepAliveSettings,
     ) -> Self {
         ConnectionActor {
             client,
             connection,
+            dropped_ids,
             operations: HashMap::new(),
             keep_alive_actor: Box::pin(keep_alive.run()),
             keep_alive,
@@ -161,11 +164,20 @@ impl ConnectionActor {
             KeepAlive(Option<ConnectionCommand>),
         }
 
+        let dropped_id = async {
+            Select::Command(
+                self.dropped_ids
+                    .recv()
+                    .await
+                    .ok()
+                    .map(ConnectionCommand::Cancel),
+            )
+        };
         let command = async { Select::Command(self.client.recv().await.ok()) };
         let message = async { Select::Message(self.connection.receive().await) };
         let keep_alive = async { Select::KeepAlive(self.keep_alive_actor.next().await) };
 
-        match command.or(message).or(keep_alive).await {
+        match dropped_id.or(keep_alive).or(command).or(message).await {
             Select::Command(Some(command)) | Select::KeepAlive(Some(command)) => {
                 Some(Next::Command(command))
             }
