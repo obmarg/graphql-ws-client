@@ -127,10 +127,7 @@ impl ClientBuilder {
     ///
     /// If users want to run multiple operations on a connection they
     /// should use the `IntoFuture` impl to construct a `Client`
-    pub async fn subscribe<'a, Operation>(
-        self,
-        op: Operation,
-    ) -> Result<Subscription<Operation>, Error>
+    pub async fn subscribe<Operation>(self, op: Operation) -> Result<Subscription<Operation>, Error>
     where
         Operation: GraphqlOperation + Unpin + Send + 'static,
     {
