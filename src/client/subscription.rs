@@ -41,7 +41,7 @@ impl<Operation> Subscription<Operation>
 where
     Operation: GraphqlOperation + Send,
 {
-    /// Returns the identifier for this subscription. 
+    /// Returns the identifier for this subscription.
     ///
     /// This can be used with [`crate::Client::stop`] to stop
     /// a running subscription without needing access to the `Subscription`

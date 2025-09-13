@@ -126,7 +126,7 @@ impl Client {
     /// # Errors
     ///
     /// Will return `Err` if the connection actor has already been shut down.
-    pub async fn stop(self, subscription_id: SubscriptionId) -> Result<(), Error> {
+    pub async fn stop(&self, subscription_id: SubscriptionId) -> Result<(), Error> {
         self.actor
             .send(ConnectionCommand::Cancel(subscription_id))
             .await
