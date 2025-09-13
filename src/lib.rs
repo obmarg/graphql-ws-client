@@ -44,6 +44,7 @@
 mod error;
 mod logging;
 mod protocol;
+#[cfg(any(feature = "ws_stream_wasm", feature = "tungstenite"))]
 mod sink_ext;
 
 #[doc(hidden)]
