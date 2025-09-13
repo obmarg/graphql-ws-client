@@ -52,7 +52,7 @@ pub mod __doc_utils;
 
 pub mod graphql;
 
-mod next;
+mod client;
 
 #[cfg(feature = "ws_stream_wasm")]
 #[cfg_attr(docsrs, doc(cfg(feature = "ws_stream_wasm")))]
@@ -65,6 +65,6 @@ pub mod ws_stream_wasm;
 #[cfg_attr(docsrs, doc(cfg(feature = "tungstenite")))]
 mod native;
 
-pub use next::*;
+pub use client::*;
 
 pub use error::Error;

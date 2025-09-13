@@ -1,10 +1,10 @@
 use std::future::Future;
 
-use crate::{next::Message, Error};
+use crate::{client::Message, Error};
 
 pub struct Conn;
 
-impl crate::next::Connection for Conn {
+impl crate::client::Connection for Conn {
     async fn receive(&mut self) -> Option<Message> {
         unimplemented!()
     }
