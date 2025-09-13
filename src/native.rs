@@ -2,7 +2,7 @@ use futures_lite::{Stream, StreamExt};
 use futures_sink::Sink;
 use tungstenite::{self, protocol::CloseFrame};
 
-use crate::{sink_ext::SinkExt, Error, Message};
+use crate::{Error, Message, sink_ext::SinkExt};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "tungstenite")))]
 impl<T> crate::client::Connection for T
@@ -18,7 +18,7 @@ where
         loop {
             match self.next().await? {
                 Ok(tungstenite::Message::Text(text)) => {
-                    return Some(crate::client::Message::Text(text))
+                    return Some(crate::client::Message::Text(text));
                 }
                 Ok(tungstenite::Message::Ping(_)) => return Some(crate::client::Message::Ping),
                 Ok(tungstenite::Message::Pong(_)) => return Some(crate::client::Message::Pong),
@@ -26,7 +26,7 @@ where
                     return Some(crate::client::Message::Close {
                         code: frame.as_ref().map(|frame| frame.code.into()),
                         reason: frame.map(|frame| frame.reason.to_string()),
-                    })
+                    });
                 }
                 Ok(tungstenite::Message::Frame(_) | tungstenite::Message::Binary(_)) => continue,
                 Err(error) => {

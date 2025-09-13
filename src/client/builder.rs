@@ -6,14 +6,14 @@ use std::{
 use futures_lite::future;
 use serde::Serialize;
 
-use crate::{graphql::GraphqlOperation, logging::trace, protocol::Event, Error};
+use crate::{Error, graphql::GraphqlOperation, logging::trace, protocol::Event};
 
 use super::{
+    Client, Subscription,
     actor::ConnectionActor,
     connection::{Connection, Message, ObjectSafeConnection},
     keepalive::KeepAliveSettings,
     production_future::read_from_producer,
-    Client, Subscription,
 };
 
 /// Builder for Graphql over Websocket clients
@@ -176,7 +176,7 @@ impl ClientBuilder {
                     return Err(Error::Close(
                         code.unwrap_or_default(),
                         reason.unwrap_or_default(),
-                    ))
+                    ));
                 }
                 Some(Message::Ping | Message::Pong) => {}
                 Some(message @ Message::Text(_)) => {

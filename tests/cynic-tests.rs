@@ -1,7 +1,7 @@
 use std::{future::IntoFuture, time::Duration};
 
 use assert_matches::assert_matches;
-use futures_lite::{future, StreamExt};
+use futures_lite::{StreamExt, future};
 use subscription_server::SubscriptionServer;
 use tokio::time::sleep;
 

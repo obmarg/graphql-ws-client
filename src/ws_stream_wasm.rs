@@ -2,7 +2,7 @@ use futures_lite::{FutureExt, StreamExt};
 use pharos::{Observable, ObserveConfig};
 use ws_stream_wasm::{WsEvent, WsMessage, WsMeta, WsStream};
 
-use crate::{sink_ext::SinkExt, Error};
+use crate::{Error, sink_ext::SinkExt};
 
 /// A websocket connection for [ws_stream_wasm][1]
 ///

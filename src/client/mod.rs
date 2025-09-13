@@ -1,8 +1,8 @@
 use std::{
     fmt,
     sync::{
-        atomic::{AtomicUsize, Ordering},
         Arc,
+        atomic::{AtomicUsize, Ordering},
     },
 };
 
@@ -10,9 +10,9 @@ use futures_lite::StreamExt;
 use serde_json::Value;
 
 use crate::{
+    Error,
     graphql::GraphqlOperation,
     protocol::{self},
-    Error,
 };
 
 mod actor;

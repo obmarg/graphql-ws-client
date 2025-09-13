@@ -1,6 +1,6 @@
 use std::future::Future;
 
-use crate::{client::Message, Error};
+use crate::{Error, client::Message};
 
 pub struct Conn;
 
