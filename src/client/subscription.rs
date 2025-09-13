@@ -3,10 +3,10 @@ use std::{
     task::{Context, Poll},
 };
 
-use futures_lite::{future, stream, Stream, StreamExt};
+use futures_lite::{Stream, StreamExt, future, stream};
 
 use crate::{
-    client::production_future::read_from_producer, graphql::GraphqlOperation, Error, SubscriptionId,
+    Error, SubscriptionId, client::production_future::read_from_producer, graphql::GraphqlOperation,
 };
 
 use super::ConnectionCommand;

@@ -1,6 +1,6 @@
 use std::{future::pending, time::Duration};
 
-use futures_lite::{stream, Stream};
+use futures_lite::{Stream, stream};
 
 use crate::ConnectionCommand;
 

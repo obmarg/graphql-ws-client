@@ -2,7 +2,7 @@ use std::{future::IntoFuture, time::Duration};
 
 use assert_matches::assert_matches;
 use async_tungstenite::tungstenite::{client::IntoClientRequest, http::HeaderValue};
-use futures_lite::{future, StreamExt};
+use futures_lite::{StreamExt, future};
 use graphql_client::GraphQLQuery;
 use graphql_ws_client::graphql::StreamingOperation;
 use subscription_server::SubscriptionServer;

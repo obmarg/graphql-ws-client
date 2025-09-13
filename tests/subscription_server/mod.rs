@@ -1,9 +1,9 @@
 // TODO: Start a server w/ async-graphql.
 // Query that server...
 
-use async_graphql::{EmptyMutation, Object, Schema, SimpleObject, Subscription, ID};
+use async_graphql::{EmptyMutation, ID, Object, Schema, SimpleObject, Subscription};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse, GraphQLSubscription};
-use axum::{extract::Extension, routing::post, Router};
+use axum::{Router, extract::Extension, routing::post};
 use futures_lite::{Stream, StreamExt};
 use tokio::sync::broadcast::Sender;
 use tokio_stream::wrappers::BroadcastStream;

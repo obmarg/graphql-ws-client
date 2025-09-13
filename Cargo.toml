@@ -2,7 +2,7 @@
 name = "graphql-ws-client"
 version = "0.11.1"
 authors = ["Graeme Coupar <graeme@polyandglot.dev>"]
-edition = "2021"
+edition = "2024"
 resolver = "2"
 description = "A graphql over websockets client"
 keywords = ["graphql", "client", "api", "websockets", "subscriptions"]

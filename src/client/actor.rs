@@ -1,21 +1,21 @@
 use std::{
-    collections::{hash_map::Entry, HashMap},
+    collections::{HashMap, hash_map::Entry},
     future::IntoFuture,
 };
 
-use futures_lite::{future, stream, FutureExt, StreamExt};
-use serde_json::{json, Value};
+use futures_lite::{FutureExt, StreamExt, future, stream};
+use serde_json::{Value, json};
 
 use crate::{
+    Error, SubscriptionId,
     logging::{trace, warning},
     protocol::Event,
-    Error, SubscriptionId,
 };
 
 use super::{
+    ConnectionCommand,
     connection::{Message, ObjectSafeConnection},
     keepalive::KeepAliveSettings,
-    ConnectionCommand,
 };
 
 #[must_use]
@@ -110,13 +110,13 @@ impl ConnectionActor {
                 return Some(Message::Close {
                     code: Some(code),
                     reason: Some(reason),
-                })
+                });
             }
             Err(other) => {
                 return Some(Message::Close {
                     code: Some(4857),
                     reason: Some(format!("Error while decoding event: {other}")),
-                })
+                });
             }
         };
 
