@@ -5,7 +5,7 @@ use tungstenite::{self, protocol::CloseFrame};
 use crate::{sink_ext::SinkExt, Error, Message};
 
 #[cfg_attr(docsrs, doc(cfg(feature = "tungstenite")))]
-impl<T> crate::next::Connection for T
+impl<T> crate::client::Connection for T
 where
     T: Stream<Item = Result<tungstenite::Message, tungstenite::Error>>
         + Sink<tungstenite::Message>
@@ -18,12 +18,12 @@ where
         loop {
             match self.next().await? {
                 Ok(tungstenite::Message::Text(text)) => {
-                    return Some(crate::next::Message::Text(text))
+                    return Some(crate::client::Message::Text(text))
                 }
-                Ok(tungstenite::Message::Ping(_)) => return Some(crate::next::Message::Ping),
-                Ok(tungstenite::Message::Pong(_)) => return Some(crate::next::Message::Pong),
+                Ok(tungstenite::Message::Ping(_)) => return Some(crate::client::Message::Ping),
+                Ok(tungstenite::Message::Pong(_)) => return Some(crate::client::Message::Pong),
                 Ok(tungstenite::Message::Close(frame)) => {
-                    return Some(crate::next::Message::Close {
+                    return Some(crate::client::Message::Close {
                         code: frame.as_ref().map(|frame| frame.code.into()),
                         reason: frame.map(|frame| frame.reason.to_string()),
                     })
@@ -39,19 +39,19 @@ where
         }
     }
 
-    async fn send(&mut self, message: crate::next::Message) -> Result<(), Error> {
+    async fn send(&mut self, message: crate::client::Message) -> Result<(), Error> {
         <Self as SinkExt<tungstenite::Message>>::send(
             self,
             match message {
-                crate::next::Message::Text(text) => tungstenite::Message::Text(text),
-                crate::next::Message::Close { code, reason } => {
+                crate::client::Message::Text(text) => tungstenite::Message::Text(text),
+                crate::client::Message::Close { code, reason } => {
                     tungstenite::Message::Close(code.zip(reason).map(|(code, reason)| CloseFrame {
                         code: code.into(),
                         reason: reason.into(),
                     }))
                 }
-                crate::next::Message::Ping => tungstenite::Message::Ping(vec![]),
-                crate::next::Message::Pong => tungstenite::Message::Pong(vec![]),
+                crate::client::Message::Ping => tungstenite::Message::Ping(vec![]),
+                crate::client::Message::Pong => tungstenite::Message::Pong(vec![]),
             },
         )
         .await

@@ -31,9 +31,9 @@ impl Connection {
     }
 }
 
-impl crate::next::Connection for Connection {
-    async fn receive(&mut self) -> Option<crate::next::Message> {
-        use crate::next::Message;
+impl crate::client::Connection for Connection {
+    async fn receive(&mut self) -> Option<crate::client::Message> {
+        use crate::client::Message;
         loop {
             match self.next().await? {
                 EventOrMessage::Event(WsEvent::Closed(close)) => {
@@ -57,8 +57,8 @@ impl crate::next::Connection for Connection {
         }
     }
 
-    async fn send(&mut self, message: crate::next::Message) -> Result<(), Error> {
-        use crate::next::Message;
+    async fn send(&mut self, message: crate::client::Message) -> Result<(), Error> {
+        use crate::client::Message;
 
         match message {
             Message::Text(text) => self.messages.send(WsMessage::Text(text)).await,

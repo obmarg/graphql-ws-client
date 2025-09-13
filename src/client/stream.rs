@@ -5,7 +5,7 @@ use std::{
 
 use futures_lite::{future, stream, Stream, StreamExt};
 
-use crate::{graphql::GraphqlOperation, next::production_future::read_from_producer, Error};
+use crate::{client::production_future::read_from_producer, graphql::GraphqlOperation, Error};
 
 use super::ConnectionCommand;
 
@@ -17,10 +17,10 @@ pub struct Subscription<Operation>
 where
     Operation: GraphqlOperation,
 {
-    pub(super) id: usize,
-    pub(super) stream: Option<stream::Boxed<Result<Operation::Response, Error>>>,
-    pub(super) actor: async_channel::Sender<ConnectionCommand>,
-    pub(super) drop_sender: async_channel::Sender<usize>,
+    pub(in crate::client) id: usize,
+    pub(in crate::client) stream: Option<stream::Boxed<Result<Operation::Response, Error>>>,
+    pub(in crate::client) actor: async_channel::Sender<ConnectionCommand>,
+    pub(in crate::client) drop_sender: async_channel::Sender<usize>,
 }
 
 #[pin_project::pinned_drop]
