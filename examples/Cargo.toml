@@ -9,9 +9,10 @@ publish = false
 
 [dependencies]
 async-std = { version = "1.9", features = ["attributes"] }
-async-tungstenite = { version = "0.28", features = [
+async-tungstenite = { version = "0.31.0", features = [
     "async-std-runtime",
     "tokio-runtime",
+    "futures-03-sink"
 ] }
 cynic = { version = "3" }
 futures = { version = "0.3" }
@@ -24,9 +25,6 @@ path = "../"
 version = "0.11.2"
 default-features = false
 features = ["cynic", "tungstenite"]
-
-[dev-dependencies]
-insta = "1.11"
 
 [lints]
 workspace = true
