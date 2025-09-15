@@ -42,7 +42,7 @@ log = { version = "0.4", optional = true }
 pin-project = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-thiserror = "1.0"
+thiserror = "2.0.16"
 
 cynic = { version = "3", optional = true }
 tungstenite = { version = ">=0.23, <=0.24", optional = true }
@@ -53,13 +53,12 @@ pharos = { version = "0.5.2", optional = true }
 
 [dev-dependencies]
 assert_matches = "1.5"
-async-graphql = "7.0.1"
+async-graphql = "=7.0.16"
 async-graphql-axum = "7"
 async-tungstenite = { version = "0.28", features = ["tokio-runtime"] }
-axum = "0.7"
-axum-macros = "0.4"
+axum = "0.8.4"
+axum-macros = "0.5.0"
 cynic = { version = "3" }
-insta = "1.11"
 tokio = { version = "1", features = ["macros"] }
 tokio-stream = { version = "0.1", features = ["sync"] }
 
