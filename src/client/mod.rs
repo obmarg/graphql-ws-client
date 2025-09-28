@@ -117,7 +117,7 @@ impl Client {
                     .map_err(|err| Error::Decode(err.to_string()))
             }))),
             actor,
-            drop_sender: self.drop_sender.clone(),
+            drop_sender: Some(self.drop_sender.clone()),
         })
     }
 

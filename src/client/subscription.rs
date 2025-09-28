@@ -22,7 +22,7 @@ where
     pub(in crate::client) id: SubscriptionId,
     pub(in crate::client) stream: Option<stream::Boxed<Result<Operation::Response, Error>>>,
     pub(in crate::client) actor: async_channel::Sender<ConnectionCommand>,
-    pub(in crate::client) drop_sender: async_channel::Sender<SubscriptionId>,
+    pub(in crate::client) drop_sender: Option<async_channel::Sender<SubscriptionId>>,
 }
 
 #[pin_project::pinned_drop]
@@ -30,10 +30,13 @@ impl<Operation> PinnedDrop for Subscription<Operation>
 where
     Operation: GraphqlOperation,
 {
-    fn drop(self: Pin<&mut Self>) {
+    fn drop(mut self: Pin<&mut Self>) {
+        let Some(drop_sender) = self.drop_sender.take() else {
+            return;
+        };
         // We try_send here but the drop_sender channel _should_ be unbounded so
         // this should always work if the connection actor is still alive.
-        self.drop_sender.try_send(self.id).ok();
+        drop_sender.try_send(self.id).ok();
     }
 }
 
@@ -51,15 +54,13 @@ where
     }
 
     /// Stops this subscription
-    ///
-    /// # Errors
-    ///
-    /// Will return `Err` if the connection actor has already been shut down.
-    pub async fn stop(self) -> Result<(), Error> {
-        self.actor
-            .send(ConnectionCommand::Cancel(self.id))
-            .await
-            .map_err(|error| Error::Send(error.to_string()))
+    pub fn stop(mut self) {
+        let Some(drop_sender) = self.drop_sender.take() else {
+            return;
+        };
+        // We try_send here but the drop_sender channel _should_ be unbounded so
+        // this should always work if the connection actor is still alive.
+        drop_sender.try_send(self.id).ok();
     }
 
     pub(super) fn join(mut self, future: future::Boxed<()>) -> Self
