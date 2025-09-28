@@ -44,7 +44,8 @@
 mod error;
 mod logging;
 mod protocol;
-#[cfg(any(feature = "ws_stream_wasm", feature = "tungstenite"))]
+
+#[cfg(any(feature = "ws_stream_wasm", feature = "sink_ext"))]
 mod sink_ext;
 
 #[doc(hidden)]
@@ -62,8 +63,6 @@ mod client;
 /// [1]: https://docs.rs/ws_stream/latest/ws_stream
 pub mod ws_stream_wasm;
 
-#[cfg(feature = "tungstenite")]
-#[cfg_attr(docsrs, doc(cfg(feature = "tungstenite")))]
 mod native;
 
 pub use client::*;

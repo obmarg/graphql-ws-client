@@ -44,16 +44,16 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - name: Build
-        run: cargo build --workspace --all-features
+        run: cargo build --workspace --features client-cynic,client-graphql-client,ws_stream_wasm
       - name: Build tests
-        run: cargo test --workspace --all-features --no-run
+        run: cargo test --workspace --no-run --features client-cynic,client-graphql-client,ws_stream_wasm
       - name: Run tests
-        run: cargo test --workspace --all-features
+        run: cargo test --workspace --features client-cynic,client-graphql-client,ws_stream_wasm
       - name: Build examples
-        run: cargo build --workspace --all-features --examples
+        run: cargo build --workspace --features client-cynic,client-graphql-client,ws_stream_wasm --examples
       - name: Build examples tests
-        run: cargo test --workspace --all-features --examples --no-run
+        run: cargo test --workspace --features client-cynic,client-graphql-client,ws_stream_wasm --examples --no-run
       - name: Run examples tests
-        run: cargo test --workspace --all-features --examples
+        run: cargo test --workspace --features client-cynic,client-graphql-client,ws_stream_wasm --examples
       - name: Run clippy
-        run: cargo clippy --all --all-features
+        run: cargo clippy --all --features client-cynic,client-graphql-client,ws_stream_wasm
