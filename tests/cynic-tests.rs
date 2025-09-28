@@ -176,6 +176,16 @@ async fn oneshot_operation_test() {
     .await;
 }
 
+#[tokio::test]
+fn test_stop() {
+    todo!("write this test")
+}
+
+#[tokio::test]
+fn test_drop_behaviour() {
+    todo!("write this test")
+}
+
 fn build_query() -> cynic::StreamingOperation<BooksChangedSubscription, BooksChangedVariables> {
     use cynic::SubscriptionBuilder;
 
