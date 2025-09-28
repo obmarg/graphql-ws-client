@@ -11,6 +11,26 @@ all APIs might be changed.
 
 ## Unreleased
 
+## v0.11.2 - 2025-09-28
+
+### New Features
+
+- add `Client.stop(subscription_id)`
+- expose ConnectionId newtype ([#133](https://github.com/obmarg/graphql-ws-client/pull/133))
+- end subscriptions on drop ([#130](https://github.com/obmarg/graphql-ws-client/pull/130))
+
+### Bug Fixes
+
+- avoid drop safety concerns in `Subscription.stop` ([#139](https://github.com/obmarg/graphql-ws-client/pull/139))
+- dont take owned self in `Client.stop` ([#138](https://github.com/obmarg/graphql-ws-client/pull/138))
+
+### Changes
+
+- use 2024 edition ([#135](https://github.com/obmarg/graphql-ws-client/pull/135))
+- rename `stream.rs` -> `subscription.rs` ([#136](https://github.com/obmarg/graphql-ws-client/pull/136))
+- bump MSRV to 1.85 ([#134](https://github.com/obmarg/graphql-ws-client/pull/134))
+- rename module `next` -> `client` ([#132](https://github.com/obmarg/graphql-ws-client/pull/132))
+
 ## v0.11.1 - 2024-10-29
 
 ### Bug Fixes
