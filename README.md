@@ -30,6 +30,16 @@ It supports the websocket libraries
 [tokio-tungstenite](https://github.com/snapview/tokio-tungstenite) and
 [ws-stream-wasm](https://github.com/najamelan/ws_stream_wasm), and
 
+### Tungstenite Versions
+
+As the tungstenite library is pre-1.0 `graphql-ws-client` provides support for
+a range of versions. You can select which version of tungestenite you want
+using the `tungstenite-0-xx` feature flags. Note that only one of these can be
+active at any time, or `graphql-ws-client` won't compile. Because of these
+limitations only one tungstenite version will be tested on the
+`grapqhl-ws-client` CI, as a result the other versions may not compile or
+work corectly.
+
 ## Integrations
 
 The library offers integrations with some popular GraphQL clients with feature flags:
