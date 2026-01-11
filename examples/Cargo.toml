@@ -1,6 +1,6 @@
 [package]
 name = "examples"
-version = "0.11.0"
+version = "0.12.0"
 authors = ["Graeme Coupar <grambo@grambo.me.uk>"]
 edition = "2018"
 publish = false
@@ -21,7 +21,7 @@ tokio = { version = "1.15", features = ["rt-multi-thread", "macros"] }
 
 [dependencies.graphql-ws-client]
 path = "../"
-version = "0.11.1"
+version = "0.12.0"
 default-features = false
 features = ["cynic", "tungstenite-0.27"]
 

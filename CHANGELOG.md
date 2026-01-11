@@ -11,6 +11,40 @@ all APIs might be changed.
 
 ## Unreleased
 
+## v0.12.0 - 2026-01-11
+
+### Breaking Changes
+
+- The tungstenite feature flag has been removed in favour of version specific
+  feature flags.  Users should use the feature flag that pairs with the version
+  that they need:
+  - `tungstenite-0.23`
+  - `tungstenite-0.24`
+  - `tungstenite-0.25`
+  - `tungstenite-0.26`
+  - `tungstenite-0.27`
+  - `tungstenite-0.28`
+- `Subscription::stop` is now synchronous and no longer has a return type.
+
+### New Features
+
+- Added a stop function to the `Client` that takes a `SubscriptionId`
+- Added an `id` function to `Subscription` that returns a `SubscriptionId`
+- Dropping a `Subscription` will now stop the subscription on the server.
+  Previously this would have continued on until the server realised the
+  subscription was dead.
+
+### Bug Fixes
+
+- Raised the  pin-project dependency slightly
+- `Subscription::stop` is now drop safe - previously it's future could be
+  dropped before the send message was sent and the subscription would 
+  carry on until the server realised it was dead.
+
+### Changes
+
+- Bumped the MSRV to 1.85 
+
 ## v0.11.1 - 2024-10-29
 
 ### Bug Fixes
