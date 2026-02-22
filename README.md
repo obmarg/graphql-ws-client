@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> This repository has been migrated to [Codeberg](https://codeberg.org/obmarg/graphql-ws-client).
+
 <div align="center">
   <h1>GraphQL Websocket Client</h1>
 
