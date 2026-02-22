@@ -8,7 +8,7 @@
   <p>
     <a href="https://crates.io/crates/graphql-ws-client"><img alt="Crate Info" src="https://img.shields.io/crates/v/graphql-ws-client.svg"/></a>
     <a href="https://docs.rs/graphql-ws-client/"><img alt="API Docs" src="https://img.shields.io/docsrs/graphql-ws-client"/></a>
-    <a href="https://discord.gg/Y5xDmDP"><img alt="Discord Chat" src="https://img.shields.io/discord/754633560933269544"/></a>
+    <a href="https://web.libera.chat/#cynic"><img alt="IRC Room" src="https://img.shields.io/badge/Chat%20Room-5555FF"/></a>
   </p>
 
   <h4>
@@ -58,3 +58,13 @@ The documentation is quite limited at the moment, here are some sources:
 
 By default, the library will log some messages at the `trace` level to help you debug.
 It is possible to turn off the logging entirely by using the `no-logging` feature.
+
+## Getting Help
+
+If you want help with graphql-ws-client you can join the #cynic chat room on
+IRC using any of these options:
+
+- [A Web UI](https://web.libera.chat/#cynic)
+- [Using this link if you have an IRC client](ircs://irc.libera.chat:6697/#cynic)
+- [Selecting a client from joinrc.at](https://joinirc.at/ircs://irc.libera.chat:6697/#cynic)
+- Joining #cynic on irc.libera.chat if you know what you're doing
